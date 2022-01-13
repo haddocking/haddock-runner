@@ -1,0 +1,7 @@
+name: benchmark-tools
+channels:
+  - defaults
+dependencies:
+  - pip=21.0.1
+  - python=3.9.2
+  - toml=0.10.2

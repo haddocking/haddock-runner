@@ -1,0 +1,22 @@
+[ general ]
+haddock_path = '/Users/rodrigo/repos/haddock24'
+dataset_path = '/Users/rodrigo/repos/haddock-CSB-tools/benchmark-tools/example'
+python2 = '/usr/bin/python2'
+receptor_suffix = '_r_u'
+ligand_suffix = '_l_u'
+
+# ==============================
+
+[ scenario_1 ]
+run_name = 'true-interface'
+ambig_tbl = 'ambig.tbl'
+
+[ scenario_2 ]
+run_name = 'center-of-mass'
+cmrest = true
+
+[ scenario_3 ]
+run_name = 'surface-restraints'
+surfrest = true
+
+# ==============================
