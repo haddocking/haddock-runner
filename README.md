@@ -1,6 +1,10 @@
-# benchmark-tools
+# HADDOCK v2.4 `benchmark-tools`
 
-🚧🚧🚧🚧🚧 _STILL UNDER TESTING_ 🚧🚧🚧🚧🚧
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+
+🚧 🚧 🚧 _UNDER DEVELOPMENT_ 🚧 🚧 🚧
 
 ---
 
@@ -8,21 +12,13 @@ This is a benchmarking framework for HADDOCK v2.4, it aims to reduce code duplic
 
 It will read a configuration file and setup your runs, customize `run.cns` parameters with the custom parameters and execute the simulations.
 
-## Todo
-
-- Add partner-specific parameters; `cg`, `dna`, `shape`, etc
-- Implement option to stop and resume the benchmarking
-- Develop a parameter-dependency tree
-- Add unit tests
-
 ## Installation
 
-1.  Create the environment with Anaconda and activate it
 
-    ```
-    $ conda env create -f environment.yml
-    $ conda activate benchmark-tools
-    ```
+```
+$ conda env create -f environment.yml
+$ conda activate benchmark-tools
+```
 
 ## Configuration
 
