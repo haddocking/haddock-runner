@@ -116,20 +116,6 @@ def maincli():
 
 
 def main(config_file, force=False, log_level="INFO"):
-    # # parse the arguments
-    # parser = argparse.ArgumentParser(description="Run a Haddock Benchmark")
-    # parser.add_argument("config_file", help="Configuration file, toml format")
-    # parser.add_argument(
-    #     "--force",
-    #     dest="force",
-    #     action="store_true",
-    #     default=False,
-    #     help="DEV only, forcefully removeinitiated runs",
-    # )
-    # levels = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
-    # parser.add_argument("--log-level", default="INFO", choices=levels)
-    # args = parser.parse_args()
-
     setuplog.setLevel(log_level)
     setuplog.warning(
         "If this is not running in the background, your "
