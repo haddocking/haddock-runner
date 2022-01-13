@@ -3,7 +3,6 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-
 🚧 🚧 🚧 _UNDER DEVELOPMENT_ 🚧 🚧 🚧
 
 ---
@@ -14,10 +13,22 @@ It will read a configuration file and setup your runs, customize `run.cns` param
 
 ## Installation
 
-
 ```
-$ conda env create -f environment.yml
-$ conda activate benchmark-tools
+$ git clone https://github.com/haddocking/benchmark-tools.git
+$ cd benchmark-tools
+$ python setup.py install
+$ haddock_bm -h
+usage: haddock_bm [-h] [--force] [-v] config_file
+
+Run a Haddock Benchmark
+
+positional arguments:
+  config_file    Configuration file, toml format
+
+optional arguments:
+  -h, --help     show this help message and exit
+  --force        DEV only, forcefully removeinitiated runs
+  -v, --version  show version
 ```
 
 ## Configuration
