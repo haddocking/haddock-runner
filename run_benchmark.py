@@ -20,7 +20,7 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     # https://stackoverflow.com/a/312464
     for i in range(0, len(lst), n):
-        yield lst[i:i + n]
+        yield lst[i : i + n]
 
 
 def init(config_file):
@@ -47,8 +47,7 @@ def init(config_file):
     try:
         setuplog.info("Checking if receptor and ligands match suffix")
         dataset.check_input_files(
-            receptor_suffix=conf.receptor_suffix,
-            ligand_suffix=conf.ligand_suffix
+            receptor_suffix=conf.receptor_suffix, ligand_suffix=conf.ligand_suffix
         )
     except Exception as e:
         setuplog.error(e)
@@ -97,7 +96,7 @@ if __name__ == "__main__":
         "benchmarking will stop when you close the terminal!"
     )
     setuplog.warning(
-        f'To run it in the background, run with: '
+        f"To run it in the background, run with: "
         f'"nohup python {" ".join(sys.argv)} &"'
     )
     time.sleep(10)
@@ -121,9 +120,7 @@ if __name__ == "__main__":
     job_list = []
     for target in prepared_run_l:
         job = HaddockJob(
-            haddock_path=config.haddock_path,
-            py2=config.py2_path,
-            run_path=target
+            haddock_path=config.haddock_path, py2=config.py2_path, run_path=target
         )
         job_list.append(job)
 
@@ -150,8 +147,7 @@ if __name__ == "__main__":
                     status_list.append(job.status)
 
                     if job.status == "null":
-                        setuplog.info(
-                            f"Starting job {counter}/{total_jobs} {job.path}")
+                        setuplog.info(f"Starting job {counter}/{total_jobs} {job.path}")
                         job.run()
                         counter += 1
 
