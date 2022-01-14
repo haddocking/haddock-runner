@@ -16,7 +16,7 @@ It will read a configuration file and setup your runs, customize `run.cns` param
 ```
 $ git clone https://github.com/haddocking/benchmark-tools.git
 $ cd benchmark-tools
-$ python setup.py install
+$ python setup.py develop
 $ haddock_bm -h
 usage: haddock_bm [-h] [--force] [-v] config_file
 
@@ -76,6 +76,7 @@ Create this file with whatever editor you prefer and save it in the location of 
 
 ## Execution example
 
-    $ conda activate benchmark-tools
-    (benchmark-tools) $ cd benchmark-tools/example
-    (benchmark-tools) $ python ../run_benchmark.py scenarios.toml
+```
+$ cd benchmark-tools/example
+$ haddock_bm scenarios.toml
+```

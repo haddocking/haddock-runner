@@ -4,7 +4,7 @@ import shlex
 import subprocess
 import tempfile
 import logging
-from .errors import HaddockError
+from haddock_benchmark_tools.modules.errors import HaddockError
 
 haddocklog = logging.getLogger("setuplog")
 

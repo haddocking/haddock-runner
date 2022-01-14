@@ -5,7 +5,7 @@ import sys
 import re
 import copy
 from pathlib import Path
-from .errors import SuffixError, HaddockError
+from haddock_benchmark_tools.modules.errors import SuffixError, HaddockError
 
 datasetlog = logging.getLogger("setuplog")
 
