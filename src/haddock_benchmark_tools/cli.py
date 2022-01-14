@@ -2,10 +2,11 @@ import argparse
 import logging
 import sys
 import time
+from haddock_benchmark_tools.version import VERSION
 
-from modules.configuration import ConfigFile  # type: ignore
-from modules.haddock import HaddockWrapper, HaddockJob  # type: ignore
-from modules.dataset import Dataset  # type: ignore
+from haddock_benchmark_tools.modules.configuration import ConfigFile
+from haddock_benchmark_tools.modules.haddock import HaddockWrapper, HaddockJob
+from haddock_benchmark_tools.modules.dataset import Dataset
 
 setuplog = logging.getLogger("setuplog")
 ch = logging.StreamHandler()
@@ -73,24 +74,47 @@ def init(config_file):
     return conf, dataset, haddock
 
 
-if __name__ == "__main__":
+# Command line interface parser
+ap = argparse.ArgumentParser()
 
-    # parse the arguments
-    parser = argparse.ArgumentParser(description="Run a Haddock Benchmark")
 
-    parser.add_argument("config_file", help="Configuration file, toml format")
-    parser.add_argument(
-        "--force",
-        dest="force",
-        action="store_true",
-        default=False,
-        help="DEV only, forcefully removeinitiated runs",
-    )
-    levels = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
-    parser.add_argument("--log-level", default="INFO", choices=levels)
-    args = parser.parse_args()
+ap = argparse.ArgumentParser(description="Run a Haddock Benchmark")
+ap.add_argument("config_file", help="Configuration file, toml format")
+ap.add_argument(
+    "--force",
+    dest="force",
+    action="store_true",
+    default=False,
+    help="DEV only, forcefully removeinitiated runs",
+)
 
-    setuplog.setLevel(args.log_level)
+ap.add_argument(
+    "-v",
+    "--version",
+    help="show version",
+    action="version",
+    version=f"Running {ap.prog} v{VERSION}",
+)
+
+
+def load_args(ap):
+    """Load argument parser args."""
+    return ap.parse_args()
+
+
+def cli(ap, main):
+    """Command-line interface entry point."""
+    cmd = load_args(ap)
+    main(**vars(cmd))
+
+
+def maincli():
+    """Execute main client."""
+    cli(ap, main)
+
+
+def main(config_file, force=False, log_level="INFO"):
+    setuplog.setLevel(log_level)
     setuplog.warning(
         "If this is not running in the background, your "
         "benchmarking will stop when you close the terminal!"
@@ -101,7 +125,7 @@ if __name__ == "__main__":
     )
     time.sleep(10)
 
-    config, dataset, haddock = init(args.config_file)
+    config, dataset, haddock = init(config_file)
 
     prepared_run_l = []
     for i, run_scenario in enumerate(config.scenarios):
@@ -112,7 +136,7 @@ if __name__ == "__main__":
             parameters=run_scenario,
             receptor_suffix=config.receptor_suffix,
             ligand_suffix=config.ligand_suffix,
-            force=args.force,
+            force=force,
         )
         prepared_run_l.extend(ready_runs)
 
@@ -173,3 +197,7 @@ if __name__ == "__main__":
                     time.sleep(600)
 
         complete = True
+
+
+if __name__ == "__main__":
+    sys.exit(maincli())
