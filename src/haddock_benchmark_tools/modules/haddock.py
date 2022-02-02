@@ -1,12 +1,27 @@
-import pathlib
+import ast
+import logging
 import os
+import pathlib
 import shlex
 import subprocess
+import sys
 import tempfile
-import logging
+from pathlib import Path
+
 from haddock_benchmark_tools.modules.errors import HaddockError
 
 haddocklog = logging.getLogger("setuplog")
+
+
+def is_py3(file_path):
+    """Check if code is Python3 compatible."""
+    # https://stackoverflow.com/a/40886697
+    code_data = open(file_path, "rb").read()
+    try:
+        ast.parse(code_data)
+    except SyntaxError:
+        return False
+    return True
 
 
 class HaddockWrapper:
@@ -15,8 +30,15 @@ class HaddockWrapper:
     def __init__(self, haddock_path, py2):
         self.path = pathlib.Path(haddock_path)
         self.py2 = pathlib.Path(py2)
-        self.run_haddock = self.path / "Haddock/RunHaddock.py"
-        self.haddock_exec = shlex.split(f"{self.py2} {self.run_haddock}")
+        try:
+            self.run_haddock = list(Path(self.path).glob("*/*addock.py"))[0]
+        except KeyError:
+            raise HaddockError(f"{self.path} does not contain Haddock")
+
+        if is_py3(self.run_haddock):
+            self.haddock_exec = shlex.split(f"{sys.executable} {self.run_haddock}")
+        else:
+            self.haddock_exec = shlex.split(f"{self.py2} {self.run_haddock}")
         self.env = os.environ.copy()
         self.env["PYTHONPATH"] = self.path
         self.pid = None

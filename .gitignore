@@ -153,3 +153,9 @@ cython_debug/
 
 # VScode
 .vscode/
+
+# project-spefic
+example/*/run-*
+example/*/haddock.out*
+example/*/run.param*
+example/*/*list
