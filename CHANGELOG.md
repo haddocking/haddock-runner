@@ -1,12 +1,7 @@
-# CHANGELOG
-
+#CHANGELOG
 
 * * *
-v
-CHANGELOG
-
-v0.2.1 020222
-* * * 020222
+v0.2.0 020222
 
 Change submission mode to continuous and sorted by size (determined by the contents in the `run_dir`)
 
