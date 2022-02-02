@@ -96,27 +96,29 @@ class HaddockJob(HaddockWrapper):
     def __init__(self, haddock_path, py2, run_path):
         HaddockWrapper.__init__(self, haddock_path, py2)
         self.path = run_path
-        self.status = None
         self.process = None
-        self.output = run_path / "haddock.out"
-        self.error = run_path / "haddock.err"
+        self.output = Path(run_path, "haddock.out")
+        self.error = Path(run_path, "haddock.err")
+        self.size = self._get_size()
+        self.name = run_path
 
-    def update_status(self):
+    def status(self):
         """Check the status of the process."""
+        current_status = ""
         try:
             if self.process.poll() is None:
-                self.status = "running"
+                current_status = "running"
             else:
-                if (self.path / "structures/it1/water/file.list").exists():
-                    self.status = "complete"
+                if Path(self.path, "structures/it1/water/file.list").exists():
+                    current_status = "complete"
                 else:
-                    self.status = "failed"
+                    current_status = "failed"
 
         except AttributeError:
             # this job has not been initiated
-            self.status = "null"
+            current_status = "null"
 
-        return self.status
+        return current_status
 
     def run(self):
         """Execute the Haddock job."""
@@ -127,3 +129,25 @@ class HaddockJob(HaddockWrapper):
             stdout=open(self.output, "w"),
             stderr=open(self.error, "w"),
         )
+
+    def _get_size(self):
+        """Assign a size to the job."""
+        # The size of the input
+        input_size = sum(file.stat().st_size for file in Path(self.path).rglob("*"))
+        # Here we can also consider the "restrain complexity",
+        #  but that is not simply a measure of how many lines there are in the file
+        #  for example assign ( segid B ) (segid A) 2.0 2.0 0.0
+        #  will calculate ALL the distances between A and B and its only one line.
+        return input_size
+
+    def __lt__(self, other):
+        return self.size < other.size
+
+    def __gt__(self, other):
+        return self.size > other.size
+
+    def __eq__(self, other):
+        return self.size == other.size
+
+    def __hash__(self):
+        return id(self)

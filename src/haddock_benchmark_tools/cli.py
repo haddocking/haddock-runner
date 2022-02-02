@@ -7,6 +7,7 @@ from haddock_benchmark_tools.version import version
 from haddock_benchmark_tools.modules.configuration import ConfigFile
 from haddock_benchmark_tools.modules.haddock import HaddockWrapper, HaddockJob
 from haddock_benchmark_tools.modules.dataset import Dataset
+from haddock_benchmark_tools.modules.queue import Queue
 
 setuplog = logging.getLogger("setuplog")
 ch = logging.StreamHandler()
@@ -154,54 +155,14 @@ def main(config_file, force=False, log_level="INFO"):
         job_list.append(job)
 
     # Execute!
-    # TODO: change submission logic to continous mode
     concurrent_jobs = 10
-    counter = 1
     total_jobs = len(job_list)
     setuplog.info(f"Executing jobs n={total_jobs}")
-    complete = False
-    while not complete:
 
-        for i, job_subset in enumerate(chunks(job_list, concurrent_jobs)):
-            setuplog.info(f"Running job subset {i+1}")
+    queue = Queue(job_list, concurrent=concurrent_jobs)
+    queue.execute()
 
-            subset_complete = False
-            while not subset_complete:
-
-                status_list = []
-                for job in job_subset:
-
-                    job.update_status()
-
-                    status_list.append(job.status)
-
-                    if job.status == "null":
-                        setuplog.info(f"Starting job {counter}/{total_jobs} {job.path}")
-                        job.run()
-                        counter += 1
-
-                    elif job.status == "failed":
-                        setuplog.warning(f"Failed {job.path}")
-
-                    elif job.status == "running":
-                        setuplog.info(f"Running {job.path}")
-
-                    elif job.status == "complete":
-                        setuplog.info(f"Complete {job.path}")
-
-                total_complete = status_list.count("complete")
-                total_failed = status_list.count("failed")
-
-                if total_complete + total_failed == len(job_subset):
-                    # all complete or failed
-                    setuplog.info("Subset complete")
-                    subset_complete = True
-
-                else:
-                    setuplog.info("Waiting...")
-                    time.sleep(600)
-
-        complete = True
+    setuplog.info("Done!")
 
 
 if __name__ == "__main__":
