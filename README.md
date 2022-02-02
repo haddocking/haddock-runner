@@ -1,13 +1,9 @@
-# HADDOCK v2.4 `benchmark-tools`
+# `benchmark-tools` for HADDOCK v2.4+
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-🚧 🚧 🚧 _UNDER DEVELOPMENT_ 🚧 🚧 🚧
-
----
-
-This is a benchmarking framework for HADDOCK v2.4, it aims to reduce code duplication and development overlap by centralizing our benchmark effots into a single tool.
+This is a benchmarking framework for HADDOCK v2.4+, it aims to reduce code duplication and development overlap by centralizing our benchmark effots into a single tool.
 
 It will read a configuration file and setup your runs, customize `run.cns` parameters with the custom parameters and execute the simulations.
 
