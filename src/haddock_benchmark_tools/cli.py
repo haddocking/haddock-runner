@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 import time
-from haddock_benchmark_tools.version import VERSION
+from haddock_benchmark_tools.version import version
 
 from haddock_benchmark_tools.modules.configuration import ConfigFile
 from haddock_benchmark_tools.modules.haddock import HaddockWrapper, HaddockJob
@@ -93,7 +93,7 @@ ap.add_argument(
     "--version",
     help="show version",
     action="version",
-    version=f"Running {ap.prog} v{VERSION}",
+    version=f"Running {ap.prog} v{version}",
 )
 
 
@@ -115,6 +115,11 @@ def maincli():
 
 def main(config_file, force=False, log_level="INFO"):
     setuplog.setLevel(log_level)
+    setuplog.info("###############################################")
+    setuplog.info("")
+    setuplog.info(f"      Welcome to benchmark-tools v{version}")
+    setuplog.info("")
+    setuplog.info("###############################################")
     setuplog.warning(
         "If this is not running in the background, your "
         "benchmarking will stop when you close the terminal!"
