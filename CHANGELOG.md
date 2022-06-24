@@ -1,20 +1,16 @@
-#CHANGELOG
+# CHANGELOG
 
-* * *
-v
-CHANGELOG
+- v0.2.2 - 24/06/2022
 
-v0.2.1 020222
-* * * 020222
+  - Use `trunk` for linting and formatting
 
-Change submission mode to continuous and sorted by size (determined by the contents in the `run_dir`)
+- v0.2.1 - 02/02/22
 
-* * *
-v0.1.0 020222
+  - Change submission mode to continuous and sorted by size (determined by the contents in the `run_dir`)
 
-Add support for HADDOCK v2.5
+- v0.1.0 - 02/02/22
 
-* * *
-v0.0.0-beta ??????
+  - Add support for HADDOCK v2.5
 
-First implementation
+- v0.0.0-beta - ??/??/??
+  - First implementation

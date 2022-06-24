@@ -1,17 +1,19 @@
-import pathlib
 import logging
+import pathlib
+import re
 import shutil
 import time
-import re
+
 import toml  # type: ignore
+
 from haddock_benchmark_tools.modules.errors import (
-    HeaderUndefined,
-    ConfigKeyUndefinedError,
     ConfigKeyEmptyError,
+    ConfigKeyUndefinedError,
+    HeaderUndefined,
+    InvalidParameter,
+    InvalidRunName,
     PathNotFound,
     ScenarioUndefined,
-    InvalidRunName,
-    InvalidParameter,
 )
 
 configlog = logging.getLogger("setuplog")

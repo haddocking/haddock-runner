@@ -2,12 +2,12 @@ import argparse
 import logging
 import sys
 import time
-from haddock_benchmark_tools.version import version
 
 from haddock_benchmark_tools.modules.configuration import ConfigFile
-from haddock_benchmark_tools.modules.haddock import HaddockWrapper, HaddockJob
 from haddock_benchmark_tools.modules.dataset import Dataset
+from haddock_benchmark_tools.modules.haddock import HaddockJob, HaddockWrapper
 from haddock_benchmark_tools.modules.queue import Queue
+from haddock_benchmark_tools.version import version
 
 setuplog = logging.getLogger("setuplog")
 ch = logging.StreamHandler()

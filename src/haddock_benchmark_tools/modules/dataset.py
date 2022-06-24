@@ -1,11 +1,12 @@
-import os
-import shutil
-import logging
-import sys
-import re
 import copy
+import logging
+import os
+import re
+import shutil
+import sys
 from pathlib import Path
-from haddock_benchmark_tools.modules.errors import SuffixError, HaddockError
+
+from haddock_benchmark_tools.modules.errors import HaddockError, SuffixError
 
 datasetlog = logging.getLogger("setuplog")
 
