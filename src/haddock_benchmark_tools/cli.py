@@ -129,7 +129,7 @@ def main(config_file, force=False, log_level="INFO"):
         f"To run it in the background, run with: "
         f'"nohup python {" ".join(sys.argv)} &"'
     )
-    time.sleep(10)
+    time.sleep(2)
 
     config, dataset, haddock = init(config_file)
 
@@ -155,11 +155,10 @@ def main(config_file, force=False, log_level="INFO"):
         job_list.append(job)
 
     # Execute!
-    concurrent_jobs = 10
     total_jobs = len(job_list)
     setuplog.info(f"Executing jobs n={total_jobs}")
 
-    queue = Queue(job_list, concurrent=concurrent_jobs)
+    queue = Queue(job_list, concurrent=config.concurrent)
     queue.execute()
 
     setuplog.info("Done!")
