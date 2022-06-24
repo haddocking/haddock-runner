@@ -1,5 +1,9 @@
 # CHANGELOG
 
+- v0.3.0 - 24/06/2022
+
+  - Add new `concurrent_jobs` general parameter to control the number of concurrent jobs.
+
 - v0.2.2 - 24/06/2022
 
   - Use `trunk` for linting and formatting

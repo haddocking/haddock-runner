@@ -42,6 +42,14 @@ class ConfigFile:
                 if not obrigatory_path.exists():
                     raise PathNotFound(obrigatory_path)
 
+        if "concurrent_jobs" in self.conf["general"]:
+            try:
+                self.concurrent = int(self.conf["general"]["concurrent_jobs"])
+            except ValueError:
+                raise InvalidParameter("concurrent_jobs must be an integer")
+        else:
+            self.concurrent = 10
+
         self.haddock_path = pathlib.Path(self.conf["general"]["haddock_path"])
         self.dataset_path = pathlib.Path(self.conf["general"]["dataset_path"])
         self.py2_path = pathlib.Path(self.conf["general"]["python2"])

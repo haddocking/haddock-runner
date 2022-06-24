@@ -5,6 +5,7 @@ dataset_path = '/Users/rodrigo/repos/benchmark-tools/example'
 python2 = '/usr/bin/python2'
 receptor_suffix = '_r_u'
 ligand_suffix = '_l_u'
+# concurrent_jobs = 10
 
 # ==============================
 

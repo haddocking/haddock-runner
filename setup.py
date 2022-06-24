@@ -1,13 +1,14 @@
 from setuptools import find_packages, setup
 
-# FIXME: Remove this and keep all requirements in this setup file
+from src.haddock_benchmark_tools.version import version
+
 with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 setup(
     name="haddock-benchmark-tools",
     license="Apache License 2.0",
-    version="0.2.2",
+    version=version,
     author="BonvinLab",
     description="benchmarking framework for HADDOCK v2.4+",
     author_email="software.csb@gmail.com",
