@@ -3,7 +3,7 @@ import logging
 import os
 import pathlib
 import shlex
-import subprocess
+import subprocess  # nosec
 import sys
 import tempfile
 from pathlib import Path
@@ -49,7 +49,7 @@ class HaddockWrapper:
         out_f = tempfile.NamedTemporaryFile(delete=False, suffix=".out")
         err_f = tempfile.NamedTemporaryFile(delete=False, suffix=".err")
 
-        p = subprocess.Popen(
+        p = subprocess.Popen(  # nosec
             self.haddock_exec, env=self.env, stdout=out_f, stderr=err_f
         )
         p.communicate()
@@ -73,7 +73,7 @@ class HaddockWrapper:
 
         output_f = target_dir / f"haddock.out-{identifier}"
         with open(output_f, "w") as out:
-            p = subprocess.Popen(self.haddock_exec, env=self.env, stdout=out)
+            p = subprocess.Popen(self.haddock_exec, env=self.env, stdout=out)  # nosec
             p.communicate()
         out.close()
 
@@ -123,7 +123,7 @@ class HaddockJob(HaddockWrapper):
     def run(self):
         """Execute the Haddock job."""
         os.chdir(self.path)
-        self.process = subprocess.Popen(
+        self.process = subprocess.Popen(  # nosec
             self.haddock_exec,
             env=self.env,
             stdout=open(self.output, "w"),

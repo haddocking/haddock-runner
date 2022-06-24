@@ -9,10 +9,10 @@ It will read a configuration file and setup your runs, customize `run.cns` param
 
 ## Installation
 
-```
+```text
 $ git clone https://github.com/haddocking/benchmark-tools.git
 $ cd benchmark-tools
-$ python setup.py develop
+$ python setup.py install
 $ haddock_bm -h
 usage: haddock_bm [-h] [--force] [-v] config_file
 
@@ -72,7 +72,7 @@ Create this file with whatever editor you prefer and save it in the location of 
 
 ## Execution example
 
-```
-$ cd benchmark-tools/example
-$ haddock_bm scenarios.toml
+```text
+cd benchmark-tools/example
+haddock_bm scenarios.toml
 ```
