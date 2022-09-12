@@ -11,8 +11,10 @@ It will read a configuration file and setup your runs, customize `run.cns` param
 
 ```text
 $ git clone https://github.com/haddocking/benchmark-tools.git
-$ cd benchmark-tools
-$ python setup.py install
+$ python -m venv venv
+$ source venv/bin/activate
+$ pip install poetry
+$ poetry install
 $ haddock_bm -h
 usage: haddock_bm [-h] [--force] [-v] config_file
 

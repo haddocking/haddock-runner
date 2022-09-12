@@ -6,7 +6,7 @@ import time
 
 import toml  # type: ignore
 
-from haddock_benchmark_tools.modules.errors import (
+from benchmarktools.modules.errors import (
     ConfigKeyEmptyError,
     ConfigKeyUndefinedError,
     HeaderUndefined,
