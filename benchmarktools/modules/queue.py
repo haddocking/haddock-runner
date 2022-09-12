@@ -1,7 +1,7 @@
 import logging
 import time
 
-queuelog = logging.getLogger("setuplog")
+log = logging.getLogger("bmlog")
 
 
 class Queue:
@@ -15,18 +15,18 @@ class Queue:
     def execute(self):
         """Execute all the jobs in the queue."""
         total = len(self.job_list)
-        queuelog.info(
+        log.info(
             f"Executing jobs in the queue n={total}, max_concurrent={self.concurrent}"
         )
         while not self.is_done():
             for i, job in enumerate(self.job_list, start=1):
                 status = job.status()
                 if status == "null" and self.has_slots():
-                    queuelog.info(f"> Submitting {job.name} [{i}/{total}]")
+                    log.info(f"> Submitting {job.name} [{i}/{total}]")
                     self.submit(job)
 
                 elif status in ["complete", "failed"]:
-                    queuelog.info(f"> Job {job.name} - {status} [{i}/{total}]")
+                    log.info(f"> Job {job.name} - {status} [{i}/{total}]")
                     self.remove(job)
             time.sleep(60)
 

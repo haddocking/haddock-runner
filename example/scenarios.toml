@@ -1,8 +1,7 @@
 [general]
-haddock_path = '/Users/rodrigo/repos/haddock24'
-# haddock_path = '/Users/rodrigo/repos/haddock25'
-dataset_path = '/Users/rodrigo/repos/benchmark-tools/example'
-python2 = '/usr/bin/python2'
+dataset_path = "/Users/rvhonorato/repos/benchmark-tools/example"
+haddock_exec = "/Users/rvhonorato/software/miniconda2/bin/python /Users/rvhonorato/repos/haddock/Haddock/RunHaddock.py"
+
 receptor_suffix = '_r_u'
 ligand_suffix = '_l_u'
 # concurrent_jobs = 10
@@ -13,12 +12,12 @@ ligand_suffix = '_l_u'
 run_name = 'true-interface'
 ambig_tbl = 'ambig.tbl'
 
-[scenario_2]
-run_name = 'center-of-mass'
-cmrest = true
+# [scenario_2]
+# run_name = 'center-of-mass'
+# cmrest = true
 
-[scenario_3]
-run_name = 'surface-restraints'
-surfrest = true
+# [scenario_3]
+# run_name = 'surface-restraints'
+# surfrest = true
 
 # ==============================

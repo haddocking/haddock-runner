@@ -4,13 +4,14 @@ import os
 import pathlib
 import shlex
 import subprocess  # nosec
-import sys
+
+# import sys
 import tempfile
 from pathlib import Path
 
 from benchmarktools.modules.errors import HaddockError
 
-haddocklog = logging.getLogger("setuplog")
+log = logging.getLogger("bmlog")
 
 
 def is_py3(file_path):
@@ -24,27 +25,30 @@ def is_py3(file_path):
     return True
 
 
-class HaddockWrapper:
+class Haddock2Wrapper:
     """Wrapper for HADDOCK."""
 
-    def __init__(self, haddock_path, py2):
-        self.path = pathlib.Path(haddock_path)
-        self.py2 = pathlib.Path(py2)
-        try:
-            self.run_haddock = list(Path(self.path).glob("*/*addock.py"))[0]
-        except KeyError:
-            raise HaddockError(f"{self.path} does not contain Haddock")
+    def __init__(self, haddock_cmd):
+        """Initialize HADDOCK2 Wrapper."""
+        self.haddock_exec = shlex.split(haddock_cmd)
+        self.path = Path(self.haddock_exec[-1]).parent.parent
+        # self.path = pathlib.Path(haddock_path)
+        # self.py2 = pathlib.Path(py2)
+        # try:
+        #     self.run_haddock = list(Path(self.path).glob("*/*addock.py"))[0]
+        # except KeyError:
+        #     raise HaddockError(f"{self.path} does not contain Haddock")
 
-        if is_py3(self.run_haddock):
-            self.haddock_exec = shlex.split(f"{sys.executable} {self.run_haddock}")
-        else:
-            self.haddock_exec = shlex.split(f"{self.py2} {self.run_haddock}")
+        # if is_py3(self.run_haddock):
+        #     self.haddock_exec = shlex.split(f"{sys.executable} {self.run_haddock}")
+        # else:
+        #     self.haddock_exec = shlex.split(f"{self.py2} {self.run_haddock}")
         self.env = os.environ.copy()
-        self.env["PYTHONPATH"] = self.path
+        self.env["PYTHONPATH"] = str(self.path)
         self.pid = None
 
     def check_if_executable(self):
-        """Check if Haddock can be executed."""
+        """Check if HADDOCK can be executed."""
 
         out_f = tempfile.NamedTemporaryFile(delete=False, suffix=".out")
         err_f = tempfile.NamedTemporaryFile(delete=False, suffix=".err")
@@ -92,15 +96,15 @@ class HaddockWrapper:
         return output_f
 
 
-class HaddockJob(HaddockWrapper):
-    def __init__(self, haddock_path, py2, run_path):
-        HaddockWrapper.__init__(self, haddock_path, py2)
-        self.path = run_path
+class HaddockJob(Haddock2Wrapper):
+    def __init__(self, haddock_cmd, job_path):
+        Haddock2Wrapper.__init__(self, haddock_cmd)
+        self.path = job_path
         self.process = None
-        self.output = Path(run_path, "haddock.out")
-        self.error = Path(run_path, "haddock.err")
+        self.output = Path(self.path, "haddock.out")
+        self.error = Path(self.path, "haddock.err")
         self.size = self._get_size()
-        self.name = run_path
+        self.name = self.path
 
     def status(self):
         """Check the status of the process."""

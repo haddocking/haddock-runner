@@ -116,9 +116,9 @@ class MultipleInputError(Error):
 
 
 class HaddockError(Error):
-    """Raised when Haddock can not be executed."""
+    """Raised when HADDOCK can not be executed."""
 
-    def __init__(self, output_file, message="Haddock could not be executed"):
+    def __init__(self, output_file, message="HADDOCK could not be executed"):
         self.output_file = output_file
         self.message = message
         super().__init__(self.message)

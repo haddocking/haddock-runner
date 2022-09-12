@@ -1,18 +1,17 @@
 import logging
-import pathlib
-import re
 import shutil
 import time
+from pathlib import Path
 
-import toml  # type: ignore
+import toml
 
+from benchmarktools.functions import get_haddock_version, load_cns_params
 from benchmarktools.modules.errors import (
     ConfigKeyEmptyError,
     ConfigKeyUndefinedError,
     HeaderUndefined,
     InvalidParameter,
     InvalidRunName,
-    PathNotFound,
     ScenarioUndefined,
 )
 
@@ -30,17 +29,24 @@ class ConfigFile:
             raise HeaderUndefined("general")
 
         # check the general path fields
-        obrigatory_fields = ["dataset_path", "haddock_path", "python2"]
+        obrigatory_fields = ["dataset_path", "haddock_exec"]
         for field in obrigatory_fields:
             if field not in self.conf["general"]:
                 raise ConfigKeyUndefinedError(field)
             elif not self.conf["general"][field]:
                 # its defined but its empty
                 raise ConfigKeyEmptyError(field)
-            else:
-                obrigatory_path = pathlib.Path(self.conf["general"][field])
-                if not obrigatory_path.exists():
-                    raise PathNotFound(obrigatory_path)
+
+        # check if the executable is executable
+        self.executable = self.conf["general"]["haddock_exec"]
+        self.haddock_version = get_haddock_version(self.executable)
+        if self.haddock_version == 2:
+            self.haddock_path = Path(
+                self.conf["general"]["haddock_exec"].split()[-1]
+            ).parent.parent
+        else:
+            self.haddock_path = ""
+        # self.conf["general"]["haddock_path"] = haddock_path
 
         if "concurrent_jobs" in self.conf["general"]:
             try:
@@ -50,9 +56,8 @@ class ConfigFile:
         else:
             self.concurrent = 10
 
-        self.haddock_path = pathlib.Path(self.conf["general"]["haddock_path"])
-        self.dataset_path = pathlib.Path(self.conf["general"]["dataset_path"])
-        self.py2_path = pathlib.Path(self.conf["general"]["python2"])
+        # self.haddock_path = Path(self.conf["general"]["haddock_path"])
+        self.dataset_path = Path(self.conf["general"]["dataset_path"])
 
         # check the receptor/ligand suffix
         suffix_fields = ["receptor_suffix", "ligand_suffix"]
@@ -75,23 +80,25 @@ class ConfigFile:
             raise ScenarioUndefined()
         else:
             self.scenarios = []
-            run_cns_f = self.haddock_path / "protocols/run.cns-conf"
-            cns_params = self.load_cns_params(run_cns_f)
-            run_name_l = []
-            for scenario_name in scenario_name_list:
-                self.scenarios.append(self.conf[scenario_name])
-                for param in self.conf[scenario_name]:
-                    if param == "run_name":
-                        name = self.conf[scenario_name][param]
-                        if name in run_name_l:
-                            raise InvalidRunName(name, message="duplicated")
-                        else:
-                            run_name_l.append(name)
-                    elif param == "ambig_tbl":
-                        # TODO: implement a tbl validator
-                        pass
-                    elif param not in cns_params:
-                        raise InvalidParameter(param)
+            if self.haddock_version == 2:
+                run_cns_f = self.haddock_path / "protocols/run.cns-conf"
+                configlog.info(f"HADDOCK version 2 detected, lookig for {run_cns_f}")
+                cns_params = load_cns_params(run_cns_f)
+                run_name_l = []
+                for scenario_name in scenario_name_list:
+                    self.scenarios.append(self.conf[scenario_name])
+                    for param in self.conf[scenario_name]:
+                        if param == "run_name":
+                            name = self.conf[scenario_name][param]
+                            if name in run_name_l:
+                                raise InvalidRunName(name, message="duplicated")
+                            else:
+                                run_name_l.append(name)
+                        elif param == "ambig_tbl":
+                            # TODO: implement a tbl validator
+                            pass
+                        elif param not in cns_params:
+                            raise InvalidParameter(param)
 
         if not shutil.which("ssub"):
             # this is specific for execution in the cluster
@@ -102,18 +109,3 @@ class ConfigFile:
             time.sleep(5)
 
         return True
-
-    @staticmethod
-    def load_cns_params(run_cns_f):
-        """Read a run.cns file and return all parameter keys."""
-        param_regex = r"{===>}\s(\w*)=.*\;"
-        param_l = []
-        with open(run_cns_f, "r") as fh:
-            for line in fh.readlines():
-                try:
-                    parameter = re.findall(param_regex, line)[0]
-                except IndexError:
-                    # this line does not contain a parameter
-                    continue
-                param_l.append(parameter)
-        return param_l
