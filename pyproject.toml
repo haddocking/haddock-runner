@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "benchmark-tools"
 license="Apache License 2.0"
-version = "0.4.0"
+version = "0.3.1"
 authors = ["BonvinLab <software.csb@gmail.com>"]
 description = "benchmarking framework for HADDOCK"
 packages = [
