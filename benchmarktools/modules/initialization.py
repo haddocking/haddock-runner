@@ -1,9 +1,9 @@
 import logging
 import sys
 
-from haddock_benchmark_tools.modules.configuration import ConfigFile
-from haddock_benchmark_tools.modules.dataset import Dataset
-from haddock_benchmark_tools.modules.haddock import HaddockWrapper
+from benchmarktools.modules.configuration import ConfigFile
+from benchmarktools.modules.dataset import Dataset
+from benchmarktools.modules.haddock import HaddockWrapper
 
 setuplog = logging.getLogger("setuplog")
 ch = logging.StreamHandler()

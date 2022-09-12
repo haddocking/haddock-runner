@@ -6,7 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from haddock_benchmark_tools.modules.errors import HaddockError, SuffixError
+from benchmarktools.modules.errors import HaddockError, SuffixError
 
 datasetlog = logging.getLogger("setuplog")
 

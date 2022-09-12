@@ -3,10 +3,11 @@ import logging
 import sys
 import time
 
-from haddock_benchmark_tools.modules.haddock import HaddockJob
-from haddock_benchmark_tools.modules.initialization import init
-from haddock_benchmark_tools.modules.queue import Queue
-from haddock_benchmark_tools.version import version
+from benchmarktools.modules.configuration import ConfigFile
+from benchmarktools.modules.dataset import Dataset
+from benchmarktools.modules.haddock import HaddockJob, HaddockWrapper
+from benchmarktools.modules.queue import Queue
+from benchmarktools.version import version
 
 setuplog = logging.getLogger("setuplog")
 ch = logging.StreamHandler()
