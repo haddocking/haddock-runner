@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from haddock_benchmark_tools.modules.errors import HaddockError
+from benchmarktools.modules.errors import HaddockError
 
 haddocklog = logging.getLogger("setuplog")
 
