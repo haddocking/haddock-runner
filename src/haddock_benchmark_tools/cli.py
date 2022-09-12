@@ -3,9 +3,8 @@ import logging
 import sys
 import time
 
-from haddock_benchmark_tools.modules.configuration import ConfigFile
-from haddock_benchmark_tools.modules.dataset import Dataset
-from haddock_benchmark_tools.modules.haddock import HaddockJob, HaddockWrapper
+from haddock_benchmark_tools.modules.haddock import HaddockJob
+from haddock_benchmark_tools.modules.initialization import init
 from haddock_benchmark_tools.modules.queue import Queue
 from haddock_benchmark_tools.version import version
 
@@ -18,103 +17,27 @@ ch.setFormatter(formatter)
 setuplog.addHandler(ch)
 
 
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    # https://stackoverflow.com/a/312464
-    for i in range(0, len(lst), n):
-        yield lst[i : i + n]
+def main(log_level="INFO"):
 
+    ap = argparse.ArgumentParser(description="Run a HADDOCK Benchmark")
+    ap.add_argument("config_file", help="Configuration file, toml format")
+    ap.add_argument(
+        "--force",
+        dest="force",
+        action="store_true",
+        default=False,
+        help="DEV only, forcefully removeinitiated runs",
+    )
 
-def init(config_file):
-    """Initialize the Setup script and do the validations."""
-    setuplog.info("Initializing Setup")
+    ap.add_argument(
+        "-v",
+        "--version",
+        help="show version",
+        action="version",
+        version=f"Running {ap.prog} v{version}",
+    )
+    args = ap.parse_args()
 
-    # Configuration
-    setuplog.info("Reading configuration file")
-    conf = ConfigFile(config_file)
-
-    try:
-        setuplog.info("Validating configuration file")
-        conf.validate()
-    except Exception as e:
-        setuplog.error(e)
-        sys.exit()
-
-    setuplog.info("Configuration file OK")
-
-    # Dataset
-    setuplog.info("Loading Dataset")
-    dataset = Dataset(dataset_path=conf.dataset_path)
-
-    try:
-        setuplog.info("Checking if receptor and ligands match suffix")
-        dataset.check_input_files(
-            receptor_suffix=conf.receptor_suffix, ligand_suffix=conf.ligand_suffix
-        )
-    except Exception as e:
-        setuplog.error(e)
-        sys.exit()
-
-    setuplog.info("Input files are OK")
-
-    # Haddock
-    setuplog.info("Initializing HADDOCK Wrapper")
-    haddock = HaddockWrapper(haddock_path=conf.haddock_path, py2=conf.py2_path)
-
-    try:
-        setuplog.info("Checking if HADDOCK is executable")
-        haddock.check_if_executable()
-    except Exception as e:
-        setuplog.error(e)
-        sys.exit()
-
-    setuplog.info("HADDOCK execution OK")
-
-    # All checks ok!
-    setuplog.info("Initialization done!")
-    return conf, dataset, haddock
-
-
-# Command line interface parser
-ap = argparse.ArgumentParser()
-
-
-ap = argparse.ArgumentParser(description="Run a Haddock Benchmark")
-ap.add_argument("config_file", help="Configuration file, toml format")
-ap.add_argument(
-    "--force",
-    dest="force",
-    action="store_true",
-    default=False,
-    help="DEV only, forcefully removeinitiated runs",
-)
-
-ap.add_argument(
-    "-v",
-    "--version",
-    help="show version",
-    action="version",
-    version=f"Running {ap.prog} v{version}",
-)
-
-
-def load_args(ap):
-    """Load argument parser args."""
-    return ap.parse_args()
-
-
-def cli(ap, main):
-    """Command-line interface entry point."""
-    cmd = load_args(ap)
-    main(**vars(cmd))
-
-
-def maincli():
-    """Execute main client."""
-    cli(ap, main)
-
-
-def main(config_file, force=False, log_level="INFO"):
     setuplog.setLevel(log_level)
     setuplog.info("###############################################")
     setuplog.info("")
@@ -131,7 +54,7 @@ def main(config_file, force=False, log_level="INFO"):
     )
     time.sleep(2)
 
-    config, dataset, haddock = init(config_file)
+    config, dataset, haddock = init(args.config_file)
 
     prepared_run_l = []
     for i, run_scenario in enumerate(config.scenarios):
@@ -142,7 +65,7 @@ def main(config_file, force=False, log_level="INFO"):
             parameters=run_scenario,
             receptor_suffix=config.receptor_suffix,
             ligand_suffix=config.ligand_suffix,
-            force=force,
+            force=args.force,
         )
         prepared_run_l.extend(ready_runs)
 
@@ -165,4 +88,4 @@ def main(config_file, force=False, log_level="INFO"):
 
 
 if __name__ == "__main__":
-    sys.exit(maincli())
+    sys.exit(main())
