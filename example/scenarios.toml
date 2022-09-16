@@ -1,6 +1,7 @@
 [general]
 dataset_path = "/Users/rvhonorato/repos/benchmark-tools/example"
-haddock_exec = "/Users/rvhonorato/software/miniconda2/bin/python /Users/rvhonorato/repos/haddock/Haddock/RunHaddock.py"
+haddock_exec = "PYTHONPATH=/Users/rvhonorato/repos/haddock /Users/rvhonorato/software/miniconda2/bin/python /Users/rvhonorato/repos/haddock/Haddock/RunHaddock.py"
+# haddock_exec = "PYTHONPATH=/Users/rvhonorato/repos/haddock3/src /Users/rvhonorato/haddock3_python_env/bin/python /Users/rvhonorato/repos/haddock3/src/haddock/clis/cli.py"
 
 receptor_suffix = '_r_u'
 ligand_suffix = '_l_u'
@@ -10,7 +11,11 @@ ligand_suffix = '_l_u'
 
 [scenario_1]
 run_name = 'true-interface'
+# rigidbody.sampling = 1000
+# rigidbody.ambig_fname = "ambig.tbl"
+# rigidbody.randremoval = false
 ambig_tbl = 'ambig.tbl'
+
 
 # [scenario_2]
 # run_name = 'center-of-mass'

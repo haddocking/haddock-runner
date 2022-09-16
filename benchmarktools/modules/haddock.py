@@ -9,6 +9,7 @@ import subprocess  # nosec
 import tempfile
 from pathlib import Path
 
+from benchmarktools.functions import get_haddock_version
 from benchmarktools.modules.errors import HaddockError
 
 log = logging.getLogger("bmlog")
@@ -25,86 +26,89 @@ def is_py3(file_path):
     return True
 
 
-class Haddock2Wrapper:
-    """Wrapper for HADDOCK."""
+# class Haddock2Wrapper:
+#     """Wrapper for HADDOCK."""
 
-    def __init__(self, haddock_cmd):
-        """Initialize HADDOCK2 Wrapper."""
-        self.haddock_exec = shlex.split(haddock_cmd)
-        self.path = Path(self.haddock_exec[-1]).parent.parent
-        # self.path = pathlib.Path(haddock_path)
-        # self.py2 = pathlib.Path(py2)
-        # try:
-        #     self.run_haddock = list(Path(self.path).glob("*/*addock.py"))[0]
-        # except KeyError:
-        #     raise HaddockError(f"{self.path} does not contain Haddock")
+#     def __init__(self, haddock_cmd):
+#         """Initialize HADDOCK2 Wrapper."""
+#         self.cmd = shlex.split(haddock_cmd)
+#         # self.path = Path(self.haddock_exec[-1]).parent.parent
+#         # self.path = pathlib.Path(haddock_path)
+#         # self.py2 = pathlib.Path(py2)
+#         # try:
+#         #     self.run_haddock = list(Path(self.path).glob("*/*addock.py"))[0]
+#         # except KeyError:
+#         #     raise HaddockError(f"{self.path} does not contain Haddock")
 
-        # if is_py3(self.run_haddock):
-        #     self.haddock_exec = shlex.split(f"{sys.executable} {self.run_haddock}")
-        # else:
-        #     self.haddock_exec = shlex.split(f"{self.py2} {self.run_haddock}")
-        self.env = os.environ.copy()
-        self.env["PYTHONPATH"] = str(self.path)
-        self.pid = None
+#         # if is_py3(self.run_haddock):
+#         #     self.haddock_exec = shlex.split(f"{sys.executable} {self.run_haddock}")
+#         # else:
+#         #     self.haddock_exec = shlex.split(f"{self.py2} {self.run_haddock}")
+#         # self.env = os.environ.copy()
+#         # self.env["PYTHONPATH"] = str(self.path)
+#         self.pid = None
 
-    def check_if_executable(self):
-        """Check if HADDOCK can be executed."""
+#     def check_if_executable(self):
+#         """Check if HADDOCK can be executed."""
 
-        out_f = tempfile.NamedTemporaryFile(delete=False, suffix=".out")
-        err_f = tempfile.NamedTemporaryFile(delete=False, suffix=".err")
+#         out_f = tempfile.NamedTemporaryFile(delete=False, suffix=".out")
+#         err_f = tempfile.NamedTemporaryFile(delete=False, suffix=".err")
 
-        p = subprocess.Popen(  # nosec
-            self.haddock_exec, env=self.env, stdout=out_f, stderr=err_f
-        )
-        p.communicate()
+#         p = subprocess.Popen(self.haddock_exec, stdout=out_f, stderr=err_f)  # nosec
+#         p.communicate()
 
-        # close the file so we can access it via the system,
-        #  we might need to show this to the user
-        out_f.close()
+#         # close the file so we can access it via the system,
+#         #  we might need to show this to the user
+#         out_f.close()
 
-        if "run.cns OR run.param" not in open(out_f.name).read():
-            raise HaddockError(out_f.name)
-        else:
-            # All good, make the temporary file disapear
-            os.unlink(out_f.name)
-            os.unlink(err_f.name)
+#         if "run.cns OR run.param" not in open(out_f.name).read():
+#             raise HaddockError(out_f.name)
+#         else:
+#             # All good, make the temporary file disapear
+#             os.unlink(out_f.name)
+#             os.unlink(err_f.name)
 
-    def setup(self, target_dir, identifier):
-        """Execute Haddock in 'setup' mode."""
+#     def setup(self, target_dir, identifier):
+#         """Execute HADDOCK in 'setup' mode."""
 
-        prev_loc = pathlib.Path.cwd()
-        os.chdir(target_dir)
+#         prev_loc = pathlib.Path.cwd()
+#         os.chdir(target_dir)
 
-        output_f = target_dir / f"haddock.out-{identifier}"
-        with open(output_f, "w") as out:
-            p = subprocess.Popen(self.haddock_exec, env=self.env, stdout=out)  # nosec
-            p.communicate()
-        out.close()
+#         output_f = target_dir / f"haddock.out-{identifier}"
+#         with open(output_f, "w") as out:
+#             p = subprocess.Popen(self.haddock_exec, stdout=out)  # nosec
+#             p.communicate()
+#         out.close()
 
-        os.chdir(prev_loc)
+#         os.chdir(prev_loc)
 
-        # check for errors
-        with open(output_f, "r") as out_fh:
-            for line in out_fh.readlines():
-                if "already exists => HADDOCK stopped" in line:
-                    raise HaddockError(line)
-                if "could not" in line:
-                    raise HaddockError(line)
-                if "does not contain an END statement" in line:
-                    raise HaddockError(line)
+#         # check for errors
+#         with open(output_f, "r") as out_fh:
+#             for line in out_fh.readlines():
+#                 if "already exists => HADDOCK stopped" in line:
+#                     raise HaddockError(line)
+#                 if "could not" in line:
+#                     raise HaddockError(line)
+#                 if "does not contain an END statement" in line:
+#                     raise HaddockError(line)
 
-        return output_f
+#         return output_f
 
 
-class HaddockJob(Haddock2Wrapper):
-    def __init__(self, haddock_cmd, job_path):
-        Haddock2Wrapper.__init__(self, haddock_cmd)
-        self.path = job_path
+class HaddockJob:
+    def __init__(
+        self, executable: str, path: str | Path, scenario_params: dict, force: bool
+    ):
+        self.cmd = executable
+        self.path = path
         self.process = None
-        self.output = Path(self.path, "haddock.out")
-        self.error = Path(self.path, "haddock.err")
+        self.force = force
+        self.params = scenario_params
+        # self.output = Path(self.path, "haddock.out")
+        # self.error = Path(self.path, "haddock.err")
         self.size = self._get_size()
-        self.name = self.path
+        # self.name = self.path
+        self.version = get_haddock_version(executable)
 
     def status(self):
         """Check the status of the process."""
@@ -125,14 +129,26 @@ class HaddockJob(Haddock2Wrapper):
         return current_status
 
     def run(self):
-        """Execute the Haddock job."""
-        os.chdir(self.path)
-        self.process = subprocess.Popen(  # nosec
-            self.haddock_exec,
-            env=self.env,
-            stdout=open(self.output, "w"),
-            stderr=open(self.error, "w"),
-        )
+        """Execute the HADDOCK job."""
+        if self.version == 2:
+            self._run_haddock2()
+        if self.version == 3:
+            self._run_haddock3()
+
+    def _run_haddock2(self):
+        """Run HADDOCK2.4/2.5."""
+        # Setup
+        # - write run.param
+
+        # Run
+        pass
+
+    def _run_haddock3(self):
+        # Setup
+        # - write run.toml
+
+        # Run
+        pass
 
     def _get_size(self):
         """Assign a size to the job."""

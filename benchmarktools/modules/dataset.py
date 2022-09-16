@@ -9,7 +9,8 @@ from pathlib import Path
 
 from benchmarktools.functions import edit_cns, glob_pdb_re, remove_cg
 from benchmarktools.modules.errors import HaddockError, SuffixError
-from benchmarktools.modules.haddock import Haddock2Wrapper
+
+# from benchmarktools.modules.haddock import Haddock2Wrapper
 
 log = logging.getLogger("bmlog")
 
@@ -54,141 +55,142 @@ class Dataset:
             elif not ligand_l:
                 raise SuffixError(target.name, ligand_suffix)
 
-    def setup(
-        self,
-        haddock: Haddock2Wrapper,
-        parameters: dict,
-        receptor_suffix: str,
-        ligand_suffix: str,
-        setup_mode: bool = False,
-        force: bool = False,
-    ):
-        """Setup the HADDOCK run."""
+    # TODO: Move to haddockjob
+    # def setup(
+    #     self,
+    #     haddock: Haddock2Wrapper,
+    #     parameters: dict,
+    #     receptor_suffix: str,
+    #     ligand_suffix: str,
+    #     setup_mode: bool = False,
+    #     force: bool = False,
+    # ):
+    #     """Setup the HADDOCK run."""
 
-        setup_paths = []
-        for target in self.dataset_path.glob("*"):
-            if os.path.isfile(target):
-                # its a file again
-                continue
+    #     setup_paths = []
+    #     for target in self.dataset_path.glob("*"):
+    #         if os.path.isfile(target):
+    #             # its a file again
+    #             continue
 
-            log.debug(f"Setting up {target}")
+    #         log.debug(f"Setting up {target}")
 
-            setup_run_name = target / f'run-{parameters["run_name"]}'
+    #         setup_run_name = target / f'run-{parameters["run_name"]}'
 
-            if setup_run_name.exists():
-                log.warning(f"Run folder already exist: {setup_run_name}")
-                if force:
-                    log.warning(f"Force removing {setup_run_name}")
-                    shutil.rmtree(setup_run_name)
-                else:
-                    log.error(
-                        "Resuming is not yet supported, please "
-                        "remove all the run directories and "
-                        "restart"
-                    )
-                    sys.exit()
+    #         if setup_run_name.exists():
+    #             log.warning(f"Run folder already exist: {setup_run_name}")
+    #             if force:
+    #                 log.warning(f"Force removing {setup_run_name}")
+    #                 shutil.rmtree(setup_run_name)
+    #             else:
+    #                 log.error(
+    #                     "Resuming is not yet supported, please "
+    #                     "remove all the run directories and "
+    #                     "restart"
+    #                 )
+    #                 sys.exit()
 
-            # Demo of this regex using receptor_suffix = r_u
-            # https://regex101.com/r/8MviAN/1
-            receptor_regex = rf"(.*{receptor_suffix}_?)(\d.pdb|.pdb)"
-            receptor_l = glob_pdb_re(target, receptor_regex)
-            receptor_l = remove_cg(receptor_l)
-            # Warning: This sorting is important!
-            receptor_l.sort()
+    #         # Demo of this regex using receptor_suffix = r_u
+    #         # https://regex101.com/r/8MviAN/1
+    #         receptor_regex = rf"(.*{receptor_suffix}_?)(\d.pdb|.pdb)"
+    #         receptor_l = glob_pdb_re(target, receptor_regex)
+    #         receptor_l = remove_cg(receptor_l)
+    #         # Warning: This sorting is important!
+    #         receptor_l.sort()
 
-            # Demo of this regex using ligand_suffix = l_u
-            # https://regex101.com/r/8n3Bg3/1
-            ligand_regex = rf"(.*{ligand_suffix}_?)(\d.pdb|.pdb)"
-            ligand_l = glob_pdb_re(target, ligand_regex)
-            ligand_l = remove_cg(ligand_l)
-            # Warning: This sorting is important!
-            ligand_l.sort()
+    #         # Demo of this regex using ligand_suffix = l_u
+    #         # https://regex101.com/r/8n3Bg3/1
+    #         ligand_regex = rf"(.*{ligand_suffix}_?)(\d.pdb|.pdb)"
+    #         ligand_l = glob_pdb_re(target, ligand_regex)
+    #         ligand_l = remove_cg(ligand_l)
+    #         # Warning: This sorting is important!
+    #         ligand_l.sort()
 
-            param_str = ""
-            if "ambig_tbl" in parameters:
-                param_str += f'AMBIG_TBL={parameters["ambig_tbl"]}' + os.linesep
+    #         param_str = ""
+    #         if "ambig_tbl" in parameters:
+    #             param_str += f'AMBIG_TBL={parameters["ambig_tbl"]}' + os.linesep
 
-            param_str += f"PDB_FILE1={receptor_l[0]}" + os.linesep
-            param_str += f"PDB_FILE2={ligand_l[0]}" + os.linesep
+    #         param_str += f"PDB_FILE1={receptor_l[0]}" + os.linesep
+    #         param_str += f"PDB_FILE2={ligand_l[0]}" + os.linesep
 
-            if len(receptor_l) > 1:
-                # This is an ensemble, generate a list
-                list_name = (
-                    receptor_l[0].name.split(receptor_suffix)[0]
-                    + receptor_suffix
-                    + ".list"
-                )
-                list_file = Path(target, list_name)
-                with open(list_file, "w") as fh:
-                    for receptor in receptor_l:
-                        # this needs to be the absolutepath
-                        fh.write(f'"{receptor}"{os.linesep}')
-                fh.close()
-                param_str += f"PDB_LIST1={list_file}" + os.linesep
+    #         if len(receptor_l) > 1:
+    #             # This is an ensemble, generate a list
+    #             list_name = (
+    #                 receptor_l[0].name.split(receptor_suffix)[0]
+    #                 + receptor_suffix
+    #                 + ".list"
+    #             )
+    #             list_file = Path(target, list_name)
+    #             with open(list_file, "w") as fh:
+    #                 for receptor in receptor_l:
+    #                     # this needs to be the absolutepath
+    #                     fh.write(f'"{receptor}"{os.linesep}')
+    #             fh.close()
+    #             param_str += f"PDB_LIST1={list_file}" + os.linesep
 
-            if len(ligand_l) > 1:
-                # This is an ensemble, generate a list
-                list_name = (
-                    ligand_l[0].name.split(ligand_suffix)[0] + ligand_suffix + ".list"
-                )
-                list_file = Path(target, list_name)
-                with open(list_file, "w") as fh:
-                    for ligand in ligand_l:
-                        # this needs to be the absolutepath
-                        fh.write(f'"{ligand}"{os.linesep}')
-                fh.close()
-                param_str += f"PDB_LIST2={list_file}" + os.linesep
+    #         if len(ligand_l) > 1:
+    #             # This is an ensemble, generate a list
+    #             list_name = (
+    #                 ligand_l[0].name.split(ligand_suffix)[0] + ligand_suffix + ".list"
+    #             )
+    #             list_file = Path(target, list_name)
+    #             with open(list_file, "w") as fh:
+    #                 for ligand in ligand_l:
+    #                     # this needs to be the absolutepath
+    #                     fh.write(f'"{ligand}"{os.linesep}')
+    #             fh.close()
+    #             param_str += f"PDB_LIST2={list_file}" + os.linesep
 
-            param_str += f"PROJECT_DIR={target}" + os.linesep
-            param_str += "N_COMP=2" + os.linesep
-            param_str += f'RUN_NUMBER=-{parameters["run_name"]}' + os.linesep
-            param_str += f"HADDOCK_DIR={haddock.path}" + os.linesep
+    #         param_str += f"PROJECT_DIR={target}" + os.linesep
+    #         param_str += "N_COMP=2" + os.linesep
+    #         param_str += f'RUN_NUMBER=-{parameters["run_name"]}' + os.linesep
+    #         param_str += f"HADDOCK_DIR={haddock.path}" + os.linesep
 
-            # TODO: Get the segID from the configuration file
-            param_str += "PROT_SEGID_1=A" + os.linesep
-            param_str += "PROT_SEGID_2=B" + os.linesep
+    #         # TODO: Get the segID from the configuration file
+    #         param_str += "PROT_SEGID_1=A" + os.linesep
+    #         param_str += "PROT_SEGID_2=B" + os.linesep
 
-            run_param_fname = target / f'run.param-{parameters["run_name"]}'
+    #         run_param_fname = target / f'run.param-{parameters["run_name"]}'
 
-            with open(run_param_fname, "w") as param_fh:
-                param_fh.write(param_str)
+    #         with open(run_param_fname, "w") as param_fh:
+    #             param_fh.write(param_str)
 
-            shutil.copy(run_param_fname, run_param_fname.parent / "run.param")
+    #         shutil.copy(run_param_fname, run_param_fname.parent / "run.param")
 
-            try:
-                lig_top = list(target.glob("ligand.top"))[0]
-            except IndexError:
-                lig_top = False
+    #         try:
+    #             lig_top = list(target.glob("ligand.top"))[0]
+    #         except IndexError:
+    #             lig_top = False
 
-            try:
-                lig_par = list(target.glob("ligand.param"))[0]
-            except IndexError:
-                lig_par = False
+    #         try:
+    #             lig_par = list(target.glob("ligand.param"))[0]
+    #         except IndexError:
+    #             lig_par = False
 
-            try:
-                haddock.setup(target_dir=target, identifier=parameters["run_name"])
-            except HaddockError as e:
-                log.error(e)
-                sys.exit()
+    #         try:
+    #             haddock.setup(target_dir=target, identifier=parameters["run_name"])
+    #         except HaddockError as e:
+    #             log.error(e)
+    #             sys.exit()
 
-            # change parameters in run.cns
-            run_cns = setup_run_name / "run.cns"
+    #         # change parameters in run.cns
+    #         run_cns = setup_run_name / "run.cns"
 
-            # save the original run.cns
-            run_cns_ori = run_cns.parent / "run.cns-ori"
-            shutil.copy(run_cns, run_cns_ori)
+    #         # save the original run.cns
+    #         run_cns_ori = run_cns.parent / "run.cns-ori"
+    #         shutil.copy(run_cns, run_cns_ori)
 
-            # copy the edited
-            edited_cns = edit_cns(run_cns, parameters)
-            shutil.copy(edited_cns, run_cns)
+    #         # copy the edited
+    #         edited_cns = edit_cns(run_cns, parameters)
+    #         shutil.copy(edited_cns, run_cns)
 
-            # copy the ligands inside the run, if any
-            if lig_top and lig_par:
-                log.debug("Ligand param/top found, adding it to run")
-                shutil.copy(lig_top, setup_run_name / "toppar/ligand.top")
-                shutil.copy(lig_par, setup_run_name / "toppar/ligand.param")
+    #         # copy the ligands inside the run, if any
+    #         if lig_top and lig_par:
+    #             log.debug("Ligand param/top found, adding it to run")
+    #             shutil.copy(lig_top, setup_run_name / "toppar/ligand.top")
+    #             shutil.copy(lig_par, setup_run_name / "toppar/ligand.param")
 
-            # Setup done, add its path to a list
-            setup_paths.append(setup_run_name)
+    #         # Setup done, add its path to a list
+    #         setup_paths.append(setup_run_name)
 
-        return setup_paths
+    #     return setup_paths
