@@ -13,7 +13,8 @@ func TestLoadInput(t *testing.T) {
 	// Create a OK input file
 	inp := Input{
 		General: GeneralStruct{
-			HaddockExecutable: "haddockX",
+			HaddockExecutable: "haddock.sh",
+			HaddockDir:        "haddock_dir",
 			ReceptorSuffix:    "r_u",
 			LigandSuffix:      "l_u",
 		},
@@ -111,22 +112,20 @@ func TestFindHaddock24RunCns(t *testing.T) {
 	// Based on the executable, return the location of run.cns
 
 	// Create an executable and place it two levels above run.cns
-	os.MkdirAll("_test/Haddock", 0755)
-	defer os.RemoveAll("_test")
+	haddockDir := "_test"
+	protocolsDir := "_test/protocols"
+	os.MkdirAll(haddockDir, 0755)
+	defer os.RemoveAll(haddockDir)
 
-	err := os.WriteFile("_test/Haddock/RunHaddock.py", []byte(""), 0755)
-	if err != nil {
-		t.Errorf("Failed to write executable: %s", err)
-	}
-
-	os.Mkdir("_test/protocols", 0755)
-	err = os.WriteFile("_test/protocols/run.cns-conf", []byte("{===>} parameter=\"value\";"), 0755)
+	os.Mkdir(protocolsDir, 0755)
+	runCnsF := "_test/protocols/run.cns-conf"
+	err := os.WriteFile(runCnsF, []byte("{===>} parameter=\"value\";"), 0755)
 	if err != nil {
 		t.Errorf("Failed to write run.cns: %s", err)
 	}
 
 	// Pass by finding the run.cns file
-	_, err = FindHaddock24RunCns("_test/Haddock/RunHaddock.py")
+	_, err = FindHaddock24RunCns(haddockDir)
 	if err != nil {
 		t.Errorf("Failed to find run.cns: %s", err)
 	}
@@ -178,6 +177,43 @@ func TestLoadHaddock24Params(t *testing.T) {
 	_, err = LoadHaddock24Params("does_not_exist")
 	if err == nil {
 		t.Errorf("Failed to detect wrong executable")
+	}
+
+}
+
+func TestValidateScenarioParams(t *testing.T) {
+
+	valid := map[string]interface{}{
+		"param1": true,
+		"param2": 1,
+		"param3": 1.5,
+		"param4": "string",
+	}
+
+	// Check if the input parameters of the scenario are valid
+	s := ScenarioStruct{
+		Name: "scenario1",
+		Parameters: map[string]interface{}{
+			"param1": false,
+		},
+	}
+
+	err := s.ValidateScenarioParams(valid)
+	if err != nil {
+		t.Errorf("Failed to validate parameters: %s", err)
+	}
+
+	// Fail by not finding the parameters
+	s = ScenarioStruct{
+		Name: "scenario1",
+		Parameters: map[string]interface{}{
+			"not-a-valid-param": false,
+		},
+	}
+
+	err = s.ValidateScenarioParams(valid)
+	if err == nil {
+		t.Errorf("Failed to detect wrong parameters")
 	}
 
 }

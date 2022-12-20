@@ -21,7 +21,8 @@ type Input struct {
 
 // GeneralStruct is the general structure
 type GeneralStruct struct {
-	HaddockExecutable string `yaml:"haddock_executable"`
+	HaddockExecutable string `yaml:"executable"`
+	HaddockDir        string `yaml:"haddock_dir"`
 	ReceptorSuffix    string `yaml:"receptor_suffix"`
 	LigandSuffix      string `yaml:"ligand_suffix"`
 }
@@ -39,11 +40,26 @@ func (inp *Input) ValidateExecutable() error {
 		return err
 	}
 
-	_, err := exec.Command("which", inp.General.HaddockExecutable).Output()
+	cmd := exec.Command(inp.General.HaddockExecutable)
+
+	err := cmd.Run()
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// ValidateScenarioParams checks if the parameters names are valid
+func (s *ScenarioStruct) ValidateScenarioParams(params map[string]interface{}) error {
+
+	for key := range s.Parameters {
+		if params[key] == nil {
+			err := errors.New("`" + key + "` not found in run.cns-conf")
+			return err
+		}
+
+	}
 	return nil
 }
 
@@ -65,11 +81,10 @@ func LoadInput(filename string) (*Input, error) {
 }
 
 // FindHaddock24RunCns finds the run.cns-conf file based on the executable location
-func FindHaddock24RunCns(exec string) (string, error) {
+func FindHaddock24RunCns(p string) (string, error) {
 
-	execPath, _ := filepath.Abs(exec)
-	rootPath := filepath.Dir(execPath)
-	runCnsLoc := filepath.Clean(filepath.Join(rootPath, "../protocols", "run.cns-conf"))
+	rootPath, _ := filepath.Abs(p)
+	runCnsLoc := filepath.Clean(filepath.Join(rootPath, "protocols", "run.cns-conf"))
 
 	if _, err := os.Stat(runCnsLoc); os.IsNotExist(err) {
 		return "", err
@@ -98,6 +113,10 @@ func LoadHaddock24Params(filename string) (map[string]interface{}, error) {
 	boolRegex := regexp.MustCompile(`^\{===>\}\s(?P<key>\w+)=(?P<value>true|false);`)
 
 	m := make(map[string]interface{})
+
+	m["ambig"] = ""
+	m["unambig"] = ""
+
 	for scanner.Scan() {
 		var res [][]string
 

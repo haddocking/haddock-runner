@@ -1,6 +1,7 @@
 general:
   # - number_of_processors: 4
-  haddock_executable: haddock2.4
+  executable: /Users/rodrigo/repos/benchmark-tools/haddock24.sh
+  haddock_dir: /Users/rodrigo/repos/haddock24
   receptor_suffix: r_u
   ligand_suffix: l_u
 
@@ -10,7 +11,9 @@ scenarios:
   - name: true-interface
     parameters:
       noecv: false
-      ambig_tbl: ./ambig.tbl
+      ambig: ./ambig.tbl
+      unambig: ./unambig.tbl
+      invalid: false
 
   - name: center-of-mass
     parameters:
