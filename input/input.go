@@ -1,4 +1,4 @@
-// Input file handling
+// Package input handles input parameters
 package input
 
 import (
