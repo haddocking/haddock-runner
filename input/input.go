@@ -1,3 +1,4 @@
+// Input file handling
 package input
 
 import (
@@ -12,24 +13,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Input is the input structure
 type Input struct {
 	General   GeneralStruct    `yaml:"general"`
 	Scenarios []ScenarioStruct `yaml:"scenarios"`
 }
 
+// GeneralStruct is the general structure
 type GeneralStruct struct {
 	HaddockExecutable string `yaml:"haddock_executable"`
 	ReceptorSuffix    string `yaml:"receptor_suffix"`
 	LigandSuffix      string `yaml:"ligand_suffix"`
 }
 
+// ScenarioStruct is the scenario structure
 type ScenarioStruct struct {
 	Name       string                 `yaml:"name"`
 	Parameters map[string]interface{} `yaml:"parameters"`
-}
-
-type ParameterStruct struct {
-	Name string `yaml:"name"`
 }
 
 // ValidateExecutable checks if the executable is defined in PATH
