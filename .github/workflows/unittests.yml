@@ -1,5 +1,8 @@
 name: unittests
 
+env:
+  CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
 on: [push, pull_request]
 
 jobs:
@@ -19,4 +22,7 @@ jobs:
         run: go mod download
 
       - name: Run tests
-        run: go test -v ./...
+        run: go test -v ./... -coverprofile=coverage.out
+
+      - name: Run codacy-coverage-reporter
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --force-coverage-parser go -r coverage.out
