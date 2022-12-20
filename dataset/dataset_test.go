@@ -26,14 +26,25 @@ func TestLoadDataset(t *testing.T) {
 			"some/path/structure1_r_u.pdb\n"+
 				"some/path/structure1_l_u.pdb\n"+
 				"some/path/structure2_l_u.pdb\n"+
-				"some/path/structure2_r_u.pdb\n"), 0644)
+				"some/path/structure2_r_u.pdb\n"+
+				"some/path/structure3_r_u_0.pdb\n"+
+				"some/path/structure3_r_u_1.pdb\n"+
+				"some/path/structure3_l_u.pdb\n"), 0644)
 	defer os.Remove("pdb.list")
 
 	// Pass by loading a valid dataset
 
-	_, errData := LoadDataset("pdb.list", "_r_u", "_l_u")
+	tArr, errData := LoadDataset("pdb.list", "_r_u", "_l_u")
 	if errData != nil {
 		t.Errorf("Failed to load dataset: %s", err)
+	}
+
+	if len(tArr) != 3 {
+		t.Errorf("Failed to load dataset: %d", len(tArr))
+	}
+
+	if len(tArr[2].Receptor) != 2 {
+		t.Errorf("Failed to load dataset")
 	}
 
 	// Fail by loading a dataset with a wrong file
@@ -86,8 +97,8 @@ func TestValidateTarget(t *testing.T) {
 	// Pass by finding both a receptor and ligand in a Target
 	target := Target{
 		ID:       "1",
-		Receptor: "receptor.pdb",
-		Ligand:   "ligand.pdb",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -98,8 +109,8 @@ func TestValidateTarget(t *testing.T) {
 	// Fail by not finding a receptor in a Target
 	target = Target{
 		ID:       "1",
-		Receptor: "does_not_exist.pdb",
-		Ligand:   "ligand.pdb",
+		Receptor: []string{"does_not_exist.pdb"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -110,8 +121,8 @@ func TestValidateTarget(t *testing.T) {
 	// Fail by not finding a ligand in a Target
 	target = Target{
 		ID:       "1",
-		Receptor: "receptor.pdb",
-		Ligand:   "does_not_exist.pdb",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"does_not_exist.pdb"},
 	}
 
 	err = target.Validate()
@@ -122,8 +133,8 @@ func TestValidateTarget(t *testing.T) {
 	// Fail when the ligand is not a PDB file
 	target = Target{
 		ID:       "1",
-		Receptor: "receptor.pdb",
-		Ligand:   "ligand.pqr",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"ligand.pqr"},
 	}
 	err = target.Validate()
 	if err == nil {
@@ -133,8 +144,8 @@ func TestValidateTarget(t *testing.T) {
 	// Fail when the receptor is not a PDB file
 	target = Target{
 		ID:       "1",
-		Receptor: "receptor.pqr",
-		Ligand:   "ligand.pdb",
+		Receptor: []string{"receptor.pqr"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -145,8 +156,8 @@ func TestValidateTarget(t *testing.T) {
 	// Fail when the receptor field is empty
 	target = Target{
 		ID:       "1",
-		Receptor: "",
-		Ligand:   "ligand.pdb",
+		Receptor: []string{""},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -157,8 +168,8 @@ func TestValidateTarget(t *testing.T) {
 	// Fail when the ligand field is empty
 	target = Target{
 		ID:       "1",
-		Receptor: "receptor.pdb",
-		Ligand:   "",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{""},
 	}
 
 	err = target.Validate()
@@ -169,8 +180,8 @@ func TestValidateTarget(t *testing.T) {
 	// Fail when the ID field is empty
 	target = Target{
 		ID:       "",
-		Receptor: "receptor.pdb",
-		Ligand:   "ligand.pdb",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()

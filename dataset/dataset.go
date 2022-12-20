@@ -17,8 +17,8 @@ type Benchmark struct {
 // Target is the target structure
 type Target struct {
 	ID       string
-	Receptor string
-	Ligand   string
+	Receptor []string
+	Ligand   []string
 }
 
 // Validate validates the Target checking if
@@ -31,28 +31,28 @@ func (t *Target) Validate() error {
 		return errors.New("Target ID not defined")
 	}
 
-	if t.Receptor == "" {
-		return errors.New("Target receptor not defined")
+	for _, r := range t.Receptor {
+		if r == "" {
+			return errors.New("Target receptor not defined")
+		}
+		if _, err := os.Stat(r); err != nil {
+			return errors.New("Target receptor file not found" + r)
+		}
+		if filepath.Ext(r) != ".pdb" {
+			return errors.New("Target receptor file not a PDB file" + r)
+		}
 	}
 
-	if t.Ligand == "" {
-		return errors.New("Target ligand not defined")
-	}
-
-	if _, err := os.Stat(t.Receptor); err != nil {
-		return errors.New("Target receptor file not found")
-	}
-
-	if _, err := os.Stat(t.Ligand); err != nil {
-		return errors.New("Target ligand file not found")
-	}
-
-	if filepath.Ext(t.Receptor) != ".pdb" {
-		return errors.New("Target receptor file not a PDB file")
-	}
-
-	if filepath.Ext(t.Ligand) != ".pdb" {
-		return errors.New("Target ligand file not a PDB file")
+	for _, l := range t.Ligand {
+		if l == "" {
+			return errors.New("Target ligand not defined")
+		}
+		if _, err := os.Stat(l); err != nil {
+			return errors.New("Target ligand file not found" + l)
+		}
+		if filepath.Ext(l) != ".pdb" {
+			return errors.New("Target ligand file not a PDB file" + l)
+		}
 	}
 
 	return nil
@@ -60,7 +60,7 @@ func (t *Target) Validate() error {
 }
 
 // LoadDataset loads a dataset from a list file
-func LoadDataset(l string, rsuf string, lsuf string) (*Benchmark, error) {
+func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 
 	listFile, err := os.Open(l)
 	if err != nil {
@@ -108,26 +108,26 @@ func LoadDataset(l string, rsuf string, lsuf string) (*Benchmark, error) {
 			// create new target
 			m[root] = Target{
 				ID:       root,
-				Receptor: receptor,
-				Ligand:   ligand,
+				Receptor: []string{receptor},
+				Ligand:   []string{ligand},
 			}
 		} else {
 			// update existing target
 			if receptor != "" {
-				entry.Receptor = receptor
+				entry.Receptor = append(entry.Receptor, receptor)
 			}
 			if ligand != "" {
-				entry.Ligand = ligand
+				entry.Ligand = append(entry.Ligand, ligand)
 			}
 			m[root] = entry
 		}
 	}
 
-	b := &Benchmark{}
+	arr := []Target{}
 	for _, v := range m {
-		b.Targets = append(b.Targets, v)
+		arr = append(arr, v)
 	}
 
-	return b, nil
+	return arr, nil
 
 }
