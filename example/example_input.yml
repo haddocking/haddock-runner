@@ -1,0 +1,62 @@
+general:
+  # - number_of_processors: 4
+  haddock_executable: haddock2.4
+  receptor_suffix: r_u
+  ligand_suffix: l_u
+
+scenarios:
+  #-----------------------------------------------
+  # Haddock2.4
+  - name: true-interface
+    parameters:
+      noecv: false
+      ambig_tbl: ./ambig.tbl
+
+  - name: center-of-mass
+    parameters:
+      cmrest: true
+
+  #-----------------------------------------------
+
+  #-----------------------------------------------
+  # Haddock3.0
+  # true-interface:
+  #   general:
+  #     mode: local
+  #   topoaa:
+  #     autohis: true
+  #     mol1:
+  #       nhisd: 0
+  #       nhise: 1
+  #       hise_1: 75
+  #     mol2:
+  #       nhisd: 1
+  #       hisd_1: 76
+  #       nhise: 1
+  #       hise_1: 15
+
+  #   rigidbody:
+  #     tolerance: 20
+  #     ambig_fname: ./ambig.tbl
+  #     sampling: 20
+
+  # center-of-mass:
+  #   general:
+  #     mode: local
+  #   topoaa:
+  #     autohis: true
+  #     mol1:
+  #       nhisd: 0
+  #       nhise: 1
+  #       hise_1: 75
+  #     mol2:
+  #       nhisd: 1
+  #       hisd_1: 76
+  #       nhise: 1
+  #       hise_1: 15
+
+  #   rigidbody:
+  #     noecv: true
+  #     sampling: 20
+  #-----------------------------------------------
+
