@@ -105,3 +105,79 @@ func TestValidateExecutable(t *testing.T) {
 	}
 
 }
+
+func TestFindHaddock24RunCns(t *testing.T) {
+
+	// Based on the executable, return the location of run.cns
+
+	// Create an executable and place it two levels above run.cns
+	os.MkdirAll("_test/Haddock", 0755)
+	defer os.RemoveAll("_test")
+
+	err := os.WriteFile("_test/Haddock/RunHaddock.py", []byte(""), 0755)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
+
+	os.Mkdir("_test/protocols", 0755)
+	err = os.WriteFile("_test/protocols/run.cns-conf", []byte("{===>} parameter=\"value\";"), 0755)
+	if err != nil {
+		t.Errorf("Failed to write run.cns: %s", err)
+	}
+
+	// Pass by finding the run.cns file
+	_, err = FindHaddock24RunCns("_test/Haddock/RunHaddock.py")
+	if err != nil {
+		t.Errorf("Failed to find run.cns: %s", err)
+	}
+
+	// Fail by not finding the run.cns file
+	_, err = FindHaddock24RunCns("does_not_exist")
+	if err == nil {
+		t.Errorf("Failed to detect wrong executable")
+	}
+
+}
+
+func TestLoadHaddock24Params(t *testing.T) {
+	// Parse the run.cns file and return the parameters as ParameterStruct
+	params := []byte(
+		"{===>} parameter1=\"value\";\n" +
+			"{===>} parameter2=1;\n" +
+			"{===>} parameter3=1.0;\n" +
+			"{===>} parameter4=true;\n")
+	err := os.WriteFile("_test_run.cns-conf", params, 0755)
+	if err != nil {
+		t.Errorf("Failed to write run.cns: %s", err)
+	}
+	defer os.Remove("_test_run.cns-conf")
+
+	// Pass by finding the parameters
+	p, err := LoadHaddock24Params("_test_run.cns-conf")
+	if err != nil {
+		t.Errorf("Failed to load parameters: %s", err)
+	}
+
+	if p["parameter1"] != "value" {
+		t.Errorf("Failed to parse parameter1")
+	}
+
+	if p["parameter2"] != 1 {
+		t.Errorf("Failed to parse parameter2")
+	}
+
+	if p["parameter3"] != 1.0 {
+		t.Errorf("Failed to parse parameter3")
+	}
+
+	if p["parameter4"] != true {
+		t.Errorf("Failed to parse parameter4")
+	}
+
+	// Fail by not finding the parameters
+	_, err = LoadHaddock24Params("does_not_exist")
+	if err == nil {
+		t.Errorf("Failed to detect wrong executable")
+	}
+
+}
