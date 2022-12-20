@@ -25,6 +25,7 @@ type GeneralStruct struct {
 	HaddockDir        string `yaml:"haddock_dir"`
 	ReceptorSuffix    string `yaml:"receptor_suffix"`
 	LigandSuffix      string `yaml:"ligand_suffix"`
+	InputPDBList      string `yaml:"input_pdb_list"`
 }
 
 // ScenarioStruct is the scenario structure

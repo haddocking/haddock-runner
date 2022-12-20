@@ -4,6 +4,7 @@ general:
   haddock_dir: /Users/rodrigo/repos/haddock24
   receptor_suffix: r_u
   ligand_suffix: l_u
+  input_pdb_list: /Users/rodrigo/repos/benchmark-tools/example/pdb.list
 
 scenarios:
   #-----------------------------------------------
@@ -13,7 +14,6 @@ scenarios:
       noecv: false
       ambig: ./ambig.tbl
       unambig: ./unambig.tbl
-      invalid: false
 
   - name: center-of-mass
     parameters:

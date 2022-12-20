@@ -71,14 +71,10 @@ func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 
 	s.Split(bufio.ScanLines)
 
-	// (.*)(?:_r_u|_l_u)
 	rootRegex := regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
 	recRegex := regexp.MustCompile(`(.*)` + rsuf)
 	ligRegex := regexp.MustCompile(`(.*)` + lsuf)
 
-	// m := make(map[string]map[string]string)
-	// data := make(map[string]Dataset)
-	// benchmark := &Benchmark{}
 	m := make(map[string]Target)
 	for s.Scan() {
 
