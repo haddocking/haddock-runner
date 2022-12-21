@@ -50,12 +50,35 @@ func main() {
 	}
 
 	// Load the dataset
-	dataset, errDataset := dataset.LoadDataset(inp.General.InputPDBList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
+	data, errDataset := dataset.LoadDataset(inp.General.InputPDBList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
 	if errDataset != nil {
 		fmt.Println("Failed to load dataset: " + errDataset.Error())
 		return
 	}
+	fmt.Println(data)
 
-	fmt.Println(dataset)
+	// Organize the dataset
+	orgData, errOrganize := dataset.OrganizeDataset(inp.General.WorkDir, data)
+	if errOrganize != nil {
+		fmt.Println("Failed to organize dataset: " + errOrganize.Error())
+		return
+	}
+
+	// Setup the scenarios
+	for _, target := range orgData {
+		// for _, scenario := range inp.Scenarios {
+		errSetup := target.SetupScenarios(inp)
+		if errSetup != nil {
+			fmt.Println("Failed to setup scenario: " + errSetup.Error())
+			return
+		}
+		// }
+	}
+
+	// Dev Only -
+	// defer os.RemoveAll(bmPath)
+	// End Dev Only
+
+	fmt.Println(orgData)
 
 }
