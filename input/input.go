@@ -26,6 +26,7 @@ type GeneralStruct struct {
 	ReceptorSuffix    string `yaml:"receptor_suffix"`
 	LigandSuffix      string `yaml:"ligand_suffix"`
 	InputPDBList      string `yaml:"input_pdb_list"`
+	WorkDir           string `yaml:"work_dir"`
 }
 
 // ScenarioStruct is the scenario structure

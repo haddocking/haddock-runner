@@ -1,10 +1,11 @@
 general:
   # - number_of_processors: 4
-  executable: /Users/rodrigo/repos/benchmark-tools/haddock24.sh
-  haddock_dir: /Users/rodrigo/repos/haddock24
-  receptor_suffix: r_u
-  ligand_suffix: l_u
-  input_pdb_list: /Users/rodrigo/repos/benchmark-tools/example/pdb.list
+  executable: /Users/rvhonorato/repos/benchmark-tools/haddock24.sh
+  haddock_dir: /Users/rvhonorato/repos/haddock
+  receptor_suffix: _r_u
+  ligand_suffix: _l_u
+  input_pdb_list: /Users/rvhonorato/repos/benchmark-tools/example/pdb.list
+  work_dir: /Users/rvhonorato/repos/benchmark-tools/dev/bm-goes-here
 
 scenarios:
   #-----------------------------------------------
