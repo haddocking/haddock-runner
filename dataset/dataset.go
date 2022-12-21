@@ -2,23 +2,27 @@
 package dataset
 
 import (
+	"benchmarktools/input"
+	"benchmarktools/utils"
+
+	// "benchmarktools/wrapper/haddock2"
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 )
 
-// Benchmark is the benchmark structure
-type Benchmark struct {
-	Targets []Target
-}
-
 // Target is the target structure
 type Target struct {
-	ID       string
-	Receptor []string
-	Ligand   []string
+	ID         string
+	Receptor   []string
+	Ligand     []string
+	Ambig      string
+	Unambig    string
+	HaddockDir string
+	ProjectDir string
 }
 
 // Validate validates the Target checking if
@@ -29,6 +33,14 @@ func (t *Target) Validate() error {
 
 	if t.ID == "" {
 		return errors.New("Target ID not defined")
+	}
+
+	if t.HaddockDir == "" {
+		return errors.New("Target Haddock directory not defined")
+	}
+
+	if t.ProjectDir == "" {
+		return errors.New("Target Project directory not defined")
 	}
 
 	for _, r := range t.Receptor {
@@ -59,6 +71,85 @@ func (t *Target) Validate() error {
 
 }
 
+func (t *Target) SetupScenarios(inp *input.Input) error {
+
+	for _, s := range inp.Scenarios {
+		fmt.Println("Setting up scenario " + s.Name)
+
+		scenarioPath := filepath.Join(inp.General.WorkDir, t.ID, s.Name)
+		_ = os.MkdirAll(scenarioPath, 0755)
+
+		t.ProjectDir = scenarioPath
+		t.HaddockDir = inp.General.HaddockDir
+
+		// Generate the run.params file
+		_, err := t.WriteRunParam()
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *Target) WriteRunParam() (string, error) {
+
+	var runParamString string
+
+	if t.HaddockDir == "" {
+		err := errors.New("haddock directory not defined")
+		return "", err
+	}
+
+	if t.ProjectDir == "" {
+		err := errors.New("project directory not defined")
+		return "", err
+	}
+
+	if len(t.Receptor) == 0 {
+		err := errors.New("receptor not defined")
+		return "", err
+	}
+
+	if len(t.Ligand) == 0 {
+		err := errors.New("ligand not defined")
+		return "", err
+	}
+
+	if t.Ambig != "" {
+		runParamString += "AMBIG_TBL=" + t.Ambig + "\n"
+	}
+
+	if t.Unambig != "" {
+		runParamString += "UNAMBIG_TBL=" + t.Unambig + "\n"
+	}
+
+	runParamString += "N_COMP=2\n"
+	runParamString += "PROJECT_DIR=" + t.ProjectDir + "\n"
+	runParamString += "HADDOCK_DIR=" + t.HaddockDir + "\n"
+
+	// Write receptor files
+	runParamString += "PDB_FILE1=" + t.Receptor[0] + "\n"
+	if len(t.Receptor) > 1 {
+		runParamString += "PDB_LIST1=receptor.list\n"
+	}
+
+	// Write ligand files
+	runParamString += "PDB_FILE2=" + t.Ligand[0] + "\n"
+	if len(t.Ligand) > 1 {
+		runParamString += "PDB_LIST2=ligand.list\n"
+	}
+
+	runParamF := filepath.Join(t.ProjectDir, "/run.param")
+	err := os.WriteFile(runParamF, []byte(runParamString), 0644)
+	if err != nil {
+		return "", err
+	}
+
+	return runParamF, nil
+
+}
+
 // LoadDataset loads a dataset from a list file
 func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 
@@ -79,10 +170,10 @@ func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 	for s.Scan() {
 
 		var receptor, ligand, root string
-
-		line := filepath.Base(s.Text())
+		fullPath := s.Text()
+		basePath := filepath.Base(fullPath)
 		// Find root and receptor/ligand names
-		match := rootRegex.FindStringSubmatch(line)
+		match := rootRegex.FindStringSubmatch(basePath)
 		if len(match) == 0 {
 			err := errors.New("root name not found with suffixes " + rsuf + " and " + lsuf)
 			return nil, err
@@ -90,22 +181,31 @@ func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 			root = match[1]
 		}
 
-		RecMatch := recRegex.FindStringSubmatch(line)
+		RecMatch := recRegex.FindStringSubmatch(basePath)
 		if len(RecMatch) != 0 {
-			receptor = line
+			receptor = fullPath
 		}
 
-		LigMatch := ligRegex.FindStringSubmatch(line)
+		LigMatch := ligRegex.FindStringSubmatch(basePath)
 		if len(LigMatch) != 0 {
-			ligand = line
+			ligand = fullPath
 		}
 
 		if entry, ok := m[root]; !ok {
 			// create new target
-			m[root] = Target{
-				ID:       root,
-				Receptor: []string{receptor},
-				Ligand:   []string{ligand},
+
+			if receptor != "" {
+				m[root] = Target{
+					ID:       root,
+					Receptor: []string{receptor},
+					Ligand:   []string{},
+				}
+			} else if ligand != "" {
+				m[root] = Target{
+					ID:       root,
+					Receptor: []string{},
+					Ligand:   []string{ligand},
+				}
 			}
 		} else {
 			// update existing target
@@ -125,5 +225,76 @@ func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 	}
 
 	return arr, nil
+
+}
+
+func CreateDatasetDir(p string) error {
+
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		os.Mkdir(p, 0755)
+	} else {
+		return errors.New("Dataset folder already exists: " + p)
+	}
+
+	return nil
+
+}
+
+func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
+
+	var tArr []Target
+
+	for _, t := range bm {
+		_ = os.MkdirAll(filepath.Join(bmPath, t.ID, "data"), 0755)
+
+		newT := Target{
+			ID: t.ID,
+		}
+
+		for _, r := range t.Receptor {
+			rdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(r))
+			err := utils.CopyFile(r, rdest)
+			if err != nil {
+				os.RemoveAll(bmPath)
+				return nil, err
+			}
+			newT.Receptor = append(newT.Receptor, rdest)
+
+		}
+		for _, l := range t.Ligand {
+			ldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(l))
+			err := utils.CopyFile(l, ldest)
+			if err != nil {
+				os.RemoveAll(bmPath)
+				return nil, err
+			}
+			newT.Ligand = append(newT.Ligand, ldest)
+		}
+
+		if t.Ambig != "" {
+			adest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.Ambig))
+			err := utils.CopyFile(t.Ambig, adest)
+			if err != nil {
+				os.RemoveAll(bmPath)
+				return nil, err
+			}
+			newT.Ambig = adest
+		}
+
+		if t.Unambig != "" {
+			udest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.Unambig))
+			err := utils.CopyFile(t.Unambig, udest)
+			if err != nil {
+				os.RemoveAll(bmPath)
+				return nil, err
+			}
+			newT.Unambig = udest
+		}
+
+		tArr = append(tArr, newT)
+
+	}
+
+	return tArr, nil
 
 }
