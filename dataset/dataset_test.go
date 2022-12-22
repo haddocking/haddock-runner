@@ -141,11 +141,11 @@ func TestLoadDataset(t *testing.T) {
 		}
 		defer os.Remove(file)
 	}
+	projectDir := "some/path"
 
+	defer os.RemoveAll("some")
 	defer os.Remove("structure3_receptor.list")
 	defer os.Remove("structure4_ligand.list")
-
-	projectDir := "some/path"
 
 	// Write a valid list
 	err = os.WriteFile("pdb.list",
