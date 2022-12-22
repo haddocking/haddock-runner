@@ -16,13 +16,15 @@ import (
 
 // Target is the target structure
 type Target struct {
-	ID         string
-	Receptor   []string
-	Ligand     []string
-	Ambig      string
-	Unambig    string
-	HaddockDir string
-	ProjectDir string
+	ID           string
+	Receptor     []string
+	ReceptorList string
+	Ligand       []string
+	LigandList   string
+	Ambig        string
+	Unambig      string
+	HaddockDir   string
+	ProjectDir   string
 }
 
 // Validate validates the Target checking if
@@ -130,14 +132,18 @@ func (t *Target) WriteRunParam() (string, error) {
 
 	// Write receptor files
 	runParamString += "PDB_FILE1=" + t.Receptor[0] + "\n"
-	if len(t.Receptor) > 1 {
-		runParamString += "PDB_LIST1=receptor.list\n"
+
+	// Write receptor list file
+	if t.ReceptorList != "" {
+		runParamString += "PDB_LIST1=" + t.ReceptorList + "\n"
 	}
 
 	// Write ligand files
 	runParamString += "PDB_FILE2=" + t.Ligand[0] + "\n"
-	if len(t.Ligand) > 1 {
-		runParamString += "PDB_LIST2=ligand.list\n"
+
+	// write ligand list files
+	if t.LigandList != "" {
+		runParamString += "PDB_LIST2=" + t.LigandList + "\n"
 	}
 
 	runParamF := filepath.Join(t.ProjectDir, "/run.param")
@@ -219,6 +225,28 @@ func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 		}
 	}
 
+	for k, v := range m {
+		if len(v.Receptor) > 1 {
+			l := ""
+			for _, r := range v.Receptor {
+				l += "\"" + r + "\"" + "\n"
+			}
+			receptListFile := filepath.Join(v.ProjectDir, v.ID+"_receptor.list")
+			_ = os.WriteFile(receptListFile, []byte(l), 0644)
+			v.ReceptorList = receptListFile
+		}
+		if len(v.Ligand) > 1 {
+			l := ""
+			for _, r := range v.Ligand {
+				l += "\"" + r + "\"" + "\n"
+			}
+			ligandListFile := filepath.Join(v.ProjectDir, v.ID+"_ligand.list")
+			_ = os.WriteFile(ligandListFile, []byte(l), 0644)
+			v.LigandList = ligandListFile
+		}
+		m[k] = v
+	}
+
 	arr := []Target{}
 	for _, v := range m {
 		arr = append(arr, v)
@@ -289,6 +317,28 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 				return nil, err
 			}
 			newT.Unambig = udest
+		}
+
+		if t.ReceptorList != "" {
+			rldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.ReceptorList))
+			err := utils.CopyFile(t.ReceptorList, rldest)
+			if err != nil {
+				os.RemoveAll(bmPath)
+				return nil, err
+			}
+			os.Remove(t.ReceptorList)
+			newT.ReceptorList = rldest
+		}
+
+		if t.LigandList != "" {
+			lldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.LigandList))
+			err := utils.CopyFile(t.LigandList, lldest)
+			if err != nil {
+				os.RemoveAll(bmPath)
+				return nil, err
+			}
+			os.Remove(t.LigandList)
+			newT.LigandList = lldest
 		}
 
 		tArr = append(tArr, newT)
