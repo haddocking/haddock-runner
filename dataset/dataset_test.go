@@ -2,7 +2,6 @@ package dataset
 
 import (
 	"benchmarktools/input"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,8 +13,10 @@ func TestWriteRunParam(t *testing.T) {
 	defer os.RemoveAll("1abc")
 
 	cwd, _ := os.Getwd()
-
-	pDir := filepath.Join(cwd, "1abc")
+	projectDir := filepath.Join(cwd, "1abc")
+	_ = os.MkdirAll(projectDir, 0755)
+	defer os.RemoveAll(projectDir)
+	haddockDir := "/home/haddock2.4"
 
 	// Pass by writing a valid run parameter file
 	target := Target{
@@ -26,11 +27,9 @@ func TestWriteRunParam(t *testing.T) {
 		LigandList:   "some/path/ligand.list",
 		Ambig:        "ambig.tbl",
 		Unambig:      "unambig.tbl",
-		HaddockDir:   "/home/haddock2.4",
-		ProjectDir:   pDir,
 	}
 
-	_, err := target.WriteRunParam()
+	_, err := target.WriteRunParam(projectDir, haddockDir)
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,87 +37,91 @@ func TestWriteRunParam(t *testing.T) {
 	// Fail by writing a run parameter file with an empty target
 	target = Target{}
 
-	_, err = target.WriteRunParam()
+	_, err = target.WriteRunParam(projectDir, haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
 	// Fail by writing a run parameter file with an empty receptor
 	target = Target{
-		ID:         "1abc",
-		Receptor:   []string{},
-		Ligand:     []string{"1abc.pdb"},
-		Ambig:      "ambig.tbl",
-		Unambig:    "unambig.tbl",
-		HaddockDir: "/home/haddock2.4",
-		ProjectDir: pDir,
+		ID:       "1abc",
+		Receptor: []string{},
+		Ligand:   []string{"1abc.pdb"},
+		Ambig:    "ambig.tbl",
+		Unambig:  "unambig.tbl",
 	}
 
-	_, err = target.WriteRunParam()
+	_, err = target.WriteRunParam(projectDir, haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
 	// Fail by writing a run parameter file with an empty ligand
 	target = Target{
-		ID:         "1abc",
-		Receptor:   []string{"1abcA.pdb", "1abcB.pdb"},
-		Ligand:     []string{},
-		Ambig:      "ambig.tbl",
-		Unambig:    "unambig.tbl",
-		HaddockDir: "/home/haddock2.4",
-		ProjectDir: pDir,
+		ID:       "1abc",
+		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
+		Ligand:   []string{},
+		Ambig:    "ambig.tbl",
+		Unambig:  "unambig.tbl",
 	}
 
-	_, err = target.WriteRunParam()
+	_, err = target.WriteRunParam(projectDir, haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
 	// Fail by writing a run parameter file with an empty haddock directory
 	target = Target{
-		ID:         "1abc",
-		Receptor:   []string{"1abcA.pdb", "1abcB.pdb"},
-		Ligand:     []string{"1abc.pdb"},
-		Ambig:      "ambig.tbl",
-		Unambig:    "unambig.tbl",
-		HaddockDir: "",
-		ProjectDir: pDir,
+		ID:       "1abc",
+		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
+		Ligand:   []string{"1abc.pdb"},
+		Ambig:    "ambig.tbl",
+		Unambig:  "unambig.tbl",
 	}
 
-	_, err = target.WriteRunParam()
+	_, err = target.WriteRunParam(projectDir, "")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
 	// Fail by writing a run parameter file with an empty project directory
 	target = Target{
-		ID:         "1abc",
-		Receptor:   []string{"1abcA.pdb", "1abcB.pdb"},
-		Ligand:     []string{"1abc.pdb"},
-		Ambig:      "ambig.tbl",
-		Unambig:    "unambig.tbl",
-		HaddockDir: "/home/haddock2.4",
-		ProjectDir: "",
+		ID:       "1abc",
+		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
+		Ligand:   []string{"1abc.pdb"},
+		Ambig:    "ambig.tbl",
+		Unambig:  "unambig.tbl",
 	}
 
-	_, err = target.WriteRunParam()
+	_, err = target.WriteRunParam("", haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
 	// Fail by not being able to write to the runparam file
 	target = Target{
-		ID:         "1abc",
-		Receptor:   []string{"1abcA.pdb", "1abcB.pdb"},
-		Ligand:     []string{"1abc.pdb"},
-		Ambig:      "ambig.tbl",
-		Unambig:    "unambig.tbl",
-		HaddockDir: "/home/haddock2.4",
-		ProjectDir: "/home/haddock2.4/projects/1abc",
+		ID:       "1abc",
+		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
+		Ligand:   []string{"1abc.pdb"},
+		Ambig:    "ambig.tbl",
+		Unambig:  "unambig.tbl",
 	}
 
-	_, err = target.WriteRunParam()
+	_, err = target.WriteRunParam("", haddockDir)
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	// Fail by not being able to write to the run.param because the project directory does not exist
+	target = Target{
+		ID:       "1abc",
+		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
+		Ligand:   []string{"1abc.pdb"},
+		Ambig:    "ambig.tbl",
+		Unambig:  "unambig.tbl",
+	}
+
+	_, err = target.WriteRunParam("some/path/that/does/not/exist", haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -142,6 +145,8 @@ func TestLoadDataset(t *testing.T) {
 	defer os.Remove("structure3_receptor.list")
 	defer os.Remove("structure4_ligand.list")
 
+	projectDir := "some/path"
+
 	// Write a valid list
 	err = os.WriteFile("pdb.list",
 		[]byte(
@@ -160,7 +165,7 @@ func TestLoadDataset(t *testing.T) {
 
 	// Pass by loading a valid dataset
 
-	tArr, errData := LoadDataset("pdb.list", "_r_u", "_l_u")
+	tArr, errData := LoadDataset(projectDir, "pdb.list", "_r_u", "_l_u")
 	if errData != nil {
 		t.Errorf("Failed to load dataset: %s", err.Error())
 	}
@@ -189,7 +194,7 @@ func TestLoadDataset(t *testing.T) {
 	}
 
 	// Fail by loading a dataset with a wrong file
-	_, errData = LoadDataset("wrong_file.pdb", "_r_u", "_l_u")
+	_, errData = LoadDataset(projectDir, "wrong_file.pdb", "_r_u", "_l_u")
 	if errData == nil {
 		t.Errorf("Failed to detect wrong dataset file")
 	}
@@ -202,7 +207,7 @@ func TestLoadDataset(t *testing.T) {
 		t.Errorf("Failed to write dataset file: %s", err)
 	}
 	defer os.Remove("pdb2.list")
-	_, errData = LoadDataset("pdb2.list", "_r_u", "_l_u")
+	_, errData = LoadDataset(projectDir, "pdb2.list", "_r_u", "_l_u")
 	if errData == nil {
 		t.Errorf("Failed to detect wrong dataset file")
 	}
@@ -237,11 +242,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Pass by finding both a receptor and ligand in a Target
 	target := Target{
-		ID:         "1",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"ligand.pdb"},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "1",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -251,11 +254,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Fail by not finding a receptor in a Target
 	target = Target{
-		ID:         "1",
-		Receptor:   []string{"does_not_exist.pdb"},
-		Ligand:     []string{"ligand.pdb"},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "1",
+		Receptor: []string{"does_not_exist.pdb"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -265,11 +266,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Fail by not finding a ligand in a Target
 	target = Target{
-		ID:         "1",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"does_not_exist.pdb"},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "1",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"does_not_exist.pdb"},
 	}
 
 	err = target.Validate()
@@ -279,11 +278,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Fail when the ligand is not a PDB file
 	target = Target{
-		ID:         "1",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"ligand.pqr"},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "1",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"ligand.pqr"},
 	}
 	err = target.Validate()
 	if err == nil {
@@ -292,11 +289,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Fail when the receptor is not a PDB file
 	target = Target{
-		ID:         "1",
-		Receptor:   []string{"receptor.pqr"},
-		Ligand:     []string{"ligand.pdb"},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "1",
+		Receptor: []string{"receptor.pqr"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -306,11 +301,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Fail when the receptor field is empty
 	target = Target{
-		ID:         "1",
-		Receptor:   []string{""},
-		Ligand:     []string{"ligand.pdb"},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "1",
+		Receptor: []string{""},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -320,11 +313,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Fail when the ligand field is empty
 	target = Target{
-		ID:         "1",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{""},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "1",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{""},
 	}
 
 	err = target.Validate()
@@ -334,11 +325,9 @@ func TestValidateTarget(t *testing.T) {
 
 	// Fail when the ID field is empty
 	target = Target{
-		ID:         "",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"ligand.pdb"},
-		HaddockDir: "haddock",
-		ProjectDir: "project",
+		ID:       "",
+		Receptor: []string{"receptor.pdb"},
+		Ligand:   []string{"ligand.pdb"},
 	}
 
 	err = target.Validate()
@@ -346,34 +335,6 @@ func TestValidateTarget(t *testing.T) {
 		t.Errorf("Failed to detect wrong target")
 	}
 
-	// Fail when the HaddockDir field is empty
-
-	target = Target{
-		ID:         "1",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"ligand.pdb"},
-		HaddockDir: "",
-		ProjectDir: "project",
-	}
-
-	err = target.Validate()
-	if err == nil {
-		t.Errorf("Failed to detect wrong target")
-	}
-
-	// Fail when the ProjectDir field is empty
-	target = Target{
-		ID:         "1",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"ligand.pdb"},
-		HaddockDir: "haddock",
-		ProjectDir: "",
-	}
-
-	err = target.Validate()
-	if err == nil {
-		t.Errorf("Failed to detect wrong target")
-	}
 }
 
 func TestCreateDatasetDir(t *testing.T) {
@@ -428,15 +389,11 @@ func TestOrganizeDataset(t *testing.T) {
 			LigandList:   "ligand_list.txt",
 			Ambig:        "ambig.tbl",
 			Unambig:      "unambig.tbl",
-			HaddockDir:   "haddock",
-			ProjectDir:   "project",
 		},
 		{
-			ID:         "2",
-			Receptor:   []string{"receptor.pdb"},
-			Ligand:     []string{"ligand.pdb"},
-			HaddockDir: "haddock",
-			ProjectDir: "project",
+			ID:       "2",
+			Receptor: []string{"receptor.pdb"},
+			Ligand:   []string{"ligand.pdb"},
 		},
 	}
 
@@ -444,6 +401,13 @@ func TestOrganizeDataset(t *testing.T) {
 	_, err = OrganizeDataset(testBmPath, arr)
 	if err != nil {
 		t.Errorf("Failed to organize data: %s", err)
+	}
+
+	// Check if the files were moved to the correct directory
+	expectedFile := "test_bm/1/data/receptor1.pdb"
+	_, err = os.Stat(expectedFile)
+	if err != nil {
+		t.Errorf("Failed to move file: %s", err)
 	}
 
 	// Fail by organizing inexisting data - receptor
@@ -496,40 +460,72 @@ func TestOrganizeDataset(t *testing.T) {
 
 }
 
-func TestSetupScenarios(t *testing.T) {
+// func TestSetupScenarios(t *testing.T) {
 
-	// Write the different run.params files in different directories
+// 	// Write the different run.params files in different directories
 
-	inp := input.Input{
-		General: input.GeneralStruct{
-			HaddockDir: "location-of-haddock",
-			WorkDir:    "location-of-workdir",
-		},
-		Scenarios: []input.ScenarioStruct{
-			{
-				Name: "scenario1",
-			},
-		},
+// 	inp := input.Input{
+// 		General: input.GeneralStruct{
+// 			HaddockDir: "location-of-haddock",
+// 			WorkDir:    "location-of-workdir",
+// 		},
+// 		Scenarios: []input.ScenarioStruct{
+// 			{
+// 				Name: "scenario1",
+// 			},
+// 		},
+// 	}
+// 	defer os.RemoveAll("location-of-workdir")
+
+// 	target := Target{
+// 		ID:       "1",
+// 		Receptor: []string{"receptor.pdb"},
+// 		Ligand:   []string{"ligand.pdb"},
+// 	}
+
+// 	// Write the different run.params files in different directories
+
+// 	err := target.SetupScenarios(&inp)
+// 	fmt.Println(target.ProjectDir)
+// 	if err != nil {
+// 		t.Errorf("Failed to setup scenarios: %s", err)
+// 	}
+
+// 	// Fail by trying to setup a scenario without defining the HaddockDir field
+// 	inp.General.HaddockDir = ""
+// 	err = target.SetupScenarios(&inp)
+// 	if err == nil {
+// 		t.Errorf("Failed to detect wrong input")
+// 	}
+
+// }
+
+func TestSetupScenario(t *testing.T) {
+
+	s := input.ScenarioStruct{
+		Name: "scenario1",
 	}
-	defer os.RemoveAll("location-of-workdir")
-
 	target := Target{
-		ID:       "1",
+		ID:       "1abc",
 		Receptor: []string{"receptor.pdb"},
 		Ligand:   []string{"ligand.pdb"},
 	}
+	wd := "some-workdir"
+	hdir := "haddock-dir"
+	defer os.RemoveAll(wd)
 
-	// Write the different run.params files in different directories
-
-	err := target.SetupScenarios(&inp)
-	fmt.Println(target.ProjectDir)
+	j, err := target.SetupScenario(wd, hdir, s)
 	if err != nil {
-		t.Errorf("Failed to setup scenarios: %s", err)
+		t.Errorf("Failed to setup scenario: %s", err)
+	}
+
+	if j.ID != target.ID+"_"+s.Name {
+		t.Errorf("Wrong scenario name: %s", j.ID)
 	}
 
 	// Fail by trying to setup a scenario without defining the HaddockDir field
-	inp.General.HaddockDir = ""
-	err = target.SetupScenarios(&inp)
+	hdir = ""
+	_, err = target.SetupScenario(wd, hdir, s)
 	if err == nil {
 		t.Errorf("Failed to detect wrong input")
 	}

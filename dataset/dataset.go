@@ -3,6 +3,7 @@ package dataset
 
 import (
 	"benchmarktools/input"
+	"benchmarktools/runner"
 	"benchmarktools/utils"
 
 	// "benchmarktools/wrapper/haddock2"
@@ -23,8 +24,6 @@ type Target struct {
 	LigandList   string
 	Ambig        string
 	Unambig      string
-	HaddockDir   string
-	ProjectDir   string
 }
 
 // Validate validates the Target checking if
@@ -35,14 +34,6 @@ func (t *Target) Validate() error {
 
 	if t.ID == "" {
 		return errors.New("Target ID not defined")
-	}
-
-	if t.HaddockDir == "" {
-		return errors.New("Target Haddock directory not defined")
-	}
-
-	if t.ProjectDir == "" {
-		return errors.New("Target Project directory not defined")
 	}
 
 	for _, r := range t.Receptor {
@@ -73,37 +64,37 @@ func (t *Target) Validate() error {
 
 }
 
-func (t *Target) SetupScenarios(inp *input.Input) error {
+func (t *Target) SetupScenario(wd string, hdir string, s input.ScenarioStruct) (runner.Job, error) {
 
-	for _, s := range inp.Scenarios {
-		fmt.Println("Setting up scenario " + s.Name)
+	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
+	j := runner.Job{}
+	fmt.Println("Preparing scenario " + s.Name + " in " + sPath)
+	_ = os.MkdirAll(sPath, 0755)
 
-		scenarioPath := filepath.Join(inp.General.WorkDir, t.ID, s.Name)
-		_ = os.MkdirAll(scenarioPath, 0755)
-
-		t.ProjectDir = scenarioPath
-		t.HaddockDir = inp.General.HaddockDir
-
-		// Generate the run.params file
-		_, err := t.WriteRunParam()
-		if err != nil {
-			return err
-		}
-
+	// Generate the run.params file
+	_, err := t.WriteRunParam(sPath, hdir)
+	if err != nil {
+		return j, err
 	}
-	return nil
+
+	j.Path = sPath
+	j.ID = t.ID + "_" + s.Name
+	j.Params = s.Parameters
+
+	return j, nil
+
 }
 
-func (t *Target) WriteRunParam() (string, error) {
+func (t *Target) WriteRunParam(projectDir string, haddockDir string) (string, error) {
 
 	var runParamString string
 
-	if t.HaddockDir == "" {
+	if haddockDir == "" {
 		err := errors.New("haddock directory not defined")
 		return "", err
 	}
 
-	if t.ProjectDir == "" {
+	if projectDir == "" {
 		err := errors.New("project directory not defined")
 		return "", err
 	}
@@ -127,8 +118,9 @@ func (t *Target) WriteRunParam() (string, error) {
 	}
 
 	runParamString += "N_COMP=2\n"
-	runParamString += "PROJECT_DIR=" + t.ProjectDir + "\n"
-	runParamString += "HADDOCK_DIR=" + t.HaddockDir + "\n"
+	runParamString += "RUN_NUMBER=1\n"
+	runParamString += "PROJECT_DIR=" + projectDir + "\n"
+	runParamString += "HADDOCK_DIR=" + haddockDir + "\n"
 
 	// Write receptor files
 	runParamString += "PDB_FILE1=" + t.Receptor[0] + "\n"
@@ -146,7 +138,7 @@ func (t *Target) WriteRunParam() (string, error) {
 		runParamString += "PDB_LIST2=" + t.LigandList + "\n"
 	}
 
-	runParamF := filepath.Join(t.ProjectDir, "/run.param")
+	runParamF := filepath.Join(projectDir, "/run.param")
 	err := os.WriteFile(runParamF, []byte(runParamString), 0644)
 	if err != nil {
 		return "", err
@@ -157,12 +149,14 @@ func (t *Target) WriteRunParam() (string, error) {
 }
 
 // LoadDataset loads a dataset from a list file
-func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
+func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([]Target, error) {
 
-	listFile, err := os.Open(l)
+	listFile, err := os.Open(pdbList)
 	if err != nil {
 		return nil, err
 	}
+
+	_ = os.MkdirAll(projectDir, 0755)
 
 	s := bufio.NewScanner(listFile)
 
@@ -231,7 +225,7 @@ func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 			for _, r := range v.Receptor {
 				l += "\"" + r + "\"" + "\n"
 			}
-			receptListFile := filepath.Join(v.ProjectDir, v.ID+"_receptor.list")
+			receptListFile := filepath.Join(projectDir, v.ID+"_receptor.list")
 			_ = os.WriteFile(receptListFile, []byte(l), 0644)
 			v.ReceptorList = receptListFile
 		}
@@ -240,7 +234,7 @@ func LoadDataset(l string, rsuf string, lsuf string) ([]Target, error) {
 			for _, r := range v.Ligand {
 				l += "\"" + r + "\"" + "\n"
 			}
-			ligandListFile := filepath.Join(v.ProjectDir, v.ID+"_ligand.list")
+			ligandListFile := filepath.Join(projectDir, v.ID+"_ligand.list")
 			_ = os.WriteFile(ligandListFile, []byte(l), 0644)
 			v.LigandList = ligandListFile
 		}
