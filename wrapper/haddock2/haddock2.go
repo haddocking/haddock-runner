@@ -2,7 +2,6 @@
 package haddock2
 
 import (
-	"benchmarktools/input"
 	"bufio"
 	"errors"
 	"fmt"
@@ -10,22 +9,18 @@ import (
 	"regexp"
 )
 
-func EditRunCns(f string, s input.ScenarioStruct) error {
+func EditRunCns(runCns string, params map[string]interface{}) error {
 
-	if f == "" {
+	if runCns == "" {
 		return errors.New("run.cns file not defined")
 	}
 
-	if s.Parameters == nil {
+	if len(params) == 0 {
 		return errors.New("scenario parameters not defined")
 	}
 
-	if s.Name == "" {
-		return errors.New("scenario name not defined")
-	}
-
 	// Read the run.cns file
-	runCnsString, err := os.Open(f)
+	runCnsString, err := os.Open(runCns)
 	if err != nil {
 		return err
 	}
@@ -40,7 +35,7 @@ func EditRunCns(f string, s input.ScenarioStruct) error {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		for key, data := range s.Parameters {
+		for key, data := range params {
 
 			paramRegex := regexp.MustCompile(`(?m){===>}\s(` + key + `)=.*;`)
 			match := paramRegex.MatchString(line)
@@ -67,7 +62,7 @@ func EditRunCns(f string, s input.ScenarioStruct) error {
 
 	}
 
-	_ = os.WriteFile(f, []byte(newLines), 0644)
+	_ = os.WriteFile(runCns, []byte(newLines), 0644)
 
 	return nil
 }

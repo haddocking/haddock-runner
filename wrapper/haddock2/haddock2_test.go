@@ -1,7 +1,6 @@
 package haddock2
 
 import (
-	"benchmarktools/input"
 	"os"
 	"testing"
 )
@@ -26,54 +25,34 @@ func TestEditRunCns(t *testing.T) {
 		"parameter_4": 2.5,
 	}
 
-	s := input.ScenarioStruct{
-		Name:       "test",
-		Parameters: params,
-	}
+	// s := input.ScenarioStruct{
+	// 	Name:       "test",
+	// 	Parameters: params,
+	// }
 
-	err := EditRunCns("test_run.cns", s)
+	err := EditRunCns("test_run.cns", params)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Fail by editing a run.cns file with an empty scenario
-	s = input.ScenarioStruct{}
+	// s = input.ScenarioStruct{}
+	emptyParams := map[string]interface{}{}
 
-	err = EditRunCns("test_run.cns", s)
+	err = EditRunCns("test_run.cns", emptyParams)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
-	// Fail by editing a run.cns file with an empty scenario name
-	s = input.ScenarioStruct{
-		Name:       "",
-		Parameters: params,
-	}
-
-	err = EditRunCns("test_run.cns", s)
-	if err == nil {
-		t.Error("Expected error, got nil")
-	}
-
-	// Fail by editing a run.cns file
-	s = input.ScenarioStruct{
-		Name:       "test",
-		Parameters: params,
-	}
-
-	err = EditRunCns("", s)
+	// Fail by editing an empty run.cns file
+	err = EditRunCns("", params)
 
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 
 	// Fail by trying to edit a run.cns that does not exist
-	s = input.ScenarioStruct{
-		Name:       "test",
-		Parameters: params,
-	}
-
-	err = EditRunCns("does_not_exist.cns", s)
+	err = EditRunCns("does_not_exist.cns", params)
 
 	if err == nil {
 		t.Error("Expected error, got nil")
