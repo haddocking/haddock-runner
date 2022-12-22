@@ -15,10 +15,16 @@ scenarios:
       noecv: false
       ambig: ./ambig.tbl
       unambig: ./unambig.tbl
+      structures_0: 2
+      structures_1: 2
+      waterrefine: 2
 
   - name: center-of-mass
     parameters:
       cmrest: true
+      structures_0: 2
+      structures_1: 2
+      waterrefine: 2
 
   #-----------------------------------------------
 

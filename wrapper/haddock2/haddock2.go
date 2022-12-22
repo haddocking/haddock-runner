@@ -29,7 +29,7 @@ func EditRunCns(runCns string, params map[string]interface{}) error {
 
 	scanner.Split(bufio.ScanLines)
 
-	subTag := " ! This line was edited by the benchmarking tool"
+	subTag := "\n! This line was edited by the benchmarking tool"
 
 	var newLines string
 
@@ -44,13 +44,13 @@ func EditRunCns(runCns string, params map[string]interface{}) error {
 				var subs string
 				switch v := data.(type) {
 				case string:
-					subs = "{===>} $1=\"" + v + "\";" + subTag
+					subs = subTag + "\n" + "{===>} $1=\"" + v + "\";"
 				case int:
-					subs = "{===>} $1=" + fmt.Sprint(v) + ";" + subTag
+					subs = subTag + "\n" + "{===>} $1=" + fmt.Sprint(v) + ";"
 				case float64:
-					subs = "{===>} $1=" + fmt.Sprint(v) + ";" + subTag
+					subs = subTag + "\n" + "{===>} $1=" + fmt.Sprint(v) + ";"
 				case bool:
-					subs = "{===>} $1=" + fmt.Sprint(v) + ";" + subTag
+					subs = subTag + "\n" + "{===>} $1=" + fmt.Sprint(v) + ";"
 				}
 
 				line = paramRegex.ReplaceAllString(line, subs)
