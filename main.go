@@ -4,6 +4,7 @@ package main
 import (
 	"benchmarktools/dataset"
 	"benchmarktools/input"
+	"benchmarktools/runner"
 	"fmt"
 	"os"
 )
@@ -50,7 +51,7 @@ func main() {
 	}
 
 	// Load the dataset
-	data, errDataset := dataset.LoadDataset(inp.General.InputPDBList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
+	data, errDataset := dataset.LoadDataset(inp.General.WorkDir, inp.General.InputPDBList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
 	if errDataset != nil {
 		fmt.Println("Failed to load dataset: " + errDataset.Error())
 		return
@@ -64,21 +65,39 @@ func main() {
 		return
 	}
 
-	// Setup the scenarios
+	// Setup the scenarios & create the jobs
+	jobArr := []runner.Job{}
+
 	for _, target := range orgData {
-		// for _, scenario := range inp.Scenarios {
-		errSetup := target.SetupScenarios(inp)
-		if errSetup != nil {
-			fmt.Println("Failed to setup scenario: " + errSetup.Error())
-			return
+		for _, scenario := range inp.Scenarios {
+			fmt.Println("Setting up scenario " + scenario.Name)
+			job, errSetup := target.SetupScenario(inp.General.WorkDir, inp.General.HaddockDir, scenario)
+			if errSetup != nil {
+				fmt.Println("Failed to setup scenario: " + errSetup.Error())
+				return
+			}
+			jobArr = append(jobArr, job)
 		}
-		// }
 	}
 
-	// Dev Only -
-	// defer os.RemoveAll(bmPath)
-	// End Dev Only
+	// Run the jobs
+	for _, job := range jobArr {
 
-	fmt.Println(orgData)
+		_, errSetup := job.SetupHaddock(inp.General.HaddockExecutable)
+
+		if errSetup != nil {
+			fmt.Println("Failed to setup job: " + errSetup.Error())
+			return
+		}
+
+		_, errRun := job.RunHaddock(inp.General.HaddockExecutable)
+		if errRun != nil {
+			fmt.Println("Failed to run job: " + errRun.Error())
+			return
+		}
+
+	}
+
+	fmt.Println(jobArr)
 
 }
