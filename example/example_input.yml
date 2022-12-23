@@ -1,31 +1,44 @@
 general:
-  # - number_of_processors: 4
-  executable: /Users/rvhonorato/repos/benchmark-tools/haddock24.sh
-  haddock_dir: /Users/rvhonorato/repos/haddock
+  executable: /Users/rodrigo/repos/benchmark-tools/haddock24.sh
+  haddock_dir: /Users/rodrigo/repos/haddock
   receptor_suffix: _r_u
   ligand_suffix: _l_u
-  input_pdb_list: /Users/rvhonorato/repos/benchmark-tools/example/pdb.list
-  work_dir: /Users/rvhonorato/repos/benchmark-tools/dev/bm-goes-here
+  input_list: /Users/rodrigo/repos/benchmark-tools/example/input_list.txt
+  work_dir: /Users/rodrigo/repos/benchmark-tools/bm-goes-here
 
 scenarios:
   #-----------------------------------------------
   # Haddock2.4
   - name: true-interface
     parameters:
-      noecv: false
-      ambig: ./ambig.tbl
-      unambig: ./unambig.tbl
-      structures_0: 2
-      structures_1: 2
-      waterrefine: 2
+      run_cns:
+        noecv: false
+        structures_0: 2
+        structures_1: 2
+        waterrefine: 2
+      restraints:
+        ambig: 'ti'
+        unambig: 'unambig'
+        hbonds: 'hb'
+      custom_toppar:
+        topology: '_ligand.top'
+        param: '_ligand.param'
 
   - name: center-of-mass
     parameters:
-      cmrest: true
-      structures_0: 2
-      structures_1: 2
-      waterrefine: 2
+      run_cns:
+        cmrest: true
+        structures_0: 2
+        structures_1: 2
+        waterrefine: 2
 
+  - name: random-restraints
+    parameters:
+      run_cns:
+        ranair: true
+        structures_0: 2
+        structures_1: 2
+        waterrefine: 2
   #-----------------------------------------------
 
   #-----------------------------------------------

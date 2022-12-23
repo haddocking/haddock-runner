@@ -1,0 +1,31 @@
+#  Lines starting with # are comments
+# ------------------------------------------------------------ #
+# Input list
+# ------------------------------------------------------------ #
+# 1A2K
+example/1A2K/1A2K_r_u.pdb
+example/1A2K/1A2K_l_u.pdb
+example/1A2K/1A2K_ligand.top
+example/1A2K/1A2K_ligand.param
+example/1A2K/1A2K_ti.tbl
+example/1A2K/1A2K_unambig.tbl
+# 1GGR
+example/1GGR/1GGR_r_u.pdb
+example/1GGR/1GGR_l_u_1.pdb
+example/1GGR/1GGR_l_u_2.pdb
+example/1GGR/1GGR_l_u_3.pdb
+example/1GGR/1GGR_l_u_4.pdb
+example/1GGR/1GGR_l_u_5.pdb
+example/1GGR/1GGR_ti.tbl
+# 1PPE
+example/1PPE/1PPE_l_u.pdb
+example/1PPE/1PPE_r_u.pdb
+example/1PPE/1PPE_ti.tbl
+example/1PPE/1PPE_hb.tbl
+example/1PPE/1PPE_unambig.tbl
+# 2OOB
+example/2OOB/2OOB_l_u.pdb
+example/2OOB/2OOB_r_u.pdb
+example/2OOB/2OOB_ti.tbl
+example/2OOB/2OOB_hb.tbl
+# ------------------------------------------------------------ #

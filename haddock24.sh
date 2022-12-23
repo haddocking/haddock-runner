@@ -10,7 +10,7 @@ pyenv shell 2.7.18
 
 #===============================================================================
 # Configure HADDOCK2.4
-export HADDOCK="/Users/rvhonorato/repos/haddock"
+export HADDOCK="$HOME/repos/haddock24"
 export HADDOCKTOOLS="$HADDOCK/tools"
 export PYTHONPATH="${PYTHONPATH}:$HADDOCK"
 
