@@ -11,10 +11,11 @@ import (
 	// "benchmarktools/wrapper/haddock2"
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/golang/glog"
 )
 
 // Target is the target structure
@@ -72,7 +73,7 @@ func (t *Target) Validate() error {
 func (t *Target) SetupScenario(wd string, hdir string, s input.Scenario) (runner.Job, error) {
 
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
-	fmt.Println("Preparing scenario " + s.Name + " in " + sPath)
+	glog.Info("Preparing : " + s.Name)
 	_ = os.MkdirAll(sPath, 0755)
 
 	// Generate the run.params file
@@ -94,13 +95,10 @@ func (t *Target) SetupScenario(wd string, hdir string, s input.Scenario) (runner
 
 	toppar := input.Toppar{}
 	for _, t := range t.Toppar {
-		fmt.Println("Checking toppar file: " + t)
 		if filepath.Ext(t) == ".top" {
-			fmt.Println("Found toppar file: " + t)
 			toppar.Top = t
 		}
 		if filepath.Ext(t) == ".param" {
-			fmt.Println("Found toppar file: " + t)
 			toppar.Param = t
 		}
 
@@ -192,7 +190,6 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 	m := make(map[string]Target)
 	for s.Scan() {
 		line := s.Text()
-		// fmt.Println(&buf, line)
 		if !strings.HasSuffix(line, ".pdb") {
 			// This is not a PDB file, ignore
 			continue

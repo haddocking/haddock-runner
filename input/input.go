@@ -27,6 +27,7 @@ type GeneralStruct struct {
 	LigandSuffix      string `yaml:"ligand_suffix"`
 	InputList         string `yaml:"input_list"`
 	WorkDir           string `yaml:"work_dir"`
+	MaxConcurrent     int    `yaml:"max_concurrent"`
 }
 
 // ScenarioStruct is the scenario structure

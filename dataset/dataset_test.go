@@ -468,46 +468,6 @@ func TestOrganizeDataset(t *testing.T) {
 
 }
 
-// func TestSetupScenarios(t *testing.T) {
-
-// 	// Write the different run.params files in different directories
-
-// 	inp := input.Input{
-// 		General: input.GeneralStruct{
-// 			HaddockDir: "location-of-haddock",
-// 			WorkDir:    "location-of-workdir",
-// 		},
-// 		Scenarios: []input.ScenarioStruct{
-// 			{
-// 				Name: "scenario1",
-// 			},
-// 		},
-// 	}
-// 	defer os.RemoveAll("location-of-workdir")
-
-// 	target := Target{
-// 		ID:       "1",
-// 		Receptor: []string{"receptor.pdb"},
-// 		Ligand:   []string{"ligand.pdb"},
-// 	}
-
-// 	// Write the different run.params files in different directories
-
-// 	err := target.SetupScenarios(&inp)
-// 	fmt.Println(target.ProjectDir)
-// 	if err != nil {
-// 		t.Errorf("Failed to setup scenarios: %s", err)
-// 	}
-
-// 	// Fail by trying to setup a scenario without defining the HaddockDir field
-// 	inp.General.HaddockDir = ""
-// 	err = target.SetupScenarios(&inp)
-// 	if err == nil {
-// 		t.Errorf("Failed to detect wrong input")
-// 	}
-
-// }
-
 func TestSetupScenario(t *testing.T) {
 
 	s := input.Scenario{

@@ -1,5 +1,7 @@
 general:
   executable: /Users/rodrigo/repos/benchmark-tools/haddock24.sh
+  # How many jobs should be executed at a given time
+  max_concurrent: 2
   haddock_dir: /Users/rodrigo/repos/haddock
   receptor_suffix: _r_u
   ligand_suffix: _l_u
