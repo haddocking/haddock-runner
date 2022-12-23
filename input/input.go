@@ -15,8 +15,8 @@ import (
 
 // Input is the input structure
 type Input struct {
-	General   GeneralStruct    `yaml:"general"`
-	Scenarios []ScenarioStruct `yaml:"scenarios"`
+	General   GeneralStruct `yaml:"general"`
+	Scenarios []Scenario    `yaml:"scenarios"`
 }
 
 // GeneralStruct is the general structure
@@ -25,14 +25,30 @@ type GeneralStruct struct {
 	HaddockDir        string `yaml:"haddock_dir"`
 	ReceptorSuffix    string `yaml:"receptor_suffix"`
 	LigandSuffix      string `yaml:"ligand_suffix"`
-	InputPDBList      string `yaml:"input_pdb_list"`
+	InputList         string `yaml:"input_list"`
 	WorkDir           string `yaml:"work_dir"`
 }
 
 // ScenarioStruct is the scenario structure
-type ScenarioStruct struct {
-	Name       string                 `yaml:"name"`
-	Parameters map[string]interface{} `yaml:"parameters"`
+type Scenario struct {
+	Name       string         `yaml:"name"`
+	Parameters ScenarioParams `yaml:"parameters"`
+}
+
+type ScenarioParams struct {
+	CnsParams  map[string]interface{} `yaml:"run_cns"`
+	Restraints Restraints             `yaml:"restraints"`
+	Toppar     Toppar                 `yaml:"custom_toppar"`
+}
+
+type Restraints struct {
+	Ambig   string
+	Unambig string
+}
+
+type Toppar struct {
+	Top   string
+	Param string
 }
 
 // ValidateExecutable checks if the executable is defined in PATH
@@ -53,11 +69,11 @@ func (inp *Input) ValidateExecutable() error {
 }
 
 // ValidateScenarioParams checks if the parameters names are valid
-func (s *ScenarioStruct) ValidateScenarioParams(params map[string]interface{}) error {
+func ValidateRunCNSParams(known map[string]interface{}, params map[string]interface{}) error {
 
-	for key := range s.Parameters {
-		if params[key] == nil {
-			err := errors.New("`" + key + "` not found in run.cns-conf")
+	for key := range params {
+		if known[key] == nil {
+			err := errors.New("`" + key + "` not valid")
 			return err
 		}
 

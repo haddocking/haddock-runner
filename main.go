@@ -43,7 +43,8 @@ func main() {
 	}
 
 	for _, scenario := range inp.Scenarios {
-		errValidate := scenario.ValidateScenarioParams(runCnsParams)
+		scenarioParams := scenario.Parameters.CnsParams
+		errValidate := input.ValidateRunCNSParams(runCnsParams, scenarioParams)
 		if errValidate != nil {
 			fmt.Println("Failed to validate scenario parameters: " + errValidate.Error())
 			return
@@ -51,7 +52,7 @@ func main() {
 	}
 
 	// Load the dataset
-	data, errDataset := dataset.LoadDataset(inp.General.WorkDir, inp.General.InputPDBList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
+	data, errDataset := dataset.LoadDataset(inp.General.WorkDir, inp.General.InputList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
 	if errDataset != nil {
 		fmt.Println("Failed to load dataset: " + errDataset.Error())
 		return
@@ -86,13 +87,13 @@ func main() {
 		_, errSetup := job.SetupHaddock(inp.General.HaddockExecutable)
 
 		if errSetup != nil {
-			fmt.Println("Failed to setup job: " + errSetup.Error())
+			fmt.Println("Failed to setup HADDOCK: " + errSetup.Error())
 			return
 		}
 
 		_, errRun := job.RunHaddock(inp.General.HaddockExecutable)
 		if errRun != nil {
-			fmt.Println("Failed to run job: " + errRun.Error())
+			fmt.Println("Failed to run HADDOCK: " + errRun.Error())
 			return
 		}
 

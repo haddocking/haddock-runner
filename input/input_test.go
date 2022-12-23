@@ -18,14 +18,24 @@ func TestLoadInput(t *testing.T) {
 			ReceptorSuffix:    "r_u",
 			LigandSuffix:      "l_u",
 		},
-		Scenarios: []ScenarioStruct{
+		Scenarios: []Scenario{
 			{
 				Name: "scenario1",
-				Parameters: map[string]interface{}{
-					"param1": false,
-					"param2": "string",
-					"param3": 1,
-					"param4": 1.5,
+				Parameters: ScenarioParams{
+					CnsParams: map[string]interface{}{
+						"param1": false,
+						"param2": "string",
+						"param3": 1,
+						"param4": 1.5,
+					},
+					Restraints: Restraints{
+						Ambig:   "ambig",
+						Unambig: "unambig",
+					},
+					Toppar: Toppar{
+						Top:   "top",
+						Param: "param",
+					},
 				},
 			},
 		},
@@ -181,7 +191,7 @@ func TestLoadHaddock24Params(t *testing.T) {
 
 }
 
-func TestValidateScenarioParams(t *testing.T) {
+func TestValidateRunCNSParams(t *testing.T) {
 
 	valid := map[string]interface{}{
 		"param1": true,
@@ -191,27 +201,25 @@ func TestValidateScenarioParams(t *testing.T) {
 	}
 
 	// Check if the input parameters of the scenario are valid
-	s := ScenarioStruct{
-		Name: "scenario1",
-		Parameters: map[string]interface{}{
-			"param1": false,
-		},
+	params := map[string]any{
+		"param1": true,
 	}
 
-	err := s.ValidateScenarioParams(valid)
+	err := ValidateRunCNSParams(valid, params)
 	if err != nil {
 		t.Errorf("Failed to validate parameters: %s", err)
 	}
 
 	// Fail by not finding the parameters
-	s = ScenarioStruct{
-		Name: "scenario1",
-		Parameters: map[string]interface{}{
-			"not-a-valid-param": false,
-		},
+	valid = map[string]any{
+		"param1": true,
 	}
 
-	err = s.ValidateScenarioParams(valid)
+	params = map[string]any{
+		"param2": true,
+	}
+
+	err = ValidateRunCNSParams(valid, params)
 	if err == nil {
 		t.Errorf("Failed to detect wrong parameters")
 	}

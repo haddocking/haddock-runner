@@ -5,6 +5,8 @@ import (
 	"benchmarktools/input"
 	"benchmarktools/runner"
 	"benchmarktools/utils"
+	"io"
+	"strings"
 
 	// "benchmarktools/wrapper/haddock2"
 	"bufio"
@@ -22,8 +24,8 @@ type Target struct {
 	ReceptorList string
 	Ligand       []string
 	LigandList   string
-	Ambig        string
-	Unambig      string
+	Restraints   []string
+	Toppar       []string
 }
 
 // Validate validates the Target checking if
@@ -64,22 +66,53 @@ func (t *Target) Validate() error {
 
 }
 
-func (t *Target) SetupScenario(wd string, hdir string, s input.ScenarioStruct) (runner.Job, error) {
+// SetupScenario method prepares the scenario
+//   - Creates the scenario directory
+//   - Creates the run.params file
+func (t *Target) SetupScenario(wd string, hdir string, s input.Scenario) (runner.Job, error) {
 
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
-	j := runner.Job{}
 	fmt.Println("Preparing scenario " + s.Name + " in " + sPath)
 	_ = os.MkdirAll(sPath, 0755)
 
 	// Generate the run.params file
 	_, err := t.WriteRunParam(sPath, hdir)
 	if err != nil {
-		return j, err
+		return runner.Job{}, err
 	}
 
-	j.Path = sPath
-	j.ID = t.ID + "_" + s.Name
-	j.Params = s.Parameters
+	// Find which restraints need to be used
+	restraints := input.Restraints{}
+	for _, r := range t.Restraints {
+		if strings.Contains(r, s.Parameters.Restraints.Ambig) {
+			restraints.Ambig = r
+		}
+		if strings.Contains(r, s.Parameters.Restraints.Unambig) {
+			restraints.Unambig = r
+		}
+	}
+
+	toppar := input.Toppar{}
+	for _, t := range t.Toppar {
+		fmt.Println("Checking toppar file: " + t)
+		if filepath.Ext(t) == ".top" {
+			fmt.Println("Found toppar file: " + t)
+			toppar.Top = t
+		}
+		if filepath.Ext(t) == ".param" {
+			fmt.Println("Found toppar file: " + t)
+			toppar.Param = t
+		}
+
+	}
+
+	j := runner.Job{
+		ID:         t.ID + "_" + s.Name,
+		Path:       sPath,
+		Params:     s.Parameters.CnsParams,
+		Restraints: restraints,
+		Toppar:     toppar,
+	}
 
 	return j, nil
 
@@ -107,14 +140,6 @@ func (t *Target) WriteRunParam(projectDir string, haddockDir string) (string, er
 	if len(t.Ligand) == 0 {
 		err := errors.New("ligand not defined")
 		return "", err
-	}
-
-	if t.Ambig != "" {
-		runParamString += "AMBIG_TBL=" + t.Ambig + "\n"
-	}
-
-	if t.Unambig != "" {
-		runParamString += "UNAMBIG_TBL=" + t.Unambig + "\n"
 	}
 
 	runParamString += "N_COMP=2\n"
@@ -151,26 +176,30 @@ func (t *Target) WriteRunParam(projectDir string, haddockDir string) (string, er
 // LoadDataset loads a dataset from a list file
 func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([]Target, error) {
 
-	listFile, err := os.Open(pdbList)
+	rootRegex := regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
+	recRegex := regexp.MustCompile(`(.*)` + rsuf)
+	ligRegex := regexp.MustCompile(`(.*)` + lsuf)
+	_ = os.MkdirAll(projectDir, 0755)
+
+	file, err := os.Open(pdbList)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = os.MkdirAll(projectDir, 0755)
-
-	s := bufio.NewScanner(listFile)
-
+	s := bufio.NewScanner(file)
 	s.Split(bufio.ScanLines)
-
-	rootRegex := regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
-	recRegex := regexp.MustCompile(`(.*)` + rsuf)
-	ligRegex := regexp.MustCompile(`(.*)` + lsuf)
 
 	m := make(map[string]Target)
 	for s.Scan() {
+		line := s.Text()
+		// fmt.Println(&buf, line)
+		if !strings.HasSuffix(line, ".pdb") {
+			// This is not a PDB file, ignore
+			continue
+		}
 
 		var receptor, ligand, root string
-		fullPath := s.Text()
+		fullPath := line
 		basePath := filepath.Base(fullPath)
 		// Find root and receptor/ligand names
 		match := rootRegex.FindStringSubmatch(basePath)
@@ -219,6 +248,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		}
 	}
 
+	// Handle the lists
 	for k, v := range m {
 		if len(v.Receptor) > 1 {
 			l := ""
@@ -239,6 +269,31 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 			v.LigandList = ligandListFile
 		}
 		m[k] = v
+	}
+
+	// Read the file again, now looking for restraints and toppars
+	// TODO: Optimize this
+	file.Seek(0, io.SeekStart)
+	s = bufio.NewScanner(file)
+	s.Split(bufio.ScanLines)
+	for s.Scan() {
+		line := s.Text()
+		for k, v := range m {
+			// Handle the restraints
+			tblRegex := regexp.MustCompile(`(` + k + `)\w+\.tbl`)
+			tblMatch := tblRegex.FindStringSubmatch(line)
+			if len(tblMatch) != 0 {
+				v.Restraints = append(v.Restraints, s.Text())
+			}
+
+			// Handle the Toppar
+			topparRegex := regexp.MustCompile(`(` + k + `)\w+\.(top|param)`)
+			topparMatch := topparRegex.FindStringSubmatch(line)
+			if len(topparMatch) != 0 {
+				v.Toppar = append(v.Toppar, s.Text())
+			}
+			m[k] = v
+		}
 	}
 
 	arr := []Target{}
@@ -262,6 +317,11 @@ func CreateDatasetDir(p string) error {
 
 }
 
+// OrganizeDataset creates the folder structure
+//   - Create a ID/data folder
+//   - Copy the receptor and ligand files to the data folder
+//   - Update the paths in the Target struct
+//   - Copy the restraints and toppars to the data folder
 func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 
 	var tArr []Target
@@ -277,7 +337,7 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			rdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(r))
 			err := utils.CopyFile(r, rdest)
 			if err != nil {
-				os.RemoveAll(bmPath)
+				// os.RemoveAll(bmPath)
 				return nil, err
 			}
 			newT.Receptor = append(newT.Receptor, rdest)
@@ -287,37 +347,17 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			ldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(l))
 			err := utils.CopyFile(l, ldest)
 			if err != nil {
-				os.RemoveAll(bmPath)
+				// os.RemoveAll(bmPath)
 				return nil, err
 			}
 			newT.Ligand = append(newT.Ligand, ldest)
-		}
-
-		if t.Ambig != "" {
-			adest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.Ambig))
-			err := utils.CopyFile(t.Ambig, adest)
-			if err != nil {
-				os.RemoveAll(bmPath)
-				return nil, err
-			}
-			newT.Ambig = adest
-		}
-
-		if t.Unambig != "" {
-			udest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.Unambig))
-			err := utils.CopyFile(t.Unambig, udest)
-			if err != nil {
-				os.RemoveAll(bmPath)
-				return nil, err
-			}
-			newT.Unambig = udest
 		}
 
 		if t.ReceptorList != "" {
 			rldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.ReceptorList))
 			err := utils.CopyFile(t.ReceptorList, rldest)
 			if err != nil {
-				os.RemoveAll(bmPath)
+				// os.RemoveAll(bmPath)
 				return nil, err
 			}
 			os.Remove(t.ReceptorList)
@@ -328,11 +368,35 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			lldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.LigandList))
 			err := utils.CopyFile(t.LigandList, lldest)
 			if err != nil {
-				os.RemoveAll(bmPath)
+				// os.RemoveAll(bmPath)
 				return nil, err
 			}
 			os.Remove(t.LigandList)
 			newT.LigandList = lldest
+		}
+
+		if len(t.Restraints) > 0 {
+			for _, r := range t.Restraints {
+				rdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(r))
+				err := utils.CopyFile(r, rdest)
+				if err != nil {
+					// os.RemoveAll(bmPath)
+					return nil, err
+				}
+				newT.Restraints = append(newT.Restraints, rdest)
+			}
+		}
+
+		if len(t.Toppar) > 0 {
+			for _, toppar := range t.Toppar {
+				tdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(toppar))
+				err := utils.CopyFile(toppar, tdest)
+				if err != nil {
+					// os.RemoveAll(bmPath)
+					return nil, err
+				}
+				newT.Toppar = append(newT.Toppar, tdest)
+			}
 		}
 
 		tArr = append(tArr, newT)

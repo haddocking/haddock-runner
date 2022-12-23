@@ -25,8 +25,6 @@ func TestWriteRunParam(t *testing.T) {
 		ReceptorList: "some/path/receptor.list",
 		Ligand:       []string{"1abc_l_1.pdb", "1abc_l_2.pdb"},
 		LigandList:   "some/path/ligand.list",
-		Ambig:        "ambig.tbl",
-		Unambig:      "unambig.tbl",
 	}
 
 	_, err := target.WriteRunParam(projectDir, haddockDir)
@@ -47,8 +45,6 @@ func TestWriteRunParam(t *testing.T) {
 		ID:       "1abc",
 		Receptor: []string{},
 		Ligand:   []string{"1abc.pdb"},
-		Ambig:    "ambig.tbl",
-		Unambig:  "unambig.tbl",
 	}
 
 	_, err = target.WriteRunParam(projectDir, haddockDir)
@@ -61,8 +57,6 @@ func TestWriteRunParam(t *testing.T) {
 		ID:       "1abc",
 		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
 		Ligand:   []string{},
-		Ambig:    "ambig.tbl",
-		Unambig:  "unambig.tbl",
 	}
 
 	_, err = target.WriteRunParam(projectDir, haddockDir)
@@ -75,8 +69,6 @@ func TestWriteRunParam(t *testing.T) {
 		ID:       "1abc",
 		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
 		Ligand:   []string{"1abc.pdb"},
-		Ambig:    "ambig.tbl",
-		Unambig:  "unambig.tbl",
 	}
 
 	_, err = target.WriteRunParam(projectDir, "")
@@ -89,8 +81,6 @@ func TestWriteRunParam(t *testing.T) {
 		ID:       "1abc",
 		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
 		Ligand:   []string{"1abc.pdb"},
-		Ambig:    "ambig.tbl",
-		Unambig:  "unambig.tbl",
 	}
 
 	_, err = target.WriteRunParam("", haddockDir)
@@ -103,8 +93,6 @@ func TestWriteRunParam(t *testing.T) {
 		ID:       "1abc",
 		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
 		Ligand:   []string{"1abc.pdb"},
-		Ambig:    "ambig.tbl",
-		Unambig:  "unambig.tbl",
 	}
 
 	_, err = target.WriteRunParam("", haddockDir)
@@ -117,8 +105,6 @@ func TestWriteRunParam(t *testing.T) {
 		ID:       "1abc",
 		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
 		Ligand:   []string{"1abc.pdb"},
-		Ambig:    "ambig.tbl",
-		Unambig:  "unambig.tbl",
 	}
 
 	_, err = target.WriteRunParam("some/path/that/does/not/exist", haddockDir)
@@ -160,7 +146,10 @@ func TestLoadDataset(t *testing.T) {
 				"some/path/structure3_l_u.pdb\n"+
 				"some/path/structure4_r_u.pdb\n"+
 				"some/path/structure4_l_u_0.pdb\n"+
-				"some/path/structure4_l_u_1.pdb\n"), 0644)
+				"some/path/structure4_l_u_1.pdb\n"+
+				"some/path/structure4_ambig.tbl\n"+
+				"some/path/structure4_ATP.top\n"+
+				"some/path/structure4_ATP.param\n"), 0644)
 	defer os.Remove("pdb.list")
 
 	// Pass by loading a valid dataset
@@ -181,6 +170,12 @@ func TestLoadDataset(t *testing.T) {
 			}
 			if len(v.Ligand) != 2 {
 				t.Errorf("Failed: Not all ligands were loaded")
+			}
+			if len(v.Restraints) != 1 {
+				t.Errorf("Failed: Not all restraints were loaded")
+			}
+			if len(v.Toppar) != 2 {
+				t.Errorf("Failed: Not all toppar files were loaded")
 			}
 		}
 		if v.ID == "structure3" {
@@ -361,8 +356,10 @@ func TestOrganizeDataset(t *testing.T) {
 	var err error
 
 	fileArr := []string{
-		"receptor.pdb", "ligand.pdb", "receptor1.pdb", "receptor2.pdb", "ligand1.pdb", "ligand2.pdb", "ambig.tbl", "unambig.tbl", "receptor_list.txt", "ligand_list.txt",
-	}
+		"receptor.pdb", "ligand.pdb", "receptor1.pdb",
+		"receptor2.pdb", "ligand1.pdb", "ligand2.pdb",
+		"ambig.tbl", "unambig.tbl", "receptor_list.txt",
+		"ligand_list.txt", "custom.top", "custom.param"}
 
 	for _, file := range fileArr {
 		err := os.WriteFile(file, []byte(""), 0644)
@@ -380,20 +377,14 @@ func TestOrganizeDataset(t *testing.T) {
 	defer os.RemoveAll(testBmPath)
 
 	arr := []Target{
-
 		{
 			ID:           "1",
 			Receptor:     []string{"receptor1.pdb", "receptor2.pdb"},
 			ReceptorList: "receptor_list.txt",
 			Ligand:       []string{"ligand1.pdb", "ligand2.pdb"},
 			LigandList:   "ligand_list.txt",
-			Ambig:        "ambig.tbl",
-			Unambig:      "unambig.tbl",
-		},
-		{
-			ID:       "2",
-			Receptor: []string{"receptor.pdb"},
-			Ligand:   []string{"ligand.pdb"},
+			Restraints:   []string{"ambig.tbl", "unambig.tbl"},
+			Toppar:       []string{"custom.top", "custom.param"},
 		},
 	}
 
@@ -403,11 +394,20 @@ func TestOrganizeDataset(t *testing.T) {
 		t.Errorf("Failed to organize data: %s", err)
 	}
 
-	// Check if the files were moved to the correct directory
-	expectedFile := "test_bm/1/data/receptor1.pdb"
-	_, err = os.Stat(expectedFile)
-	if err != nil {
-		t.Errorf("Failed to move file: %s", err)
+	// Check if the files were copied to the correct directory
+	path := "test_bm/1/data"
+	expectedFiles := []string{
+		"receptor1.pdb", "receptor2.pdb", "ligand1.pdb",
+		"ligand2.pdb", "ambig.tbl", "unambig.tbl",
+		"receptor_list.txt", "ligand_list.txt", "custom.top",
+		"custom.param"}
+
+	for _, v := range expectedFiles {
+		f := path + "/" + v
+		_, err = os.Stat(f)
+		if err != nil {
+			t.Errorf("Failed to copy file: %s", err)
+		}
 	}
 
 	// Fail by organizing inexisting data - receptor
@@ -416,47 +416,55 @@ func TestOrganizeDataset(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
+	arr[0].Receptor = []string{"receptor.pdb"}
 
 	// Fail by organizing inexisting data - ligand
-	arr[0].Receptor = []string{"receptor.pdb"}
 	arr[0].Ligand = []string{"does_not_exist.pdb"}
 	_, err = OrganizeDataset(testBmPath, arr)
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
-
-	// Fail by organizing inexisting data - ambig
 	arr[0].Ligand = []string{"ligand.pdb"}
-	arr[0].Ambig = "does_not_exist.tbl"
-	_, err = OrganizeDataset(testBmPath, arr)
-	if err == nil {
-		t.Errorf("Failed to detect wrong directory")
-	}
-
-	// Fail by organizing inexisting data - unambig
-	arr[0].Ambig = "ambig.tbl"
-	arr[0].Unambig = "does_not_exist.tbl"
-	_, err = OrganizeDataset(testBmPath, arr)
-	if err == nil {
-		t.Errorf("Failed to detect wrong directory")
-	}
 
 	// Fail by organizing inexisting data - receptor_list
-	arr[0].Unambig = "unambig.tbl"
 	arr[0].ReceptorList = "does_not_exist.txt"
 	_, err = OrganizeDataset(testBmPath, arr)
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
+	arr[0].ReceptorList = "receptor_list.txt"
+	_, _ = os.Create("receptor_list.txt")
+	_, _ = os.Create("ligand_list.txt")
 
 	// Fail by organizing inexisting data - ligand_list
-	os.WriteFile("receptor_list.txt", []byte(""), 0644)
-	arr[0].ReceptorList = "receptor_list.txt"
 	arr[0].LigandList = "does_not_exist.txt"
 	_, err = OrganizeDataset(testBmPath, arr)
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
+	arr[0].LigandList = "ligand_list.txt"
+	_, _ = os.Create("receptor_list.txt")
+	_, _ = os.Create("ligand_list.txt")
+
+	// Fail by trying to copy unexisting restraints
+	arr[0].Restraints = []string{"does_not_exist.tbl"}
+	_, err = OrganizeDataset(testBmPath, arr)
+	if err == nil {
+		t.Errorf("Failed to detect wrong directory")
+	}
+	arr[0].Restraints = []string{"ambig.tbl", "unambig.tbl"}
+	_, _ = os.Create("receptor_list.txt")
+	_, _ = os.Create("ligand_list.txt")
+
+	// Fail by trying to copy unexisting toppar
+	arr[0].Toppar = []string{"does_not_exist.top"}
+	_, err = OrganizeDataset(testBmPath, arr)
+	if err == nil {
+		t.Errorf("Failed to detect wrong directory")
+	}
+	arr[0].Toppar = []string{"custom.top", "custom.param"}
+	_, _ = os.Create("receptor_list.txt")
+	_, _ = os.Create("ligand_list.txt")
 
 }
 
@@ -502,13 +510,15 @@ func TestOrganizeDataset(t *testing.T) {
 
 func TestSetupScenario(t *testing.T) {
 
-	s := input.ScenarioStruct{
+	s := input.Scenario{
 		Name: "scenario1",
 	}
 	target := Target{
-		ID:       "1abc",
-		Receptor: []string{"receptor.pdb"},
-		Ligand:   []string{"ligand.pdb"},
+		ID:         "1abc",
+		Receptor:   []string{"receptor.pdb"},
+		Ligand:     []string{"ligand.pdb"},
+		Restraints: []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:     []string{"custom.top", "custom.param"},
 	}
 	wd := "some-workdir"
 	hdir := "haddock-dir"
