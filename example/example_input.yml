@@ -19,12 +19,12 @@ scenarios:
         structures_1: 2
         waterrefine: 2
       restraints:
-        ambig: 'ti'
-        unambig: 'unambig'
-        hbonds: 'hb'
+        ambig: "ti"
+        unambig: "unambig"
+        hbonds: "hb"
       custom_toppar:
-        topology: '_ligand.top'
-        param: '_ligand.param'
+        topology: "_ligand.top"
+        param: "_ligand.param"
 
   - name: center-of-mass
     parameters:

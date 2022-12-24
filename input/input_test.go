@@ -124,10 +124,10 @@ func TestFindHaddock24RunCns(t *testing.T) {
 	// Create an executable and place it two levels above run.cns
 	haddockDir := "_test"
 	protocolsDir := "_test/protocols"
-	os.MkdirAll(haddockDir, 0755)
+	_ = os.MkdirAll(haddockDir, 0755)
 	defer os.RemoveAll(haddockDir)
 
-	os.Mkdir(protocolsDir, 0755)
+	_ = os.Mkdir(protocolsDir, 0755)
 	runCnsF := "_test/protocols/run.cns-conf"
 	err := os.WriteFile(runCnsF, []byte("{===>} parameter=\"value\";"), 0755)
 	if err != nil {

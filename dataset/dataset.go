@@ -270,7 +270,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 
 	// Read the file again, now looking for restraints and toppars
 	// TODO: Optimize this
-	file.Seek(0, io.SeekStart)
+	_, _ = file.Seek(0, io.SeekStart)
 	s = bufio.NewScanner(file)
 	s.Split(bufio.ScanLines)
 	for s.Scan() {
@@ -305,7 +305,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 func CreateDatasetDir(p string) error {
 
 	if _, err := os.Stat(p); os.IsNotExist(err) {
-		os.Mkdir(p, 0755)
+		_ = os.Mkdir(p, 0755)
 	} else {
 		return errors.New("Dataset folder already exists: " + p)
 	}

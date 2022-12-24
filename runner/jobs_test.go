@@ -46,10 +46,10 @@ func TestSetupHaddock(t *testing.T) {
 	_ = os.MkdirAll("cmd-test/run1/toppar", 0755)
 	defer os.RemoveAll("cmd-test")
 
-	os.WriteFile("cmd-test/run1/run.cns", []byte("{===>} param1=true;"), 0644)
+	_ = os.WriteFile("cmd-test/run1/run.cns", []byte("{===>} param1=true;"), 0644)
 
 	for _, f := range []string{"ambig.tbl", "unambig.tbl", "gdp.top", "gdp.param"} {
-		os.WriteFile(f, []byte(""), 0644)
+		_ = os.WriteFile(f, []byte(""), 0644)
 		defer os.Remove(f)
 	}
 

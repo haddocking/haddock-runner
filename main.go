@@ -14,9 +14,9 @@ import (
 
 func main() {
 	// Set the glog flags
-	flag.Set("logtostderr", "true")
-	flag.Set("stderrthreshold", "WARNING")
-	flag.Set("v", "2")
+	_ = flag.Set("logtostderr", "true")
+	_ = flag.Set("stderrthreshold", "WARNING")
+	_ = flag.Set("v", "2")
 
 	flag.Parse()
 
@@ -83,6 +83,7 @@ func main() {
 
 	for _, target := range orgData {
 		glog.Info("Setting up target " + target.ID)
+
 		for _, scenario := range inp.Scenarios {
 			job, errSetup := target.SetupScenario(inp.General.WorkDir, inp.General.HaddockDir, scenario)
 			if errSetup != nil {
