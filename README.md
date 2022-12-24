@@ -19,11 +19,16 @@
 
 This repository contains a set of tools to benchmark the performance of HADDOCK2.4.
 
-These can be used to compare the perfomance of HADDOCK against other software packages, to compare the performance of different versions of HADDOCK, or to compare the performance of HADDOCK on different hardware.
+These can be used to compare the perfomance of HADDOCK against other software
+packages, to compare the performance of different versions of HADDOCK, or to
+compare the performance of HADDOCK on different hardware.
 
-Additionally it can be used to perform large-scale docking experiments in different scenarios (parameters), for example:
+Additionally it can be used to perform large-scale docking experiments in
+different scenarios (parameters), for example:
 
-- You have obtained experimental data for a set of proteins and you want to dock them against a set of targets. You want to test different parameters to see which one gives the best results.
+- You have obtained experimental data for a set of proteins and you want to
+  dock them against a set of targets. You want to test different parameters
+  to see which one gives the best results.
   - Scenario 1: Use all information
   - Scenario 2: Use only 50% of the information
   - Scenario 3: _ab initio_ docking (without information)
@@ -55,7 +60,7 @@ OR
 
 Use the pre-compiled binaries
 
-<pending>
+\<pending>
 
 #### Usage
 

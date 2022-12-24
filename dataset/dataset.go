@@ -116,6 +116,7 @@ func (t *Target) SetupScenario(wd string, hdir string, s input.Scenario) (runner
 
 }
 
+// WriteRunParam writes the run.param file
 func (t *Target) WriteRunParam(projectDir string, haddockDir string) (string, error) {
 
 	var runParamString string
@@ -203,9 +204,8 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		if len(match) == 0 {
 			err := errors.New("root name not found with suffixes " + rsuf + " and " + lsuf)
 			return nil, err
-		} else {
-			root = match[1]
 		}
+		root = match[1]
 
 		RecMatch := recRegex.FindStringSubmatch(basePath)
 		if len(RecMatch) != 0 {

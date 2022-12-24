@@ -2,8 +2,9 @@ name: unittests
 
 env:
   CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-on: [push, pull_request]
+on: push
 
 jobs:
   test:
