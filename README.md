@@ -151,7 +151,10 @@ It is used to run HADDOCK in a given folder, and it is called by
 `benchmark-tools` for each scenario. The script is provided in the
 `examples` folder (`haddock24.sh`) and also below.
 
-**Important: Keep in mind that HADDOCK2.4 runs on Python2.7, which is likely not present in recent systems. For tips on how to install it, please refer to the [PYTHON2.md](PYTHON2.md) file in this repository.**
+**Important: Keep in mind that HADDOCK2.4 runs on Python2.7,
+which is likely not present in recent systems. For tips on how
+to install it, please refer to the [PYTHON2.md](PYTHON2.md)
+file in this repository.**
 
 ```bash
 #!/bin/bash

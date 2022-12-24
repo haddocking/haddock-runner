@@ -30,23 +30,26 @@ type GeneralStruct struct {
 	MaxConcurrent     int    `yaml:"max_concurrent"`
 }
 
-// ScenarioStruct is the scenario structure
+// Scenario is the scenario structure
 type Scenario struct {
 	Name       string         `yaml:"name"`
 	Parameters ScenarioParams `yaml:"parameters"`
 }
 
+// ScenarioParams is the scenario parameters structure
 type ScenarioParams struct {
 	CnsParams  map[string]interface{} `yaml:"run_cns"`
 	Restraints Restraints             `yaml:"restraints"`
 	Toppar     Toppar                 `yaml:"custom_toppar"`
 }
 
+// Restraints is the restraints structure
 type Restraints struct {
 	Ambig   string
 	Unambig string
 }
 
+// Toppar is the toppar structure
 type Toppar struct {
 	Top   string
 	Param string
@@ -69,7 +72,7 @@ func (inp *Input) ValidateExecutable() error {
 	return nil
 }
 
-// ValidateScenarioParams checks if the parameters names are valid
+// ValidateRunCNSParams checks if the parameters names are valid
 func ValidateRunCNSParams(known map[string]interface{}, params map[string]interface{}) error {
 
 	for key := range params {

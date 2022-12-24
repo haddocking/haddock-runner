@@ -9,6 +9,7 @@ import (
 	"regexp"
 )
 
+// EditRunCns edits the run.cns file with the parameters passed
 func EditRunCns(runCns string, params map[string]interface{}) error {
 
 	if runCns == "" {

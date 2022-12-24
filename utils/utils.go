@@ -1,3 +1,4 @@
+// Package utils contains utility functions
 package utils
 
 import (
@@ -6,6 +7,8 @@ import (
 	"os"
 )
 
+// CopyFile copies a file from src to dst
+// If the file does not exist or cannot be created, an error is returned
 func CopyFile(src, dst string) error {
 
 	if _, err := os.Stat(src); os.IsNotExist(err) {

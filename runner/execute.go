@@ -1,4 +1,4 @@
-// Package fs provides a set of functions to interact with the filesystem
+// Package runner provides a set of functions to run commands
 package runner
 
 import (
@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-// Path: fs/execute/execute.go
-
+// Run executes a command in a given path
 func Run(command string, path string) (string, error) {
 	var app string
 	var args []string

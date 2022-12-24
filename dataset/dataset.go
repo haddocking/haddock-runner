@@ -302,6 +302,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 
 }
 
+// CreateDatasetDir creates the dataset folder
 func CreateDatasetDir(p string) error {
 
 	if _, err := os.Stat(p); os.IsNotExist(err) {

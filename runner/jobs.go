@@ -1,3 +1,4 @@
+// Package runner provides a set of functions to run commands
 package runner
 
 import (
@@ -10,6 +11,7 @@ import (
 	"benchmarktools/wrapper/haddock2"
 )
 
+// Job is the HADDOCK job
 type Job struct {
 	ID         string
 	Path       string
@@ -94,6 +96,7 @@ func (j Job) SetupHaddock(cmd string) (string, error) {
 	return logF, nil
 }
 
+// RunHaddock runs the HADDOCK job in run1 directory
 func (j Job) RunHaddock(cmd string) (string, error) {
 
 	// Run HADDOCK
