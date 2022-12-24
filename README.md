@@ -148,7 +148,8 @@ scenarios:
 
 The `haddock24.sh` script is a wrapper around the HADDOCK2.4 executable.
 It is used to run HADDOCK in a given folder, and it is called by
-`benchmark-tools` for each scenario. The script is provided in the `examples` folder (`haddock24.sh`) and also below.
+`benchmark-tools` for each scenario. The script is provided in the
+`examples` folder (`haddock24.sh`) and also below.
 
 **Important: Keep in mind that HADDOCK2.4 runs on Python2.7, which is likely not present in recent systems. For tips on how to install it, please refer to the [PYTHON2.md](PYTHON2.md) file in this repository.**
 
@@ -170,9 +171,10 @@ $(which python2.7) $HADDOCK/Haddock/RunHaddock.py
 
 - `input_list.txt`
 
-The input file is a list of the input files to be used in the benchmarking experiment.
-This is a simple text file with one line per input. Each line contains the path to one
-of the input files. The input files must be:
+The input file is a list of the input files to be used in the
+benchmarking experiment.This is a simple text file with one
+line per input. Each line contains the path to one of the input
+files. The input files must be:
 
 - `.pdb`: for receptor and ligand files
 - `.top`: for custom topology files (used for small-molecules)
