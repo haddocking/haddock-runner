@@ -7,6 +7,8 @@ plugins:
       ref: v0.0.8
       uri: https://github.com/trunk-io/plugins
 lint:
+  disabled:
+    - prettier
   enabled:
     - gitleaks@8.15.2
     - shfmt@3.5.0
@@ -14,7 +16,6 @@ lint:
     - git-diff-check
     - shellcheck@0.9.0
     - golangci-lint@1.50.1
-    - prettier@2.8.1
     - markdownlint@0.32.2
     - actionlint@1.6.22
 runtimes:

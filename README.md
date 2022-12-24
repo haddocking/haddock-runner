@@ -35,9 +35,27 @@ different scenarios (parameters), for example:
 
 #### How do I get set up?
 
-**To run the benchmarking tools, you need to have a working (local) installation of HADDOCK2.4.** The software is free for academic use and can be obtained via [registration](https://www.bonvinlab.org/software/haddock2.4/download/). More information can be obtained from the [HADDOCK website](https://www.bonvinlab.org/software/haddock2.4/).
+**To run the benchmarking tools, you need to have a working (local)
+installation of HADDOCK2.4.** The software is free for academic use and can be
+obtained via [registration](https://www.bonvinlab.org/software/haddock2.4/download/).
+More information can be obtained from the [HADDOCK website](https://www.bonvinlab.org/software/haddock2.4/).
 
-For more information on how to install HADDOCK, please refer to the [documentation](https://www.bonvinlab.org/software/haddock2.4/installation/) and also to the [HADDOCK.md](HADDOCK.md) file in this repository.
+For more information on how to install HADDOCK, please refer to the
+[documentation](https://www.bonvinlab.org/software/haddock2.4/installation/)
+and also to the [HADDOCK.md](HADDOCK.md) file in this repository.
+
+#### Previous version
+
+"Hey, what happened to the previous version of this repository? Where is the
+python code?!" - you might ask.
+
+The previous vesion of this repository was indeed written in Python but have been
+migrated to Go. The main reason for this is that the python version was slow, not
+very efficient (or well designed) also it had no tests...! The Go version is faster,
+efficient and easier to maintain - see the code coverage.
+
+However you can still find the Python version as the v0.2.1 tag in this
+repository [HERE](https://github.com/haddocking/benchmark-tools/tree/v0.2.1).
 
 ### [Installation](#installation)
 
@@ -66,9 +84,15 @@ Use the pre-compiled binaries
 
 - `input.yml`
 
-The input of `benchmark-tools` is a `.yml` file; YAML is a human-readable data-serialization language. It is commonly used for configuration files and in applications where data is being stored or transmitted. For more information, please refer to the [YAML website](https://yaml.org/).
+The input of `benchmark-tools` is a `.yml` file; YAML is a human-readable
+data-serialization language. It is commonly used for configuration files and
+in applications where data is being stored or transmitted. For more information,
+please refer to the [YAML website](https://yaml.org/).
 
-An example file is provided in the `examples` folder (`example_input.yml`) and also below. Its composed of two main sections, `general` which defines the general parameters of the benchmarking experiment, and `scenarios` which defines the different scenarios to be tested.
+An example file is provided in the `examples` folder (`example_input.yml`) and
+also below. Its composed of two main sections, `general` which defines the
+general parameters of the benchmarking experiment, and `scenarios` which defines
+the different scenarios to be tested.
 
 ```yaml
 # General parameters
@@ -122,7 +146,9 @@ scenarios:
 
 - `haddock24.sh`
 
-The `haddock24.sh` script is a wrapper around the HADDOCK2.4 executable. It is used to run HADDOCK in a given folder, and it is called by `benchmark-tools` for each scenario. The script is provided in the `examples` folder (`haddock24.sh`) and also below.
+The `haddock24.sh` script is a wrapper around the HADDOCK2.4 executable.
+It is used to run HADDOCK in a given folder, and it is called by
+`benchmark-tools` for each scenario. The script is provided in the `examples` folder (`haddock24.sh`) and also below.
 
 **Important: Keep in mind that HADDOCK2.4 runs on Python2.7, which is likely not present in recent systems. For tips on how to install it, please refer to the [PYTHON2.md](PYTHON2.md) file in this repository.**
 
@@ -144,16 +170,21 @@ $(which python2.7) $HADDOCK/Haddock/RunHaddock.py
 
 - `input_list.txt`
 
-The input file is a list of the input files to be used in the benchmarking experiment. This is a simple text file with one line per input. Each line contains the path to one of the input files. The input files must be:
+The input file is a list of the input files to be used in the benchmarking experiment.
+This is a simple text file with one line per input. Each line contains the path to one
+of the input files. The input files must be:
 
 - `.pdb`: for receptor and ligand files
 - `.top`: for custom topology files (used for small-molecules)
 - `.param` : for custom parameter files (used for small-molecules)
 - `.tbl`: a table file containing the restraints to be used in the docking experiment
 
-This list is parsed by `benchmark-tools` and are identified according to the patterns set in `input.yml`. Lines begining with `#` are ignored and can be used to document the input list for future reference - in-line comments are not supported.
+This list is parsed by `benchmark-tools` and are identified according to the patterns
+ set in `input.yml`. Lines begining with `#` are ignored and can be used to document
+ the input list for future reference - in-line comments are not supported.
 
-An example file is provided in the `examples` folder (`example_input_list.txt`) and also below.
+An example file is provided in the `examples` folder (`example_input_list.txt`)
+and also below.
 
 ```text
 #  Lines starting with # are comments
@@ -189,7 +220,10 @@ example/2OOB/2OOB_hb.tbl
 # ------------------------------------------------------------ #
 ```
 
-**Ensembles**: multiple conformations of a receptor or ligand are also supported, they need to follow the naming convention: `<root>_<ligand|receptor suffix>_N.pdb`, where `N` is the ensemble number. For example, if the ligand suffix is `_l_u`, the ligand files for the first ensemble would be:
+**Ensembles**: multiple conformations of a receptor or ligand are also supported,
+they need to follow the naming convention: `<root>_<ligand|receptor suffix>_N.pdb`,
+where `N` is the ensemble number. For example, if the ligand suffix is `_l_u`,
+the ligand files for the first ensemble would be:
 
 ```text
 <root>_l_u_1.pdb
@@ -197,7 +231,8 @@ example/2OOB/2OOB_hb.tbl
 <root>_l_u_3.pdb
 ```
 
-**Important: Do not provide a multi-model ensemble file, instead provide the individual models.**
+**Important: Do not provide a multi-model ensemble file,
+instead provide the individual models.**
 
 #### [Development](#development)
 
