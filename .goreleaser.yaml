@@ -1,0 +1,32 @@
+
+builds:
+  # You can have multiple builds defined as a yaml list
+  -
+
+    # GOOS list to build for.
+    # For more info refer to: https://golang.org/doc/install/source#environment
+    # Defaults are darwin, linux, and windows.
+    goos:
+      - linux
+      - darwin
+
+    # # GOARCH to build for.
+    # # For more info refer to: https://golang.org/doc/install/source#environment
+    # # Defaults are 386, amd64 and arm64.
+    # goarch:
+    #   - amd64
+    #   - arm
+    #   - arm64
+
+    # # List of combinations of GOOS + GOARCH + GOARM to ignore.
+    # # Default is empty.
+    # ignore:
+    #   - goos: darwin
+    #     goarch: 386
+    #   - goos: linux
+    #     goarch: arm
+    #     goarm: 7
+    #   - goarm: mips64
+    #   - gomips: hardfloat
+    #   - goamd64: v4
+
