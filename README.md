@@ -91,7 +91,6 @@ Options:
   -version: Print version and exit
 ```
 
-
 - `input.yml`
 
 The input of `benchmark-tools` is a `.yml` file; YAML is a human-readable
