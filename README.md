@@ -1,7 +1,10 @@
 # `benchmark-tools` for [HADDOCK](https://www.bonvinlab.org/software/haddock2.4/)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
+[![unittests](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml/badge.svg)](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/benchmark-tools/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/benchmark-tools&utm_campaign=Badge_Coverage)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/benchmark-tools/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=haddocking/benchmark-tools&amp;utm_campaign=Badge_Grade)
+[![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8B%20%20%E2%97%8B-orange)](https://fair-software.eu)
 ---
 
 ## Table of contents
