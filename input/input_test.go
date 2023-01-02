@@ -79,22 +79,53 @@ func TestLoadInput(t *testing.T) {
 
 func TestValidateExecutable(t *testing.T) {
 
-	// Pass by finding the executable in the PATH
+	// Pass by creating an executable
+	// Create an executable
+	haddockDir := "_test"
+	_ = os.MkdirAll(haddockDir, 0755)
+	defer os.RemoveAll(haddockDir)
+
+	haddockF := "_test/haddock.sh"
+	err := os.WriteFile(haddockF, []byte("#!/bin/bash"), 0755)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
+
+	// Pass by finding the executable in the same directory
 	inp := Input{
 		General: GeneralStruct{
-			HaddockExecutable: "ls",
+			HaddockExecutable: haddockF,
 		},
 	}
 
-	err := inp.ValidateExecutable()
+	err = inp.ValidateExecutable()
+
 	if err != nil {
 		t.Errorf("Failed to validate executable: %s", err)
 	}
 
-	// Fail by not finding the executable in the PATH
+	// Fail by not finding the executable in the same directory
 	inp = Input{
 		General: GeneralStruct{
 			HaddockExecutable: "does_not_exist",
+		},
+	}
+
+	err = inp.ValidateExecutable()
+	if err == nil {
+		t.Errorf("Failed to detect wrong executable")
+	}
+
+	// Fail by finding a file with the wrong permissions
+	haddockF = "_test/haddock_wrong.sh"
+	err = os.WriteFile(haddockF, []byte("#!/bin/bash"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
+
+	inp = Input{
+		General: GeneralStruct{
+			HaddockExecutable: haddockF,
 		},
 	}
 
@@ -111,9 +142,50 @@ func TestValidateExecutable(t *testing.T) {
 	}
 
 	err = inp.ValidateExecutable()
+
 	if err == nil {
-		t.Errorf("Failed to detect empty executable")
+		t.Errorf("Failed to detect wrong executable")
 	}
+
+	// // Pass by finding the executable in the PATH
+	// inp := Input{
+	// 	General: GeneralStruct{
+	// 		HaddockExecutable: "ls",
+	// 	},
+	// }
+
+	// err := inp.ValidateExecutable()
+	// if err != nil {
+	// 	t.Errorf("Failed to validate executable: %s", err)
+	// }
+
+	// // Fail by not finding the executable in the PATH
+	// inp = Input{
+	// 	General: GeneralStruct{
+	// 		HaddockExecutable: "does_not_exist",
+	// 	},
+	// }
+
+	// err = inp.ValidateExecutable()
+	// if err == nil {
+	// 	t.Errorf("Failed to detect wrong executable")
+	// }
+
+	// // Fail because no executable is defined
+	// inp = Input{
+	// 	General: GeneralStruct{
+	// 		HaddockExecutable: "",
+	// 	},
+	// }
+
+	// err = inp.ValidateExecutable()
+	// if err == nil {
+	// 	t.Errorf("Failed to detect empty executable")
+	// }
+
+}
+
+func TestValidateHaddock3Executable(t *testing.T) {
 
 }
 

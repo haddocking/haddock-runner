@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -55,21 +54,23 @@ type Toppar struct {
 	Param string
 }
 
-// ValidateExecutable checks if the executable is defined in PATH
+// ValidateExecutable checks if the executable script has the correct permissions
 func (inp *Input) ValidateExecutable() error {
 	if inp.General.HaddockExecutable == "" {
 		err := errors.New("executable not defined")
 		return err
 	}
 
-	cmd := exec.Command(inp.General.HaddockExecutable)
-
-	err := cmd.Run()
+	info, err := os.Stat(inp.General.HaddockExecutable)
 	if err != nil {
 		return err
 	}
+	mode := info.Mode()
+	if mode&0111 != 0 && mode&0011 != 0 {
+		return nil
+	}
+	return errors.New("executable not executable")
 
-	return nil
 }
 
 // ValidateRunCNSParams checks if the parameters names are valid
