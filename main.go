@@ -5,6 +5,7 @@ import (
 	"benchmarktools/dataset"
 	"benchmarktools/input"
 	"benchmarktools/runner"
+	"benchmarktools/utils"
 	"flag"
 	"fmt"
 	"os"
@@ -12,26 +13,51 @@ import (
 	"github.com/golang/glog"
 )
 
-func main() {
-	// Set the glog flags
+const version = "v1.0.0"
+
+func init() {
+	var versionPrint bool
+	const usage = `Usage: %s [options] <input file>
+
+Run HADDOCK benchmarking
+
+Options:
+`
 	_ = flag.Set("logtostderr", "true")
 	_ = flag.Set("stderrthreshold", "WARNING")
 	_ = flag.Set("v", "2")
 
+	flag.BoolVar(&versionPrint, "version", false, "Print version and exit")
+	flag.Usage = func() {
+		flagSet := flag.CommandLine
+		fmt.Fprintf(flag.CommandLine.Output(), usage, "benchmarktools")
+		for _, f := range []string{"version"} {
+			flag := flagSet.Lookup(f)
+			fmt.Printf("  -%s: %s\n", f, flag.Usage)
+		}
+		fmt.Println("")
+	}
+
+}
+
+func main() {
+
 	flag.Parse()
 
-	args := os.Args[1:]
-
-	if len(args) == 0 {
-		glog.Error("No arguments provided")
-		return
+	if utils.IsFlagPassed("version") {
+		fmt.Printf("benchmarktools version %s\n", version)
+		os.Exit(0)
 	}
+
+	args := os.Args[1:]
+	inputF := args[0]
+
 	glog.Info("#######################")
 	glog.Info("Starting benchmarktools")
 	glog.Info("#######################")
-	glog.Info("Loading input file: " + args[0])
+	glog.Info("Loading input file: " + inputF)
 
-	inp, errInp := input.LoadInput(args[0])
+	inp, errInp := input.LoadInput(inputF)
 	if errInp != nil {
 		glog.Error("Failed to load input file: " + errInp.Error())
 		return

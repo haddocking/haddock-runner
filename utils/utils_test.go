@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"flag"
 	"os"
 	"testing"
 )
@@ -32,6 +33,25 @@ func TestCopyFile(t *testing.T) {
 	err = CopyFile("some-file", "does-not-exist/some-file-copy")
 	if err == nil {
 		t.Errorf("Failed to detect wrong file")
+	}
+
+}
+
+func TestIsFlagPassed(t *testing.T) {
+
+	// Pass by passing a flag
+	os.Args = []string{"benchmarktools", "-option1"}
+	var option1 bool
+	flag.BoolVar(&option1, "option1", false, "")
+	flag.Parse()
+
+	if !IsFlagPassed("option1") {
+		t.Errorf("Failed to detect flag")
+	}
+
+	// Pass by passing a flag that is not set
+	if IsFlagPassed("option2") {
+		t.Errorf("Failed to detect flag")
 	}
 
 }

@@ -71,7 +71,7 @@ Clone the repository
 git clone https://github.com/haddocking/benchmark-tools.git
 cd benchmark-tools
 go build -o benchmark-tools
-./benchmark-tools --help
+./benchmark-tools -version
 ```
 
 OR
@@ -81,6 +81,16 @@ Use the pre-compiled binaries
 \<pending>
 
 #### Usage
+
+```bash
+Usage: benchmarktools [options] <input file>
+
+Run HADDOCK benchmarking
+
+Options:
+  -version: Print version and exit
+```
+
 
 - `input.yml`
 

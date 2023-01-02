@@ -3,6 +3,7 @@ package utils
 
 import (
 	"errors"
+	"flag"
 	"io"
 	"os"
 )
@@ -28,4 +29,15 @@ func CopyFile(src, dst string) error {
 	_, _ = io.Copy(destination, source)
 
 	return nil
+}
+
+// IsFlagPassed returns true if the flag was passed
+func IsFlagPassed(name string) bool {
+	var found bool
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
 }
