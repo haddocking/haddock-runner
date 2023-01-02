@@ -1,3 +1,10 @@
+---
+name: Bug report
+about: Create an issue about a bug
+title: ""
+labels: bug
+assignees: ""
+---
 
 <!--- Provide a general summary of the issue in the Title above -->
 
