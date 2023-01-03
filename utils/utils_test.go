@@ -113,12 +113,14 @@ func TestCreateEnsemble(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to write file: %s", err)
 	}
+	defer os.Remove("dummy.pdb")
 
 	// Make a list of PDB files and save it to a file
 	err = os.WriteFile("pdb-files.txt", []byte("\"dummy.pdb\"\n\"dummy.pdb\"\n\"dummy.pdb\"\n"), 0644)
 	if err != nil {
 		t.Errorf("Failed to write file: %s", err)
 	}
+	defer os.RemoveAll("pdb-files.txt")
 
 	// Create an ensemble
 	outF := "ensemble.pdb"
