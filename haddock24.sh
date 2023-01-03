@@ -13,5 +13,11 @@ export HADDOCK="$HOME/repos/haddock24"
 export HADDOCKTOOLS="$HADDOCK/tools"
 export PYTHONPATH="${PYTHONPATH}:$HADDOCK"
 
+########
+# IMPORTANT: HADDOCK2.4 might fail if there's no `run.cns` or `run.param` files
+#   in the current directory. However it will still exit with a 0 status code.
+########
+
 python "$HADDOCK/Haddock/RunHaddock.py"
+
 #===============================================================================
