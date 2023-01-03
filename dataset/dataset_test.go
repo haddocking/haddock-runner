@@ -484,8 +484,12 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 			Name: "scenario1",
 			Parameters: input.ScenarioParams{
 				Modules: input.ModuleParams{
+					Order: []string{"topoaa", "rigidbody"},
 					Topoaa: map[string]interface{}{
 						"some-param": "some-value",
+					},
+					Rigidbody: map[string]interface{}{
+						"ambig_fname": "_ti.tbl",
 					},
 				},
 			},
@@ -512,7 +516,7 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 		ReceptorList: "pdb-files.txt",
 		Ligand:       []string{"dummy.pdb", "dummy.pdb"},
 		LigandList:   "pdb-files.txt",
-		Restraints:   []string{"ambig.tbl", "unambig.tbl"},
+		Restraints:   []string{"1abc_ti.tbl", "unambig.tbl"},
 		Toppar:       []string{"custom.top", "custom.param"},
 	}
 

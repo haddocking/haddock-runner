@@ -196,7 +196,7 @@ func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job,
 		t.Ligand = []string{ensembleF}
 	}
 
-	// Generate the run.toml file
+	// Generate the run.toml file - it will handle the restraints
 	_, _ = t.WriteRunToml(sPath, s.Parameters.Modules)
 
 	j := runner.Job{
@@ -234,16 +234,26 @@ func (t *Target) WriteRunToml(projectDir string, mod input.ModuleParams) (string
 			if m == strings.ToLower(name) {
 				runTomlString += "[" + m + "]\n"
 				for k, v := range field.Interface().(map[string]interface{}) {
-					// // s := utils.MapInterfaceToString(v)
-					switch v := v.(type) {
-					case string:
-						runTomlString += k + " = \"" + v + "\"\n"
-					case int:
-						runTomlString += k + " = " + strconv.Itoa(v) + "\n"
-					case float64:
-						runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
-					case bool:
-						runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+					// NOTE: This is a hack to get the restraints working
+					//  Improve this asap!
+					if k == "ambig_fname" {
+						// Find the restraint that matches the pattern
+						for _, r := range t.Restraints {
+							if strings.Contains(r, v.(string)) {
+								runTomlString += k + " = \"" + r + "\"\n"
+							}
+						}
+					} else {
+						switch v := v.(type) {
+						case string:
+							runTomlString += k + " = \"" + v + "\"\n"
+						case int:
+							runTomlString += k + " = " + strconv.Itoa(v) + "\n"
+						case float64:
+							runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
+						case bool:
+							runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+						}
 					}
 				}
 
