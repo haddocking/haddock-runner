@@ -13,9 +13,9 @@ scenarios:
   # Haddock3.0
   - name: true-interface
     parameters:
-      # general:
-      #   mode: local
-      #   ncores: 1
+      general:
+        mode: local
+        ncores: 1
 
       modules:
         order: [topoaa, rigidbody, seletop, flexref, emref]
@@ -31,6 +31,9 @@ scenarios:
 
   - name: center-of-mass
     parameters:
+      general:
+        mode: local
+        ncores: 1
 
       modules:
         order: [topoaa, rigidbody]
@@ -43,6 +46,8 @@ scenarios:
   - name: random-restraints
     parameters:
       general:
+        mode: local
+        ncores: 1
 
       modules:
         order: [topoaa, rigidbody]

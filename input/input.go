@@ -46,6 +46,7 @@ type ScenarioParams struct {
 	Restraints Restraints             `yaml:"restraints"`
 	Toppar     Toppar                 `yaml:"custom_toppar"`
 	Modules    ModuleParams           `yaml:"modules"`
+	General    map[string]interface{} `yaml:"general"`
 }
 
 // Restraints is the restraints structure
@@ -239,6 +240,8 @@ func LoadHaddock3Params(p string) (ModuleParams, error) {
 	if err != nil {
 		return ModuleParams{}, err
 	}
+
+	// TODO: Load the mandatory/optional parameters
 
 	return m, nil
 

@@ -197,7 +197,7 @@ func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job,
 	}
 
 	// Generate the run.toml file - it will handle the restraints
-	_, _ = t.WriteRunToml(sPath, s.Parameters.Modules)
+	_, _ = t.WriteRunToml(sPath, s.Parameters.General, s.Parameters.Modules)
 
 	j := runner.Job{
 		ID:   t.ID + "_" + s.Name,
@@ -209,12 +209,23 @@ func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job,
 }
 
 // WriteRunToml writes the run.toml file
-func (t *Target) WriteRunToml(projectDir string, mod input.ModuleParams) (string, error) {
+func (t *Target) WriteRunToml(projectDir string, general map[string]interface{}, mod input.ModuleParams) (string, error) {
 
 	runTomlString := ""
+	for k, v := range general {
+		switch v := v.(type) {
+		case string:
+			runTomlString += k + " = \"" + v + "\"\n"
+		case int:
+			runTomlString += k + " = " + strconv.Itoa(v) + "\n"
+		case float64:
+			runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
+		case bool:
+			runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+		}
+	}
+
 	runTomlString += "run_dir = \"run1\"\n"
-	runTomlString += "ncores = 1\n"
-	runTomlString += "mode = \"local\"\n"
 	runTomlString += "molecules = [\n"
 	for _, r := range t.Receptor {
 		runTomlString += "    \"" + r + "\",\n"

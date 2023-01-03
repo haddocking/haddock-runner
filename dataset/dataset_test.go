@@ -571,14 +571,20 @@ func TestWriteRunToml(t *testing.T) {
 		},
 	}
 
-	_, err := target.WriteRunToml("_some-workdir", m)
+	g := make(map[string]interface{})
+	g["general-param1"] = "general-value"
+	g["general-param2"] = 2.5
+	g["general-param3"] = false
+	g["general-param4"] = 1
+
+	_, err := target.WriteRunToml("_some-workdir", g, m)
 
 	if err != nil {
 		t.Errorf("Failed to write run.toml: %s", err)
 	}
 
 	// Fail by trying to write to a directory that does not exist
-	_, err = target.WriteRunToml("_some-workdir/does_not_exist", m)
+	_, err = target.WriteRunToml("_some-workdir/does_not_exist", g, m)
 	if err == nil {
 		t.Errorf("Failed to detect wrong input")
 	}
