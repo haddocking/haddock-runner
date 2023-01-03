@@ -60,6 +60,7 @@ type Toppar struct {
 	Param string
 }
 
+// ModuleParams is the module parameters structure
 type ModuleParams struct {
 	Order         []string               `yaml:"order"`
 	Topoaa        map[string]interface{} `yaml:"topoaa"`

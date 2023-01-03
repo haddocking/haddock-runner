@@ -111,6 +111,7 @@ func (j Job) RunHaddock24(cmd string) (string, error) {
 
 }
 
+// RunHaddock3 runs the HADDOCK3 job in run directory
 func (j Job) RunHaddock3(cmd string) (string, error) {
 
 	// Run HADDOCK3
