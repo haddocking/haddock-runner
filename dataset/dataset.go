@@ -181,8 +181,22 @@ func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job,
 
 	glog.Info("Preparing : " + s.Name)
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
+	dataPath := filepath.Join(wd, t.ID, "data")
 	_ = os.MkdirAll(sPath, 0755)
 
+	// Handle the ensembles
+	if t.ReceptorList != "" {
+		ensembleF := filepath.Join(dataPath, t.ID+"-receptor_ens.pdb")
+		_ = utils.CreateEnsemble(t.ReceptorList, ensembleF)
+		t.Receptor = []string{ensembleF}
+	}
+	if t.LigandList != "" {
+		ensembleF := filepath.Join(dataPath, t.ID+"-ligand_ens.pdb")
+		_ = utils.CreateEnsemble(t.LigandList, ensembleF)
+		t.Ligand = []string{ensembleF}
+	}
+
+	// Generate the run.toml file
 	_, _ = t.WriteRunToml(sPath, s.Parameters.Modules)
 
 	j := runner.Job{
@@ -320,29 +334,6 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		}
 	}
 
-	// Handle the lists
-	for k, v := range m {
-		if len(v.Receptor) > 1 {
-			l := ""
-			for _, r := range v.Receptor {
-				l += "\"" + r + "\"" + "\n"
-			}
-			receptListFile := filepath.Join(projectDir, v.ID+"_receptor.list")
-			_ = os.WriteFile(receptListFile, []byte(l), 0644)
-			v.ReceptorList = receptListFile
-		}
-		if len(v.Ligand) > 1 {
-			l := ""
-			for _, r := range v.Ligand {
-				l += "\"" + r + "\"" + "\n"
-			}
-			ligandListFile := filepath.Join(projectDir, v.ID+"_ligand.list")
-			_ = os.WriteFile(ligandListFile, []byte(l), 0644)
-			v.LigandList = ligandListFile
-		}
-		m[k] = v
-	}
-
 	// Read the file again, now looking for restraints and toppars
 	// TODO: Optimize this
 	_, _ = file.Seek(0, io.SeekStart)
@@ -414,8 +405,8 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 				return nil, err
 			}
 			newT.Receptor = append(newT.Receptor, rdest)
-
 		}
+
 		for _, l := range t.Ligand {
 			ldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(l))
 			err := utils.CopyFile(l, ldest)
@@ -426,26 +417,25 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			newT.Ligand = append(newT.Ligand, ldest)
 		}
 
-		if t.ReceptorList != "" {
-			rldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.ReceptorList))
-			err := utils.CopyFile(t.ReceptorList, rldest)
-			if err != nil {
-				// os.RemoveAll(bmPath)
-				return nil, err
+		// Create lists
+		if len(newT.Receptor) > 1 {
+			l := ""
+			for _, r := range newT.Receptor {
+				l += "\"" + r + "\"" + "\n"
 			}
-			os.Remove(t.ReceptorList)
-			newT.ReceptorList = rldest
+			receptListFile := filepath.Join(bmPath, t.ID, "data", t.ID+"_receptor.list")
+			_ = os.WriteFile(receptListFile, []byte(l), 0644)
+			newT.ReceptorList = receptListFile
 		}
 
-		if t.LigandList != "" {
-			lldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.LigandList))
-			err := utils.CopyFile(t.LigandList, lldest)
-			if err != nil {
-				// os.RemoveAll(bmPath)
-				return nil, err
+		if len(newT.Ligand) > 1 {
+			l := ""
+			for _, r := range newT.Ligand {
+				l += "\"" + r + "\"" + "\n"
 			}
-			os.Remove(t.LigandList)
-			newT.LigandList = lldest
+			ligandListFile := filepath.Join(bmPath, t.ID, "data", t.ID+"_ligand.list")
+			_ = os.WriteFile(ligandListFile, []byte(l), 0644)
+			newT.LigandList = ligandListFile
 		}
 
 		if len(t.Restraints) > 0 {
