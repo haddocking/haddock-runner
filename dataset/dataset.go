@@ -213,6 +213,8 @@ func (t *Target) WriteRunToml(projectDir string, mod input.ModuleParams) (string
 
 	runTomlString := ""
 	runTomlString += "run_dir = \"run1\"\n"
+	runTomlString += "ncores = 1\n"
+	runTomlString += "mode = \"local\"\n"
 	runTomlString += "molecules = [\n"
 	for _, r := range t.Receptor {
 		runTomlString += "    \"" + r + "\",\n"
@@ -227,10 +229,10 @@ func (t *Target) WriteRunToml(projectDir string, mod input.ModuleParams) (string
 	v := reflect.ValueOf(mod)
 	types := v.Type()
 
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Field(i)
-		name := types.Field(i).Name
-		for _, m := range mod.Order {
+	for _, m := range mod.Order {
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			name := types.Field(i).Name
 			if m == strings.ToLower(name) {
 				runTomlString += "[" + m + "]\n"
 				for k, v := range field.Interface().(map[string]interface{}) {
