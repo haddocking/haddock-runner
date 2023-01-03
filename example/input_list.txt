@@ -14,8 +14,6 @@ example/1GGR/1GGR_r_u.pdb
 example/1GGR/1GGR_l_u_1.pdb
 example/1GGR/1GGR_l_u_2.pdb
 example/1GGR/1GGR_l_u_3.pdb
-example/1GGR/1GGR_l_u_4.pdb
-example/1GGR/1GGR_l_u_5.pdb
 example/1GGR/1GGR_ti.tbl
 # 1PPE
 example/1PPE/1PPE_l_u.pdb
