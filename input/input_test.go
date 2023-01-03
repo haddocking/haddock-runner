@@ -335,3 +335,39 @@ func TestLoadHaddock3DefaultParams(t *testing.T) {
 	}
 
 }
+
+func TestValidateHaddock3Params(t *testing.T) {
+
+	known := ModuleParams{}
+	known.Rigidbody = map[string]any{
+		"param1": "value1",
+	}
+	known.Topoaa = map[string]any{
+		"param2": "value2",
+	}
+
+	test := ModuleParams{}
+	test.Rigidbody = map[string]any{
+		"param1": "value1",
+	}
+	test.Topoaa = map[string]any{
+		"param2": "value2",
+	}
+
+	// Pass by finding the parameters
+	err := ValidateHaddock3Params(known, test)
+	if err != nil {
+		t.Errorf("Failed to validate parameters: %s", err)
+	}
+
+	// Fail by not finding a parameter
+	test.Rigidbody = map[string]any{
+		"param10": "value",
+	}
+
+	err = ValidateHaddock3Params(known, test)
+	if err == nil {
+		t.Errorf("Failed to detect wrong parameters")
+	}
+
+}
