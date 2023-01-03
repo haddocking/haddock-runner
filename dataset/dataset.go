@@ -67,10 +67,10 @@ func (t *Target) Validate() error {
 
 }
 
-// SetupScenario method prepares the scenario
+// SetupHaddock24Scenario method prepares the scenario
 //   - Creates the scenario directory
 //   - Creates the run.params file
-func (t *Target) SetupScenario(wd string, hdir string, s input.Scenario) (runner.Job, error) {
+func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario) (runner.Job, error) {
 
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
 	glog.Info("Preparing : " + s.Name)
@@ -169,6 +169,66 @@ func (t *Target) WriteRunParam(projectDir string, haddockDir string) (string, er
 	}
 
 	return runParamF, nil
+
+}
+
+// SetupHaddock3Scenario method prepares the scenario for HADDOCK3
+//   - Creates the scenario directory
+//   - Creates the `run.toml` file
+func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job, error) {
+
+	glog.Info("Preparing : " + s.Name)
+	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
+	_ = os.MkdirAll(sPath, 0755)
+
+	_, _ = t.WriteRunToml(sPath, s.Parameters.Modules)
+
+	j := runner.Job{
+		ID:   t.ID + "_" + s.Name,
+		Path: sPath,
+	}
+
+	return j, nil
+
+}
+
+// WriteRunToml writes the run.toml file
+func (t *Target) WriteRunToml(projectDir string, mod input.ModuleParams) (string, error) {
+
+	runTomlString := ""
+	runTomlString += "run_dir = \"run1\"\n"
+	runTomlString += "molecules = [\n"
+	for _, r := range t.Receptor {
+		runTomlString += "    \"" + r + "\",\n"
+	}
+	for _, l := range t.Ligand {
+		runTomlString += "    \"" + l + "\",\n"
+	}
+	runTomlString += "]\n\n"
+
+	// NOTE: THE ORDER OF THE MODULES IS IMPORTANT!!
+	// The switch below will write the modules in the order
+	//   they are defined in the input file with the `order` key
+	for _, m := range mod.Order {
+		switch m {
+		case "topoaa":
+			runTomlString += "[topoaa]\n"
+			s := utils.MapInterfaceToString(mod.Topoaa)
+			runTomlString += s
+		case "rigidbody":
+			runTomlString += "[rigidbody]\n"
+			s := utils.MapInterfaceToString(mod.Rigidbody)
+			runTomlString += s
+		}
+	}
+
+	runTomlF := filepath.Join(projectDir, "/run.toml")
+	err := os.WriteFile(runTomlF, []byte(runTomlString), 0644)
+	if err != nil {
+		return "", err
+	}
+
+	return runTomlF, nil
 
 }
 

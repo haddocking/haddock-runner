@@ -468,7 +468,7 @@ func TestOrganizeDataset(t *testing.T) {
 
 }
 
-func TestSetupScenario(t *testing.T) {
+func TestSetupHaddock24Scenario(t *testing.T) {
 
 	s := input.Scenario{
 		Name: "scenario1",
@@ -484,7 +484,7 @@ func TestSetupScenario(t *testing.T) {
 	hdir := "haddock-dir"
 	defer os.RemoveAll(wd)
 
-	j, err := target.SetupScenario(wd, hdir, s)
+	j, err := target.SetupHaddock24Scenario(wd, hdir, s)
 	if err != nil {
 		t.Errorf("Failed to setup scenario: %s", err)
 	}
@@ -495,7 +495,91 @@ func TestSetupScenario(t *testing.T) {
 
 	// Fail by trying to setup a scenario without defining the HaddockDir field
 	hdir = ""
-	_, err = target.SetupScenario(wd, hdir, s)
+	_, err = target.SetupHaddock24Scenario(wd, hdir, s)
+	if err == nil {
+		t.Errorf("Failed to detect wrong input")
+	}
+
+}
+
+func TestSetupHaddock3Scenario(t *testing.T) {
+
+	inp := input.Input{}
+	inp.Scenarios = []input.Scenario{
+		{
+			Name: "scenario1",
+			Parameters: input.ScenarioParams{
+				Modules: input.ModuleParams{
+					Topoaa: map[string]interface{}{
+						"some-param": "some-value",
+					},
+				},
+			},
+		},
+	}
+	s := inp.Scenarios[0]
+
+	target := Target{
+		ID:         "1abc",
+		Receptor:   []string{"receptor.pdb"},
+		Ligand:     []string{"ligand.pdb"},
+		Restraints: []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:     []string{"custom.top", "custom.param"},
+	}
+
+	wd := "some-workdir"
+	// hdir := "haddock-dir"
+	defer os.RemoveAll(wd)
+
+	j, err := target.SetupHaddock3Scenario(wd, s)
+	if err != nil {
+		t.Errorf("Failed to setup scenario: %s", err)
+	}
+
+	if j.ID != target.ID+"_"+s.Name {
+		t.Errorf("Wrong scenario name: %s", j.ID)
+	}
+
+	// check if the scenario was written to disk
+	scenarioPath := filepath.Join(wd, target.ID, "scenario-"+s.Name)
+	if _, err := os.Stat(scenarioPath); os.IsNotExist(err) {
+		t.Errorf("Scenario was not written to disk")
+	}
+
+}
+
+func TestWriteRunToml(t *testing.T) {
+
+	// Create a temporary directory
+	_ = os.MkdirAll("_some-workdir", 0755)
+	defer os.RemoveAll("_some-workdir")
+
+	target := Target{
+		ID:         "1abc",
+		Receptor:   []string{"receptor.pdb"},
+		Ligand:     []string{"ligand.pdb"},
+		Restraints: []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:     []string{"custom.top", "custom.param"},
+	}
+
+	m := input.ModuleParams{
+		Order: []string{"topoaa", "rigidbody"},
+		Topoaa: map[string]interface{}{
+			"some-param": "some-value",
+		},
+		Rigidbody: map[string]interface{}{
+			"some-other-param": "some-other-value",
+		},
+	}
+
+	_, err := target.WriteRunToml("_some-workdir", m)
+
+	if err != nil {
+		t.Errorf("Failed to write run.toml: %s", err)
+	}
+
+	// Fail by trying to write to a directory that does not exist
+	_, err = target.WriteRunToml("_some-workdir/does_not_exist", m)
 	if err == nil {
 		t.Errorf("Failed to detect wrong input")
 	}
