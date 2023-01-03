@@ -3,6 +3,7 @@ package utils
 import (
 	"flag"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -52,6 +53,81 @@ func TestIsFlagPassed(t *testing.T) {
 	// Pass by passing a flag that is not set
 	if IsFlagPassed("option2") {
 		t.Errorf("Failed to detect flag")
+	}
+
+}
+
+func TestIsHaddock3(t *testing.T) {
+
+	// Create a folder structure that is the same as haddock3's
+	err := os.MkdirAll("_test_haddock3/src/haddock/modules", 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+	defer os.RemoveAll("_test_haddock3")
+	_, err = os.Create("_test_haddock3/src/haddock/modules/defaults.yaml")
+	if err != nil {
+		t.Errorf("Failed to create file: %s", err)
+	}
+
+	// Pass by finding the defaults.yaml file
+	if !IsHaddock3("_test_haddock3") {
+		t.Errorf("Failed to detect haddock3")
+	}
+
+	// Fail by not finding the defaults.yaml file
+	if IsHaddock3("_test_haddock3/src") {
+		t.Errorf("Failed to detect haddock3")
+	}
+
+}
+
+func TestIsHaddock24(t *testing.T) {
+
+	// Create a folder structure that is the same as haddock2.4's
+	err := os.MkdirAll("_test_haddock24/protocols", 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+	defer os.RemoveAll("_test_haddock24")
+	_, err = os.Create("_test_haddock24/protocols/run.cns-conf")
+	if err != nil {
+		t.Errorf("Failed to create file: %s", err)
+	}
+
+	// Pass by finding the run.cns-conf file
+	if !IsHaddock24("_test_haddock24") {
+		t.Errorf("Failed to detect haddock2.4")
+	}
+
+	// Fail by not finding the run.cns-conf file
+	if IsHaddock24("_test_haddock24/protocols") {
+		t.Errorf("Failed to detect haddock2.4")
+	}
+
+}
+
+func TestMapInterfaceToString(t *testing.T) {
+
+	m := make(map[string]interface{})
+
+	m["key1"] = "value1"
+	m["key2"] = 2
+	m["key3"] = 3.5
+	m["key4"] = true
+
+	s := MapInterfaceToString(m)
+	if !strings.Contains(s, "key1 = \"value1\"") {
+		t.Errorf("Failed to convert map: %s", s)
+	}
+	if !strings.Contains(s, "key2 = 2") {
+		t.Errorf("Failed to convert map: %s", s)
+	}
+	if !strings.Contains(s, "key3 = 3.5") {
+		t.Errorf("Failed to convert map: %s", s)
+	}
+	if !strings.Contains(s, "key4 = true") {
+		t.Errorf("Failed to convert map: %s", s)
 	}
 
 }

@@ -6,6 +6,8 @@ import (
 	"flag"
 	"io"
 	"os"
+	"path/filepath"
+	"strconv"
 )
 
 // CopyFile copies a file from src to dst
@@ -40,4 +42,56 @@ func IsFlagPassed(name string) bool {
 		}
 	})
 	return found
+}
+
+// IsHaddock3 returns true if the path is a Haddock 3 project
+func IsHaddock3(p string) bool {
+
+	rootPath, _ := filepath.Abs(p)
+	DefaultsLoc := filepath.Clean(filepath.Join(rootPath, "src/haddock/modules/defaults.yaml"))
+
+	if _, err := os.Stat(DefaultsLoc); os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+
+}
+
+// IsHaddock24 returns true if the path is a Haddock 2.4 project
+func IsHaddock24(p string) bool {
+
+	rootPath, _ := filepath.Abs(p)
+	runCnsLoc := filepath.Clean(filepath.Join(rootPath, "protocols/run.cns-conf"))
+
+	if _, err := os.Stat(runCnsLoc); os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+
+}
+
+// MapInterfaceToString converts a map[string]interface{} to a string representation
+//
+// This is useful when writing to HADDOCK3's `run.toml`
+func MapInterfaceToString(m map[string]interface{}) string {
+
+	s := ""
+
+	for k, v := range m {
+		switch v := v.(type) {
+		case string:
+			s += k + " = \"" + v + "\"\n"
+		case int:
+			s += k + " = " + strconv.Itoa(v) + "\n"
+		case float64:
+			s += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
+		case bool:
+			s += k + " = " + strconv.FormatBool(v) + "\n"
+		}
+	}
+
+	return s
+
 }
