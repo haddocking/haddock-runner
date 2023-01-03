@@ -6,6 +6,8 @@ import (
 	"benchmarktools/runner"
 	"benchmarktools/utils"
 	"io"
+	"reflect"
+	"strconv"
 	"strings"
 
 	// "benchmarktools/wrapper/haddock2"
@@ -207,18 +209,31 @@ func (t *Target) WriteRunToml(projectDir string, mod input.ModuleParams) (string
 	runTomlString += "]\n\n"
 
 	// NOTE: THE ORDER OF THE MODULES IS IMPORTANT!!
-	// The switch below will write the modules in the order
-	//   they are defined in the input file with the `order` key
-	for _, m := range mod.Order {
-		switch m {
-		case "topoaa":
-			runTomlString += "[topoaa]\n"
-			s := utils.MapInterfaceToString(mod.Topoaa)
-			runTomlString += s
-		case "rigidbody":
-			runTomlString += "[rigidbody]\n"
-			s := utils.MapInterfaceToString(mod.Rigidbody)
-			runTomlString += s
+	// Range over the modules in the order they are defined
+	v := reflect.ValueOf(mod)
+	types := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		name := types.Field(i).Name
+		for _, m := range mod.Order {
+			if m == strings.ToLower(name) {
+				runTomlString += "[" + m + "]\n"
+				for k, v := range field.Interface().(map[string]interface{}) {
+					// // s := utils.MapInterfaceToString(v)
+					switch v := v.(type) {
+					case string:
+						runTomlString += k + " = \"" + v + "\"\n"
+					case int:
+						runTomlString += k + " = " + strconv.Itoa(v) + "\n"
+					case float64:
+						runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
+					case bool:
+						runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+					}
+				}
+
+			}
 		}
 	}
 

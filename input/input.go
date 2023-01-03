@@ -6,9 +6,12 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gopkg.in/yaml.v2"
 )
 
@@ -58,9 +61,24 @@ type Toppar struct {
 }
 
 type ModuleParams struct {
-	Order     []string               `yaml:"order"`
-	Topoaa    map[string]interface{} `yaml:"topoaa"`
-	Rigidbody map[string]interface{} `yaml:"rigidbody"`
+	Order         []string               `yaml:"order"`
+	Topoaa        map[string]interface{} `yaml:"topoaa"`
+	Topocg        map[string]interface{} `yaml:"topocg"`
+	Exit          map[string]interface{} `yaml:"exit"`
+	Emref         map[string]interface{} `yaml:"emref"`
+	Flexref       map[string]interface{} `yaml:"flexref"`
+	Mdref         map[string]interface{} `yaml:"mdref"`
+	Gdock         map[string]interface{} `yaml:"gdock"`
+	Lightdock     map[string]interface{} `yaml:"lightdock"`
+	Rigidbody     map[string]interface{} `yaml:"rigidbody"`
+	Emscoring     map[string]interface{} `yaml:"emscoring"`
+	Mdscoring     map[string]interface{} `yaml:"mdscoring"`
+	Caprieval     map[string]interface{} `yaml:"caprieval"`
+	Clustfcc      map[string]interface{} `yaml:"clustfcc"`
+	Clustrmsd     map[string]interface{} `yaml:"clustrmsd"`
+	Rmsdmatrix    map[string]interface{} `yaml:"rmsdmatrix"`
+	Seletop       map[string]interface{} `yaml:"seletop"`
+	Seletopclusts map[string]interface{} `yaml:"seletopclusts"`
 }
 
 // ---------------------------------------------------------------------
@@ -199,6 +217,7 @@ func LoadHaddock3Params(p string) (ModuleParams, error) {
 		if filepath.Ext(path) == ".yaml" {
 
 			moduleName := filepath.Base(filepath.Dir(path))
+			name := cases.Title(language.Und, cases.NoLower).String(moduleName)
 			yamlFile, _ := os.ReadFile(path)
 
 			data := make(map[string]interface{})
@@ -207,13 +226,12 @@ func LoadHaddock3Params(p string) (ModuleParams, error) {
 				return errMarshal
 			}
 
-			if moduleName == "rigidbody" {
-				m.Rigidbody = data
+			// Add the data to the correct module
+			v := reflect.ValueOf(&m).Elem()
+			if v.FieldByName(name).IsValid() {
+				v.FieldByName(name).Set(reflect.ValueOf(data))
 			}
 
-			if moduleName == "topoaa" {
-				m.Topoaa = data
-			}
 		}
 		return nil
 	})
@@ -228,19 +246,19 @@ func LoadHaddock3Params(p string) (ModuleParams, error) {
 // ValidateHaddock3Params checks if the parameters names are valid
 func ValidateHaddock3Params(known ModuleParams, loaded ModuleParams) error {
 
-	// Check rigidbody
-	for key := range loaded.Rigidbody {
-		if known.Rigidbody[key] == nil {
-			err := errors.New("`" + key + "` not valid")
-			return err
-		}
-	}
+	v := reflect.ValueOf(loaded)
+	k := reflect.ValueOf(known)
 
-	// Check topoaa
-	for key := range loaded.Topoaa {
-		if known.Topoaa[key] == nil {
-			err := errors.New("`" + key + "` not valid")
-			return err
+	types := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		if field.Kind() == reflect.Map {
+			for key := range field.Interface().(map[string]interface{}) {
+				if !k.Field(i).MapIndex(reflect.ValueOf(key)).IsValid() {
+					err := errors.New("`" + key + "` not valid for " + types.Field(i).Name)
+					return err
+				}
+			}
 		}
 	}
 

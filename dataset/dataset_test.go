@@ -563,12 +563,18 @@ func TestWriteRunToml(t *testing.T) {
 	}
 
 	m := input.ModuleParams{
-		Order: []string{"topoaa", "rigidbody"},
+		Order: []string{"topoaa", "rigidbody", "flexref", "mdref"},
 		Topoaa: map[string]interface{}{
 			"some-param": "some-value",
 		},
 		Rigidbody: map[string]interface{}{
-			"some-other-param": "some-other-value",
+			"some-other-param": 10,
+		},
+		Flexref: map[string]interface{}{
+			"some-other-param": 3.5,
+		},
+		Mdref: map[string]interface{}{
+			"some-other-param": false,
 		},
 	}
 

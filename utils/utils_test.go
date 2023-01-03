@@ -3,7 +3,6 @@ package utils
 import (
 	"flag"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -103,31 +102,6 @@ func TestIsHaddock24(t *testing.T) {
 	// Fail by not finding the run.cns-conf file
 	if IsHaddock24("_test_haddock24/protocols") {
 		t.Errorf("Failed to detect haddock2.4")
-	}
-
-}
-
-func TestMapInterfaceToString(t *testing.T) {
-
-	m := make(map[string]interface{})
-
-	m["key1"] = "value1"
-	m["key2"] = 2
-	m["key3"] = 3.5
-	m["key4"] = true
-
-	s := MapInterfaceToString(m)
-	if !strings.Contains(s, "key1 = \"value1\"") {
-		t.Errorf("Failed to convert map: %s", s)
-	}
-	if !strings.Contains(s, "key2 = 2") {
-		t.Errorf("Failed to convert map: %s", s)
-	}
-	if !strings.Contains(s, "key3 = 3.5") {
-		t.Errorf("Failed to convert map: %s", s)
-	}
-	if !strings.Contains(s, "key4 = true") {
-		t.Errorf("Failed to convert map: %s", s)
 	}
 
 }

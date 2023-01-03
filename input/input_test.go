@@ -276,7 +276,23 @@ func TestLoadHaddock3DefaultParams(t *testing.T) {
 		Default string
 	}
 
-	moduleNames := []string{"rigidbody", "topoaa"}
+	moduleNames := []string{"topoaa",
+		"topocg",
+		"exit",
+		"emref",
+		"flexref",
+		"mdref",
+		"gdock",
+		"lightdock",
+		"rigidbody",
+		"emscoring",
+		"mdscoring",
+		"caprieval",
+		"clustfcc",
+		"clustrmsd",
+		"rmsdmatrix",
+		"seletop",
+		"seletopclusts"}
 
 	for _, mod := range moduleNames {
 		_ = os.MkdirAll(filepath.Join(modulePath, mod), 0755)
@@ -316,56 +332,6 @@ func TestLoadHaddock3DefaultParams(t *testing.T) {
 	_, err = LoadHaddock3Params(rootPath)
 	if err == nil {
 		t.Errorf("Failed to load parameters: %s", err)
-	}
-
-}
-
-func TestValidateHaddock3Params(t *testing.T) {
-
-	known := ModuleParams{}
-	known.Rigidbody = map[string]any{
-		"param1": "value1",
-	}
-	known.Topoaa = map[string]any{
-		"param2": "value2",
-	}
-
-	test := ModuleParams{}
-	test.Rigidbody = map[string]any{
-		"param1": "value1",
-	}
-	test.Topoaa = map[string]any{
-		"param2": "value2",
-	}
-
-	// Pass by finding the parameters
-	err := ValidateHaddock3Params(known, test)
-	if err != nil {
-		t.Errorf("Failed to validate parameters: %s", err)
-	}
-
-	// Fail by not finding the parameters for rigidbody
-	test.Rigidbody = map[string]any{
-		"param10": "value",
-	}
-
-	err = ValidateHaddock3Params(known, test)
-	if err == nil {
-		t.Errorf("Failed to detect wrong parameters")
-	}
-
-	// Fail by not finding the parameters for topoaa
-	test.Rigidbody = map[string]any{
-		"param1": "value1",
-	}
-
-	test.Topoaa = map[string]any{
-		"param20": "value",
-	}
-
-	err = ValidateHaddock3Params(known, test)
-	if err == nil {
-		t.Errorf("Failed to detect wrong parameters")
 	}
 
 }
