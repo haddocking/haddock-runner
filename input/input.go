@@ -12,6 +12,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// ---------------------------------------------------------------------
+
 // Input is the input structure
 type Input struct {
 	General   GeneralStruct `yaml:"general"`
@@ -40,6 +42,7 @@ type ScenarioParams struct {
 	CnsParams  map[string]interface{} `yaml:"run_cns"`
 	Restraints Restraints             `yaml:"restraints"`
 	Toppar     Toppar                 `yaml:"custom_toppar"`
+	Modules    ModuleParams           `yaml:"modules"`
 }
 
 // Restraints is the restraints structure
@@ -53,6 +56,14 @@ type Toppar struct {
 	Top   string
 	Param string
 }
+
+type ModuleParams struct {
+	Order     []string               `yaml:"order"`
+	Topoaa    map[string]interface{} `yaml:"topoaa"`
+	Rigidbody map[string]interface{} `yaml:"rigidbody"`
+}
+
+// ---------------------------------------------------------------------
 
 // ValidateExecutable checks if the executable script has the correct permissions
 func (inp *Input) ValidateExecutable() error {
@@ -170,5 +181,69 @@ func LoadHaddock24Params(filename string) (map[string]interface{}, error) {
 	}
 
 	return m, nil
+
+}
+
+// LoadHaddock3Params reads the defaults.yaml files recursively and returns a list of modules
+//
+//	It returns an array of `Module` structs
+func LoadHaddock3Params(p string) (ModuleParams, error) {
+
+	// Check if path exists
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return ModuleParams{}, err
+	}
+
+	m := ModuleParams{}
+	err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+		if filepath.Ext(path) == ".yaml" {
+
+			moduleName := filepath.Base(filepath.Dir(path))
+			yamlFile, _ := os.ReadFile(path)
+
+			data := make(map[string]interface{})
+			errMarshal := yaml.Unmarshal(yamlFile, &data)
+			if errMarshal != nil {
+				return errMarshal
+			}
+
+			if moduleName == "rigidbody" {
+				m.Rigidbody = data
+			}
+
+			if moduleName == "topoaa" {
+				m.Topoaa = data
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return ModuleParams{}, err
+	}
+
+	return m, nil
+
+}
+
+// ValidateHaddock3Params checks if the parameters names are valid
+func ValidateHaddock3Params(known ModuleParams, loaded ModuleParams) error {
+
+	// Check rigidbody
+	for key := range loaded.Rigidbody {
+		if known.Rigidbody[key] == nil {
+			err := errors.New("`" + key + "` not valid")
+			return err
+		}
+	}
+
+	// Check topoaa
+	for key := range loaded.Topoaa {
+		if known.Topoaa[key] == nil {
+			err := errors.New("`" + key + "` not valid")
+			return err
+		}
+	}
+
+	return nil
 
 }

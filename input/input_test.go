@@ -2,6 +2,7 @@ package input
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"gopkg.in/yaml.v2"
@@ -147,42 +148,6 @@ func TestValidateExecutable(t *testing.T) {
 		t.Errorf("Failed to detect wrong executable")
 	}
 
-	// // Pass by finding the executable in the PATH
-	// inp := Input{
-	// 	General: GeneralStruct{
-	// 		HaddockExecutable: "ls",
-	// 	},
-	// }
-
-	// err := inp.ValidateExecutable()
-	// if err != nil {
-	// 	t.Errorf("Failed to validate executable: %s", err)
-	// }
-
-	// // Fail by not finding the executable in the PATH
-	// inp = Input{
-	// 	General: GeneralStruct{
-	// 		HaddockExecutable: "does_not_exist",
-	// 	},
-	// }
-
-	// err = inp.ValidateExecutable()
-	// if err == nil {
-	// 	t.Errorf("Failed to detect wrong executable")
-	// }
-
-	// // Fail because no executable is defined
-	// inp = Input{
-	// 	General: GeneralStruct{
-	// 		HaddockExecutable: "",
-	// 	},
-	// }
-
-	// err = inp.ValidateExecutable()
-	// if err == nil {
-	// 	t.Errorf("Failed to detect empty executable")
-	// }
-
 }
 
 func TestValidateHaddock3Executable(t *testing.T) {
@@ -292,6 +257,113 @@ func TestValidateRunCNSParams(t *testing.T) {
 	}
 
 	err = ValidateRunCNSParams(valid, params)
+	if err == nil {
+		t.Errorf("Failed to detect wrong parameters")
+	}
+
+}
+
+func TestLoadHaddock3DefaultParams(t *testing.T) {
+
+	// Create a folder structure and fill it with dummy files
+
+	rootPath := "_haddock3"
+	modulePath := filepath.Join(rootPath, "/src/haddock/modules/")
+	_ = os.MkdirAll(modulePath, 0755)
+	defer os.RemoveAll(rootPath)
+
+	type dummyParams struct {
+		Default string
+	}
+
+	moduleNames := []string{"rigidbody", "topoaa"}
+
+	for _, mod := range moduleNames {
+		_ = os.MkdirAll(filepath.Join(modulePath, mod), 0755)
+		defaultsF := filepath.Join(modulePath, mod, "defaults.yaml")
+		params := map[string]dummyParams{
+			"param1": {"value1"},
+		}
+		data, err := yaml.Marshal(&params)
+		if err != nil {
+			t.Errorf("Failed to marshal parameters: %s", err)
+		}
+		err = os.WriteFile(defaultsF, data, 0755)
+		if err != nil {
+			t.Errorf("Failed to write defaults.yaml: %s", err)
+		}
+	}
+
+	// Pass by finding the parameters
+	_, err := LoadHaddock3Params(rootPath)
+	if err != nil {
+		t.Errorf("Failed to load parameters: %s", err)
+	}
+
+	// Fail by not finding the parameters
+	_, err = LoadHaddock3Params("does_not_exist")
+	if err == nil {
+		t.Errorf("Failed to load parameters")
+	}
+
+	// Fail by trying to unmarshal a malformed file
+	// defaultsF := filepath.Join(modulePath, "rigidbody", "defaults.yaml")
+	wrongParams := filepath.Join(modulePath, "rigidbody", "wrong_params.yaml")
+	err = os.WriteFile(wrongParams, []byte("not a yaml file"), 0755)
+	if err != nil {
+		t.Errorf("Failed to write defaults.yaml: %s", err)
+	}
+	_, err = LoadHaddock3Params(rootPath)
+	if err == nil {
+		t.Errorf("Failed to load parameters: %s", err)
+	}
+
+}
+
+func TestValidateHaddock3Params(t *testing.T) {
+
+	known := ModuleParams{}
+	known.Rigidbody = map[string]any{
+		"param1": "value1",
+	}
+	known.Topoaa = map[string]any{
+		"param2": "value2",
+	}
+
+	test := ModuleParams{}
+	test.Rigidbody = map[string]any{
+		"param1": "value1",
+	}
+	test.Topoaa = map[string]any{
+		"param2": "value2",
+	}
+
+	// Pass by finding the parameters
+	err := ValidateHaddock3Params(known, test)
+	if err != nil {
+		t.Errorf("Failed to validate parameters: %s", err)
+	}
+
+	// Fail by not finding the parameters for rigidbody
+	test.Rigidbody = map[string]any{
+		"param10": "value",
+	}
+
+	err = ValidateHaddock3Params(known, test)
+	if err == nil {
+		t.Errorf("Failed to detect wrong parameters")
+	}
+
+	// Fail by not finding the parameters for topoaa
+	test.Rigidbody = map[string]any{
+		"param1": "value1",
+	}
+
+	test.Topoaa = map[string]any{
+		"param20": "value",
+	}
+
+	err = ValidateHaddock3Params(known, test)
 	if err == nil {
 		t.Errorf("Failed to detect wrong parameters")
 	}
