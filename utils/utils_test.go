@@ -105,3 +105,61 @@ func TestIsHaddock24(t *testing.T) {
 	}
 
 }
+
+func TestCreateEnsemble(t *testing.T) {
+
+	// Write a dummy PDB file
+	err := os.WriteFile("dummy.pdb", []byte("ATOM      1  N   ALA A   1      10.000  10.000  10.000  1.00  0.00           N\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+
+	// Make a list of PDB files and save it to a file
+	err = os.WriteFile("pdb-files.txt", []byte("\"dummy.pdb\"\n\"dummy.pdb\"\n\"dummy.pdb\"\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+
+	// Create an ensemble
+	outF := "ensemble.pdb"
+	err = CreateEnsemble("pdb-files.txt", "ensemble.pdb")
+	if err != nil {
+		t.Errorf("Failed to create ensemble: %s", err)
+	}
+
+	// Check if the ensemble file exists
+	if _, err := os.Stat(outF); os.IsNotExist(err) {
+		t.Errorf("Failed to create ensemble file")
+	}
+	defer os.Remove(outF)
+
+	// Fail by passing a file that does not exist
+	err = CreateEnsemble("does-not-exist.txt", "ensemble.pdb")
+	if err == nil {
+		t.Errorf("Failed to detect wrong file")
+	}
+
+	// Fail by passing a file that does not point to a PDB file
+	err = os.WriteFile("pdb-files.txt", []byte("\"i-dont-exist.pdb\"\n\"dummy.pdb\"\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	err = CreateEnsemble("pdb-files.txt", "ensemble.pdb")
+	if err == nil {
+		t.Errorf("Failed to detect wrong file")
+	}
+
+	// Fail by passing a file with empty pdb files
+	err = os.WriteFile("dummy.pdb", []byte(""), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	err = os.WriteFile("pdb-files.txt", []byte("\"dummy.pdb\"\n\"dummy.pdb\"\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	err = CreateEnsemble("pdb-files.txt", "ensemble.pdb")
+	if err == nil {
+		t.Errorf("Failed to detect wrong file")
+	}
+}

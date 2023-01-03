@@ -2,12 +2,14 @@
 package utils
 
 import (
+	"bufio"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
+	"strings"
 )
 
 // CopyFile copies a file from src to dst
@@ -72,26 +74,56 @@ func IsHaddock24(p string) bool {
 
 }
 
-// MapInterfaceToString converts a map[string]interface{} to a string representation
-//
-// This is useful when writing to HADDOCK3's `run.toml`
-func MapInterfaceToString(m map[string]interface{}) string {
+// CreateEnsemble creates an ensemble file from a list of PDB files
+func CreateEnsemble(p string, out string) error {
 
-	s := ""
-
-	for k, v := range m {
-		switch v := v.(type) {
-		case string:
-			s += k + " = \"" + v + "\"\n"
-		case int:
-			s += k + " = " + strconv.Itoa(v) + "\n"
-		case float64:
-			s += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
-		case bool:
-			s += k + " = " + strconv.FormatBool(v) + "\n"
-		}
+	// Read the list file and check how many models there should be
+	file, err := os.Open(p)
+	if err != nil {
+		return err
 	}
+	defer file.Close()
 
-	return s
+	s := bufio.NewScanner(file)
+
+	s.Split(bufio.ScanLines)
+	nbModels := 1
+	ens := ""
+
+	for s.Scan() {
+		// modelF := s.Text()
+		path := strings.Trim(s.Text(), "\"")
+
+		modelF, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+
+		// Keep only ATOM records
+		modelScanner := bufio.NewScanner(modelF)
+		modelScanner.Split(bufio.ScanLines)
+		modelStr := ""
+		for modelScanner.Scan() {
+			line := modelScanner.Text()
+			if strings.HasPrefix(line, "ATOM") {
+				modelStr += line + "\n"
+			}
+		}
+		if modelStr == "" {
+			err := errors.New("empty file: " + path)
+			return err
+		}
+
+		header := fmt.Sprintf("MODEL    %-5d\n", nbModels)
+		footer := "ENDMDL\n"
+		ens += header + modelStr + footer
+
+		nbModels++
+	}
+	ens += "END\n"
+
+	_ = os.WriteFile(out, []byte(ens), 0644)
+
+	return nil
 
 }
