@@ -11,6 +11,19 @@ general:
 scenarios:
   # -----------------------------------------------
   # Haddock3.0
+  - name: true-interface
+    parameters:
+      general:
+        mode: local
+
+      modules:
+        order: [topoaa, rigidbody]
+        topoaa:
+          autohis: true
+        rigidbody:
+          sampling: 2
+          ambig_fname: "_ti.tbl"
+
   - name: center-of-mass
     parameters:
       general:
