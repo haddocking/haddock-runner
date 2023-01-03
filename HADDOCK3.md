@@ -3,7 +3,6 @@
 IMPORTANT: HADDOCK v3.0 is still under development and is
 **not ready for production use**!! Please use HADDOCK v2.4.
 
-
 The input file for `haddock3` is slightly different than the one for
 `haddock2.4`. This is needed to accomodate for the new features of HADDOCK3.
 More information about its new features and how to use it can be found in the
@@ -51,7 +50,8 @@ scenarios:
 
 ## Executable script
 
-Here you also need to create an executable script that will call `haddock3`, see the example below:
+Here you also need to create an executable script that will
+call `haddock3`, see the example below:
 
 ```bash
 #!/bin/bash
