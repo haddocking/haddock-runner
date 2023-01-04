@@ -6,6 +6,8 @@ import (
 	"benchmarktools/runner"
 	"benchmarktools/utils"
 	"io"
+	"reflect"
+	"strconv"
 	"strings"
 
 	// "benchmarktools/wrapper/haddock2"
@@ -67,10 +69,10 @@ func (t *Target) Validate() error {
 
 }
 
-// SetupScenario method prepares the scenario
+// SetupHaddock24Scenario method prepares the scenario
 //   - Creates the scenario directory
 //   - Creates the run.params file
-func (t *Target) SetupScenario(wd string, hdir string, s input.Scenario) (runner.Job, error) {
+func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario) (runner.Job, error) {
 
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
 	glog.Info("Preparing : " + s.Name)
@@ -172,6 +174,116 @@ func (t *Target) WriteRunParam(projectDir string, haddockDir string) (string, er
 
 }
 
+// SetupHaddock3Scenario method prepares the scenario for HADDOCK3
+//   - Creates the scenario directory
+//   - Creates the `run.toml` file
+func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job, error) {
+
+	glog.Info("Preparing : " + s.Name)
+	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
+	dataPath := filepath.Join(wd, t.ID, "data")
+	_ = os.MkdirAll(sPath, 0755)
+
+	// Handle the ensembles
+	if t.ReceptorList != "" {
+		ensembleF := filepath.Join(dataPath, t.ID+"-receptor_ens.pdb")
+		_ = utils.CreateEnsemble(t.ReceptorList, ensembleF)
+		t.Receptor = []string{ensembleF}
+	}
+	if t.LigandList != "" {
+		ensembleF := filepath.Join(dataPath, t.ID+"-ligand_ens.pdb")
+		_ = utils.CreateEnsemble(t.LigandList, ensembleF)
+		t.Ligand = []string{ensembleF}
+	}
+
+	// Generate the run.toml file - it will handle the restraints
+	_, _ = t.WriteRunToml(sPath, s.Parameters.General, s.Parameters.Modules)
+
+	j := runner.Job{
+		ID:   t.ID + "_" + s.Name,
+		Path: sPath,
+	}
+
+	return j, nil
+
+}
+
+// WriteRunToml writes the run.toml file
+func (t *Target) WriteRunToml(projectDir string, general map[string]interface{}, mod input.ModuleParams) (string, error) {
+
+	runTomlString := ""
+	for k, v := range general {
+		switch v := v.(type) {
+		case string:
+			runTomlString += k + " = \"" + v + "\"\n"
+		case int:
+			runTomlString += k + " = " + strconv.Itoa(v) + "\n"
+		case float64:
+			runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
+		case bool:
+			runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+		}
+	}
+
+	runTomlString += "run_dir = \"run1\"\n"
+	runTomlString += "molecules = [\n"
+	for _, r := range t.Receptor {
+		runTomlString += "    \"" + r + "\",\n"
+	}
+	for _, l := range t.Ligand {
+		runTomlString += "    \"" + l + "\",\n"
+	}
+	runTomlString += "]\n\n"
+
+	// NOTE: THE ORDER OF THE MODULES IS IMPORTANT!!
+	// Range over the modules in the order they are defined
+	v := reflect.ValueOf(mod)
+	types := v.Type()
+
+	for _, m := range mod.Order {
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			name := types.Field(i).Name
+			if m == strings.ToLower(name) {
+				runTomlString += "[" + m + "]\n"
+				for k, v := range field.Interface().(map[string]interface{}) {
+					// NOTE: This is a hack to get the restraints working
+					//  Improve this asap!
+					if k == "ambig_fname" {
+						// Find the restraint that matches the pattern
+						for _, r := range t.Restraints {
+							if strings.Contains(r, v.(string)) {
+								runTomlString += k + " = \"" + r + "\"\n"
+							}
+						}
+					} else {
+						switch v := v.(type) {
+						case string:
+							runTomlString += k + " = \"" + v + "\"\n"
+						case int:
+							runTomlString += k + " = " + strconv.Itoa(v) + "\n"
+						case float64:
+							runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
+						case bool:
+							runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	runTomlF := filepath.Join(projectDir, "/run.toml")
+	err := os.WriteFile(runTomlF, []byte(runTomlString), 0644)
+	if err != nil {
+		return "", err
+	}
+
+	return runTomlF, nil
+
+}
+
 // LoadDataset loads a dataset from a list file
 func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([]Target, error) {
 
@@ -245,29 +357,6 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		}
 	}
 
-	// Handle the lists
-	for k, v := range m {
-		if len(v.Receptor) > 1 {
-			l := ""
-			for _, r := range v.Receptor {
-				l += "\"" + r + "\"" + "\n"
-			}
-			receptListFile := filepath.Join(projectDir, v.ID+"_receptor.list")
-			_ = os.WriteFile(receptListFile, []byte(l), 0644)
-			v.ReceptorList = receptListFile
-		}
-		if len(v.Ligand) > 1 {
-			l := ""
-			for _, r := range v.Ligand {
-				l += "\"" + r + "\"" + "\n"
-			}
-			ligandListFile := filepath.Join(projectDir, v.ID+"_ligand.list")
-			_ = os.WriteFile(ligandListFile, []byte(l), 0644)
-			v.LigandList = ligandListFile
-		}
-		m[k] = v
-	}
-
 	// Read the file again, now looking for restraints and toppars
 	// TODO: Optimize this
 	_, _ = file.Seek(0, io.SeekStart)
@@ -339,8 +428,8 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 				return nil, err
 			}
 			newT.Receptor = append(newT.Receptor, rdest)
-
 		}
+
 		for _, l := range t.Ligand {
 			ldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(l))
 			err := utils.CopyFile(l, ldest)
@@ -351,26 +440,25 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			newT.Ligand = append(newT.Ligand, ldest)
 		}
 
-		if t.ReceptorList != "" {
-			rldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.ReceptorList))
-			err := utils.CopyFile(t.ReceptorList, rldest)
-			if err != nil {
-				// os.RemoveAll(bmPath)
-				return nil, err
+		// Create lists
+		if len(newT.Receptor) > 1 {
+			l := ""
+			for _, r := range newT.Receptor {
+				l += "\"" + r + "\"" + "\n"
 			}
-			os.Remove(t.ReceptorList)
-			newT.ReceptorList = rldest
+			receptListFile := filepath.Join(bmPath, t.ID, "data", t.ID+"_receptor.list")
+			_ = os.WriteFile(receptListFile, []byte(l), 0644)
+			newT.ReceptorList = receptListFile
 		}
 
-		if t.LigandList != "" {
-			lldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(t.LigandList))
-			err := utils.CopyFile(t.LigandList, lldest)
-			if err != nil {
-				// os.RemoveAll(bmPath)
-				return nil, err
+		if len(newT.Ligand) > 1 {
+			l := ""
+			for _, r := range newT.Ligand {
+				l += "\"" + r + "\"" + "\n"
 			}
-			os.Remove(t.LigandList)
-			newT.LigandList = lldest
+			ligandListFile := filepath.Join(bmPath, t.ID, "data", t.ID+"_ligand.list")
+			_ = os.WriteFile(ligandListFile, []byte(l), 0644)
+			newT.LigandList = ligandListFile
 		}
 
 		if len(t.Restraints) > 0 {

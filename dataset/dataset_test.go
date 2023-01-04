@@ -165,9 +165,6 @@ func TestLoadDataset(t *testing.T) {
 
 	for _, v := range tArr {
 		if v.ID == "structure4" {
-			if v.LigandList == "" {
-				t.Errorf("Failed: LigandList is empty")
-			}
 			if len(v.Ligand) != 2 {
 				t.Errorf("Failed: Not all ligands were loaded")
 			}
@@ -179,9 +176,6 @@ func TestLoadDataset(t *testing.T) {
 			}
 		}
 		if v.ID == "structure3" {
-			if v.ReceptorList == "" {
-				t.Errorf("Failed: ReceptorList is empty")
-			}
 			if len(v.Receptor) != 3 {
 				t.Errorf("Failed: Not all receptors were loaded")
 			}
@@ -399,7 +393,7 @@ func TestOrganizeDataset(t *testing.T) {
 	expectedFiles := []string{
 		"receptor1.pdb", "receptor2.pdb", "ligand1.pdb",
 		"ligand2.pdb", "ambig.tbl", "unambig.tbl",
-		"receptor_list.txt", "ligand_list.txt", "custom.top",
+		"custom.top",
 		"custom.param"}
 
 	for _, v := range expectedFiles {
@@ -426,26 +420,6 @@ func TestOrganizeDataset(t *testing.T) {
 	}
 	arr[0].Ligand = []string{"ligand.pdb"}
 
-	// Fail by organizing inexisting data - receptor_list
-	arr[0].ReceptorList = "does_not_exist.txt"
-	_, err = OrganizeDataset(testBmPath, arr)
-	if err == nil {
-		t.Errorf("Failed to detect wrong directory")
-	}
-	arr[0].ReceptorList = "receptor_list.txt"
-	_, _ = os.Create("receptor_list.txt")
-	_, _ = os.Create("ligand_list.txt")
-
-	// Fail by organizing inexisting data - ligand_list
-	arr[0].LigandList = "does_not_exist.txt"
-	_, err = OrganizeDataset(testBmPath, arr)
-	if err == nil {
-		t.Errorf("Failed to detect wrong directory")
-	}
-	arr[0].LigandList = "ligand_list.txt"
-	_, _ = os.Create("receptor_list.txt")
-	_, _ = os.Create("ligand_list.txt")
-
 	// Fail by trying to copy unexisting restraints
 	arr[0].Restraints = []string{"does_not_exist.tbl"}
 	_, err = OrganizeDataset(testBmPath, arr)
@@ -468,7 +442,7 @@ func TestOrganizeDataset(t *testing.T) {
 
 }
 
-func TestSetupScenario(t *testing.T) {
+func TestSetupHaddock24Scenario(t *testing.T) {
 
 	s := input.Scenario{
 		Name: "scenario1",
@@ -484,7 +458,7 @@ func TestSetupScenario(t *testing.T) {
 	hdir := "haddock-dir"
 	defer os.RemoveAll(wd)
 
-	j, err := target.SetupScenario(wd, hdir, s)
+	j, err := target.SetupHaddock24Scenario(wd, hdir, s)
 	if err != nil {
 		t.Errorf("Failed to setup scenario: %s", err)
 	}
@@ -495,7 +469,122 @@ func TestSetupScenario(t *testing.T) {
 
 	// Fail by trying to setup a scenario without defining the HaddockDir field
 	hdir = ""
-	_, err = target.SetupScenario(wd, hdir, s)
+	_, err = target.SetupHaddock24Scenario(wd, hdir, s)
+	if err == nil {
+		t.Errorf("Failed to detect wrong input")
+	}
+
+}
+
+func TestSetupHaddock3Scenario(t *testing.T) {
+
+	inp := input.Input{}
+	inp.Scenarios = []input.Scenario{
+		{
+			Name: "scenario1",
+			Parameters: input.ScenarioParams{
+				Modules: input.ModuleParams{
+					Order: []string{"topoaa", "rigidbody"},
+					Topoaa: map[string]interface{}{
+						"some-param": "some-value",
+					},
+					Rigidbody: map[string]interface{}{
+						"ambig_fname": "_ti.tbl",
+					},
+				},
+			},
+		},
+	}
+	s := inp.Scenarios[0]
+
+	// Create a dummy PDB
+	err := os.WriteFile("dummy.pdb", []byte("ATOM      1  N   ALA A   1      10.000  10.000  10.000  1.00  0.00           N\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.RemoveAll("dummy.pdb")
+	// Make a list of PDB files and save it to a file
+	err = os.WriteFile("pdb-files.txt", []byte("\"dummy.pdb\"\n\"dummy.pdb\"\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.RemoveAll("pdb-files.txt")
+
+	target := Target{
+		ID:           "1abc",
+		Receptor:     []string{"dummy.pdb", "dummy.pdb"},
+		ReceptorList: "pdb-files.txt",
+		Ligand:       []string{"dummy.pdb", "dummy.pdb"},
+		LigandList:   "pdb-files.txt",
+		Restraints:   []string{"1abc_ti.tbl", "unambig.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+	}
+
+	wd := "some-workdir"
+	// hdir := "haddock-dir"
+	defer os.RemoveAll(wd)
+
+	j, err := target.SetupHaddock3Scenario(wd, s)
+	if err != nil {
+		t.Errorf("Failed to setup scenario: %s", err)
+	}
+
+	if j.ID != target.ID+"_"+s.Name {
+		t.Errorf("Wrong scenario name: %s", j.ID)
+	}
+
+	// check if the scenario was written to disk
+	scenarioPath := filepath.Join(wd, target.ID, "scenario-"+s.Name)
+	if _, err := os.Stat(scenarioPath); os.IsNotExist(err) {
+		t.Errorf("Scenario was not written to disk")
+	}
+
+}
+
+func TestWriteRunToml(t *testing.T) {
+
+	// Create a temporary directory
+	_ = os.MkdirAll("_some-workdir", 0755)
+	defer os.RemoveAll("_some-workdir")
+
+	target := Target{
+		ID:         "1abc",
+		Receptor:   []string{"receptor.pdb"},
+		Ligand:     []string{"ligand.pdb"},
+		Restraints: []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:     []string{"custom.top", "custom.param"},
+	}
+
+	m := input.ModuleParams{
+		Order: []string{"topoaa", "rigidbody", "flexref", "mdref"},
+		Topoaa: map[string]interface{}{
+			"some-param": "some-value",
+		},
+		Rigidbody: map[string]interface{}{
+			"some-other-param": 10,
+		},
+		Flexref: map[string]interface{}{
+			"some-other-param": 3.5,
+		},
+		Mdref: map[string]interface{}{
+			"some-other-param": false,
+		},
+	}
+
+	g := make(map[string]interface{})
+	g["general-param1"] = "general-value"
+	g["general-param2"] = 2.5
+	g["general-param3"] = false
+	g["general-param4"] = 1
+
+	_, err := target.WriteRunToml("_some-workdir", g, m)
+
+	if err != nil {
+		t.Errorf("Failed to write run.toml: %s", err)
+	}
+
+	// Fail by trying to write to a directory that does not exist
+	_, err = target.WriteRunToml("_some-workdir/does_not_exist", g, m)
 	if err == nil {
 		t.Errorf("Failed to detect wrong input")
 	}

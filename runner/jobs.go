@@ -20,12 +20,12 @@ type Job struct {
 	Toppar     input.Toppar
 }
 
-// SetupHaddock sets up the HADDOCK job
+// SetupHaddock24 sets up the HADDOCK job
 // - Setup the `run1“ directory by running the haddock executable
 // - Edit the `run.cns` file
 // - Copy the restraints
 // - Copy the custom toppar
-func (j Job) SetupHaddock(cmd string) (string, error) {
+func (j Job) SetupHaddock24(cmd string) (string, error) {
 
 	logF, err := Run(cmd, j.Path)
 	if err != nil {
@@ -96,12 +96,28 @@ func (j Job) SetupHaddock(cmd string) (string, error) {
 	return logF, nil
 }
 
-// RunHaddock runs the HADDOCK job in run1 directory
-func (j Job) RunHaddock(cmd string) (string, error) {
+// RunHaddock24 runs the HADDOCK job in run1 directory
+func (j Job) RunHaddock24(cmd string) (string, error) {
 
-	// Run HADDOCK
+	// Run HADDOCK24
 	run1Path := filepath.Join(j.Path, "run1")
 	logF, err := Run(cmd, run1Path)
+	if err != nil {
+		err := errors.New("Error running HADDOCK: " + err.Error())
+		return logF, err
+	}
+
+	return logF, nil
+
+}
+
+// RunHaddock3 runs the HADDOCK3 job in run directory
+func (j Job) RunHaddock3(cmd string) (string, error) {
+
+	// Run HADDOCK3
+	runWD := filepath.Join(j.Path)
+	cmd = cmd + " run.toml"
+	logF, err := Run(cmd, runWD)
 	if err != nil {
 		err := errors.New("Error running HADDOCK: " + err.Error())
 		return logF, err

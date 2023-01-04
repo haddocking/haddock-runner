@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestRunHaddock(t *testing.T) {
+func TestRunHaddock24(t *testing.T) {
 
 	_ = os.MkdirAll("cmd-test/run1", 0755)
 	defer os.RemoveAll("cmd-test")
@@ -22,7 +22,7 @@ func TestRunHaddock(t *testing.T) {
 	}
 
 	cmd := "echo test"
-	logF, err := j.RunHaddock(cmd)
+	logF, err := j.RunHaddock24(cmd)
 	if err != nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -30,7 +30,7 @@ func TestRunHaddock(t *testing.T) {
 
 	// fail by passing a non existing command
 	cmdNon := "non_existing_command"
-	logF, err = j.RunHaddock(cmdNon)
+	logF, err = j.RunHaddock24(cmdNon)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestRunHaddock(t *testing.T) {
 
 }
 
-func TestSetupHaddock(t *testing.T) {
+func TestSetupHaddock24(t *testing.T) {
 
 	_ = os.MkdirAll("cmd-test/run1/structures/it0", 0755)
 	_ = os.MkdirAll("cmd-test/run1/structures/it1/water", 0755)
@@ -70,7 +70,7 @@ func TestSetupHaddock(t *testing.T) {
 	}
 
 	cmd := "echo test"
-	logF, err := j.SetupHaddock(cmd)
+	logF, err := j.SetupHaddock24(cmd)
 	if err != nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -116,7 +116,7 @@ func TestSetupHaddock(t *testing.T) {
 
 	// fail by passing a non existing command
 	cmdNon := "non_existing_command"
-	logF, err = j.SetupHaddock(cmdNon)
+	logF, err = j.SetupHaddock24(cmdNon)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestSetupHaddock(t *testing.T) {
 
 	// Fail by not being able to edit run.cns
 	os.Remove("cmd-test/run1/run.cns")
-	_, err = j.SetupHaddock(cmd)
+	_, err = j.SetupHaddock24(cmd)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -132,7 +132,7 @@ func TestSetupHaddock(t *testing.T) {
 
 	// Fail by not being able to copy restraints - ambig
 	j.Restraints.Ambig = "non_existing_file"
-	_, err = j.SetupHaddock(cmd)
+	_, err = j.SetupHaddock24(cmd)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -140,7 +140,7 @@ func TestSetupHaddock(t *testing.T) {
 
 	// Pass by not having ambig restraints
 	j.Restraints.Ambig = ""
-	_, err = j.SetupHaddock(cmd)
+	_, err = j.SetupHaddock24(cmd)
 	if err != nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestSetupHaddock(t *testing.T) {
 
 	// Fail by not being able to copy restraints - unambig
 	j.Restraints.Unambig = "non_existing_file"
-	_, err = j.SetupHaddock(cmd)
+	_, err = j.SetupHaddock24(cmd)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -156,7 +156,7 @@ func TestSetupHaddock(t *testing.T) {
 
 	// Pass by not having unambig restraints
 	j.Restraints.Unambig = ""
-	_, err = j.SetupHaddock(cmd)
+	_, err = j.SetupHaddock24(cmd)
 	if err != nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -164,7 +164,7 @@ func TestSetupHaddock(t *testing.T) {
 
 	// Fail by not being able to copy toppar - top
 	j.Toppar.Top = "non_existing_file"
-	_, err = j.SetupHaddock(cmd)
+	_, err = j.SetupHaddock24(cmd)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -172,7 +172,43 @@ func TestSetupHaddock(t *testing.T) {
 
 	// Fail by not being able to copy toppar - param
 	j.Toppar.Param = "non_existing_file"
-	_, err = j.SetupHaddock(cmd)
+	_, err = j.SetupHaddock24(cmd)
+	if err == nil {
+		t.Errorf("Error running haddock: %v", err)
+	}
+
+}
+
+func TestRunHaddock3(t *testing.T) {
+
+	// Create a directory
+	_ = os.MkdirAll("_run-test", 0755)
+	defer os.RemoveAll("_run-test")
+
+	// Create a Job
+	j := Job{
+		ID:   "test",
+		Path: "_run-test",
+	}
+
+	// define the cmd
+	cmd := "echo test"
+
+	// Pass by running
+	logF, err := j.RunHaddock3(cmd)
+	if err != nil {
+		t.Errorf("Error running haddock: %v", err)
+	}
+
+	// Check if log file was created
+	_, err = os.Stat(logF)
+	if err != nil {
+		t.Errorf("Error creating log file: %v", err)
+	}
+
+	// Fail by running a non existing command
+	cmdNon := "non_existing_command"
+	_, err = j.RunHaddock3(cmdNon)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}

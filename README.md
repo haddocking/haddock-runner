@@ -1,4 +1,4 @@
-# `benchmark-tools` for [HADDOCK](https://www.bonvinlab.org/software/haddock2.4/)
+# `benchmark-tools` for [HADDOCK](https://www.bonvinlab.org/software)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![unittests](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml/badge.svg)](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml)
@@ -100,6 +100,11 @@ The input of `benchmark-tools` is a `.yml` file; YAML is a human-readable
 data-serialization language. It is commonly used for configuration files and
 in applications where data is being stored or transmitted. For more information,
 please refer to the [YAML website](https://yaml.org/).
+
+Currently `benchmark-tools` can be executed for both the production-stable version
+2.4 and the experimental 3.0.0-beta2. The input file is slightly different for
+each version. The input file for version 2.4 is described below, while the input
+file for version 3.0.0-beta2 is described [HERE](HADDOCK3.md).
 
 An example file is provided in the `examples` folder (`example_input.yml`) and
 also below. Its composed of two main sections, `general` which defines the

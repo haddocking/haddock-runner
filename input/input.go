@@ -5,13 +5,17 @@ import (
 	"bufio"
 	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gopkg.in/yaml.v2"
 )
+
+// ---------------------------------------------------------------------
 
 // Input is the input structure
 type Input struct {
@@ -41,6 +45,8 @@ type ScenarioParams struct {
 	CnsParams  map[string]interface{} `yaml:"run_cns"`
 	Restraints Restraints             `yaml:"restraints"`
 	Toppar     Toppar                 `yaml:"custom_toppar"`
+	Modules    ModuleParams           `yaml:"modules"`
+	General    map[string]interface{} `yaml:"general"`
 }
 
 // Restraints is the restraints structure
@@ -55,21 +61,47 @@ type Toppar struct {
 	Param string
 }
 
-// ValidateExecutable checks if the executable is defined in PATH
+// ModuleParams is the module parameters structure
+type ModuleParams struct {
+	Order         []string               `yaml:"order"`
+	Topoaa        map[string]interface{} `yaml:"topoaa"`
+	Topocg        map[string]interface{} `yaml:"topocg"`
+	Exit          map[string]interface{} `yaml:"exit"`
+	Emref         map[string]interface{} `yaml:"emref"`
+	Flexref       map[string]interface{} `yaml:"flexref"`
+	Mdref         map[string]interface{} `yaml:"mdref"`
+	Gdock         map[string]interface{} `yaml:"gdock"`
+	Lightdock     map[string]interface{} `yaml:"lightdock"`
+	Rigidbody     map[string]interface{} `yaml:"rigidbody"`
+	Emscoring     map[string]interface{} `yaml:"emscoring"`
+	Mdscoring     map[string]interface{} `yaml:"mdscoring"`
+	Caprieval     map[string]interface{} `yaml:"caprieval"`
+	Clustfcc      map[string]interface{} `yaml:"clustfcc"`
+	Clustrmsd     map[string]interface{} `yaml:"clustrmsd"`
+	Rmsdmatrix    map[string]interface{} `yaml:"rmsdmatrix"`
+	Seletop       map[string]interface{} `yaml:"seletop"`
+	Seletopclusts map[string]interface{} `yaml:"seletopclusts"`
+}
+
+// ---------------------------------------------------------------------
+
+// ValidateExecutable checks if the executable script has the correct permissions
 func (inp *Input) ValidateExecutable() error {
 	if inp.General.HaddockExecutable == "" {
 		err := errors.New("executable not defined")
 		return err
 	}
 
-	cmd := exec.Command(inp.General.HaddockExecutable)
-
-	err := cmd.Run()
+	info, err := os.Stat(inp.General.HaddockExecutable)
 	if err != nil {
 		return err
 	}
+	mode := info.Mode()
+	if mode&0111 != 0 && mode&0011 != 0 {
+		return nil
+	}
+	return errors.New("executable not executable")
 
-	return nil
 }
 
 // ValidateRunCNSParams checks if the parameters names are valid
@@ -169,5 +201,71 @@ func LoadHaddock24Params(filename string) (map[string]interface{}, error) {
 	}
 
 	return m, nil
+
+}
+
+// LoadHaddock3Params reads the defaults.yaml files recursively and returns a list of modules
+//
+//	It returns an array of `Module` structs
+func LoadHaddock3Params(p string) (ModuleParams, error) {
+
+	// Check if path exists
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return ModuleParams{}, err
+	}
+
+	m := ModuleParams{}
+	err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+		if filepath.Ext(path) == ".yaml" {
+
+			moduleName := filepath.Base(filepath.Dir(path))
+			name := cases.Title(language.Und, cases.NoLower).String(moduleName)
+			yamlFile, _ := os.ReadFile(path)
+
+			data := make(map[string]interface{})
+			errMarshal := yaml.Unmarshal(yamlFile, &data)
+			if errMarshal != nil {
+				return errMarshal
+			}
+
+			// Add the data to the correct module
+			v := reflect.ValueOf(&m).Elem()
+			if v.FieldByName(name).IsValid() {
+				v.FieldByName(name).Set(reflect.ValueOf(data))
+			}
+
+		}
+		return nil
+	})
+	if err != nil {
+		return ModuleParams{}, err
+	}
+
+	// TODO: Load the mandatory/optional parameters
+
+	return m, nil
+
+}
+
+// ValidateHaddock3Params checks if the parameters names are valid
+func ValidateHaddock3Params(known ModuleParams, loaded ModuleParams) error {
+
+	v := reflect.ValueOf(loaded)
+	k := reflect.ValueOf(known)
+
+	types := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		if field.Kind() == reflect.Map {
+			for key := range field.Interface().(map[string]interface{}) {
+				if !k.Field(i).MapIndex(reflect.ValueOf(key)).IsValid() {
+					err := errors.New("`" + key + "` not valid for " + types.Field(i).Name)
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 
 }
