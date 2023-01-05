@@ -23,10 +23,17 @@ scenarios:
           autohis: true
         rigidbody:
           sampling: 10
-          ambig_fname: "_ti.tbl"
+          ambig_fname: _ti
+          unambig_fname: _unambig
+          ligand_top_fname: _custom_top
+          ligand_param_fname: _custom_param
         seletop:
           select: 2
         flexref:
+          ambig_fname: _ti
+          unambig_fname: _unambig
+          ligand_top_fname: _custom_top
+          ligand_param_fname: _custom_param
         emref:
 
   - name: center-of-mass
