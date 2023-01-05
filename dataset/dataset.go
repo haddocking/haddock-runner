@@ -98,7 +98,7 @@ func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario
 	toppar := input.Toppar{}
 	for _, t := range t.Toppar {
 		if filepath.Ext(t) == ".top" {
-			toppar.Top = t
+			toppar.Topology = t
 		}
 		if filepath.Ext(t) == ".param" {
 			toppar.Param = t
@@ -247,15 +247,20 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 			if m == strings.ToLower(name) {
 				runTomlString += "[" + m + "]\n"
 				for k, v := range field.Interface().(map[string]interface{}) {
-					// NOTE: This is a hack to get the restraints working
-					//  Improve this asap!
-					if k == "ambig_fname" {
+					if strings.Contains(k, "_fname") {
 						// Find the restraint that matches the pattern
 						for _, r := range t.Restraints {
 							if strings.Contains(r, v.(string)) {
 								runTomlString += k + " = \"" + r + "\"\n"
 							}
 						}
+						// Find the toppar that matches the pattern
+						for _, r := range t.Toppar {
+							if strings.Contains(r, v.(string)) {
+								runTomlString += k + " = \"" + r + "\"\n"
+							}
+						}
+
 					} else {
 						switch v := v.(type) {
 						case string:

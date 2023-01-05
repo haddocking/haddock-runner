@@ -551,8 +551,8 @@ func TestWriteRunToml(t *testing.T) {
 		ID:         "1abc",
 		Receptor:   []string{"receptor.pdb"},
 		Ligand:     []string{"ligand.pdb"},
-		Restraints: []string{"ambig.tbl", "unambig.tbl"},
-		Toppar:     []string{"custom.top", "custom.param"},
+		Restraints: []string{"ambig.tbl", "unambig.tbl", "something.tbl"},
+		Toppar:     []string{"custom1.top", "custom2.param"},
 	}
 
 	m := input.ModuleParams{
@@ -562,6 +562,10 @@ func TestWriteRunToml(t *testing.T) {
 		},
 		Rigidbody: map[string]interface{}{
 			"some-other-param": 10,
+			"some_fname":       "ambig",
+			"another_fname":    "unambig",
+			"other_fname":      "custom1",
+			"someother_fname":  "custom2",
 		},
 		Flexref: map[string]interface{}{
 			"some-other-param": 3.5,
@@ -581,6 +585,12 @@ func TestWriteRunToml(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Failed to write run.toml: %s", err)
+	}
+
+	// check if the run.toml was written to disk
+	runTomlPath := filepath.Join("_some-workdir", "run.toml")
+	if _, err := os.Stat(runTomlPath); os.IsNotExist(err) {
+		t.Errorf("run.toml was not written to disk")
 	}
 
 	// Fail by trying to write to a directory that does not exist
