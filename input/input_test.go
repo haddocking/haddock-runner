@@ -201,7 +201,7 @@ func TestValidatePatterns(t *testing.T) {
 					Restraints: Restraints{},
 					Toppar:     Toppar{},
 					Modules: ModuleParams{
-						Order: []string{},
+						Order: []string{"rigidbody"},
 						Rigidbody: map[string]interface{}{
 							"param1_fname": "pattern1",
 							"param2_fname": "pattern1",
