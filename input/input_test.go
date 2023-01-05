@@ -34,8 +34,8 @@ func TestLoadInput(t *testing.T) {
 						Unambig: "unambig",
 					},
 					Toppar: Toppar{
-						Top:   "top",
-						Param: "param",
+						Topology: "top",
+						Param:    "param",
 					},
 				},
 			},
@@ -150,6 +150,122 @@ func TestValidateExecutable(t *testing.T) {
 
 }
 
+func TestValidatePatterns(t *testing.T) {
+
+	inp := Input{
+		General: GeneralStruct{
+			ReceptorSuffix: "r_u",
+			LigandSuffix:   "l_u",
+		},
+		Scenarios: []Scenario{
+			{
+				Name: "scenario1",
+				Parameters: ScenarioParams{
+					CnsParams:  map[string]interface{}{},
+					Restraints: Restraints{},
+					Toppar: Toppar{
+						Topology: "top",
+						Param:    "param",
+					},
+					Modules: ModuleParams{
+						Rigidbody: map[string]interface{}{
+							"param1_fname": "pattern1",
+							"param2_fname": "pattern2",
+						},
+					},
+					General: map[string]interface{}{},
+				},
+			},
+		},
+	}
+
+	// Pass by validating the patterns
+	err := inp.ValidatePatterns()
+	if err != nil {
+		t.Errorf("Failed to validate patterns: %s", err)
+	}
+
+	// Fail by not validating the patterns
+
+	// Fail because the fname parameters are repeated
+	badInp := Input{
+		General: GeneralStruct{
+			ReceptorSuffix: "r_u",
+			LigandSuffix:   "l_u",
+		},
+		Scenarios: []Scenario{
+			{
+				Name: "scenario1",
+				Parameters: ScenarioParams{
+					CnsParams:  map[string]interface{}{},
+					Restraints: Restraints{},
+					Toppar:     Toppar{},
+					Modules: ModuleParams{
+						Order: []string{},
+						Rigidbody: map[string]interface{}{
+							"param1_fname": "pattern1",
+							"param2_fname": "pattern1",
+						},
+					},
+					General: map[string]interface{}{},
+				},
+			},
+		},
+	}
+
+	err = badInp.ValidatePatterns()
+	if err == nil {
+		t.Errorf("Failed to detect repeated patterns")
+	}
+
+	// fail because the receptor and ligand suffixes are not defined
+	badInp.General.ReceptorSuffix = ""
+	badInp.General.LigandSuffix = ""
+
+	err = badInp.ValidatePatterns()
+	if err == nil {
+		t.Errorf("Failed to detect missing receptor and ligand suffixes")
+	}
+	badInp.General.ReceptorSuffix = "p1"
+	badInp.General.LigandSuffix = "p2"
+
+	// fail because the receptor/ligand suffixex are the same
+	badInp.General.ReceptorSuffix = "p1"
+	badInp.General.LigandSuffix = "p1"
+
+	err = badInp.ValidatePatterns()
+	if err == nil {
+		t.Errorf("Failed to detect same receptor and ligand suffixes")
+	}
+
+	badInp.General.ReceptorSuffix = "p1"
+	badInp.General.LigandSuffix = "p2"
+
+	// Fail because the Ambig/Unambig patterns are the same
+	badInp.Scenarios[0].Parameters.Restraints.Ambig = "p1"
+	badInp.Scenarios[0].Parameters.Restraints.Unambig = "p1"
+
+	err = badInp.ValidatePatterns()
+	if err == nil {
+		t.Errorf("Failed to detect same Ambig and Unambig patterns")
+	}
+
+	badInp.Scenarios[0].Parameters.Restraints.Ambig = "p1"
+	badInp.Scenarios[0].Parameters.Restraints.Unambig = "p2"
+
+	// Fail because Topology and Param are the same
+	badInp.Scenarios[0].Parameters.Toppar.Topology = "p1"
+	badInp.Scenarios[0].Parameters.Toppar.Param = "p1"
+
+	err = badInp.ValidatePatterns()
+	if err == nil {
+		t.Errorf("Failed to detect same Topology and Param patterns")
+	}
+
+	badInp.Scenarios[0].Parameters.Toppar.Topology = "p1"
+	badInp.Scenarios[0].Parameters.Toppar.Param = "p2"
+
+}
 func TestValidateHaddock3Executable(t *testing.T) {
 
 }
