@@ -127,3 +127,15 @@ func CreateEnsemble(p string, out string) error {
 	return nil
 
 }
+
+// IsUnique returns true if the slice contains unique elements
+func IsUnique(s []string) bool {
+	seen := make(map[string]struct{}, len(s))
+	for _, v := range s {
+		if _, ok := seen[v]; ok {
+			return false
+		}
+		seen[v] = struct{}{}
+	}
+	return true
+}
