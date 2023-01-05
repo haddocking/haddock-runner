@@ -78,9 +78,9 @@ func (j Job) SetupHaddock24(cmd string) (string, error) {
 
 	// Copy toppar
 	topparPath := filepath.Join(j.Path, "run1", "toppar")
-	if j.Toppar.Top != "" {
+	if j.Toppar.Topology != "" {
 		dest := filepath.Join(topparPath, "ligand.top")
-		if err := utils.CopyFile(j.Toppar.Top, dest); err != nil {
+		if err := utils.CopyFile(j.Toppar.Topology, dest); err != nil {
 			err := errors.New("Error copying custom topology: " + err.Error())
 			return logF, err
 		}
