@@ -6,10 +6,8 @@ labels: "feature"
 assignees: ""
 ---
 
-### Is your feature request related to a problem? Please describe
+### Please describe the feature you'd like
 
-### Describe the solution you'd like
+### Why is it relevant?
 
-### Describe alternatives you've considered
-
-### Additional context
+### Additional context (if any)
