@@ -179,3 +179,34 @@ func TestIsUnique(t *testing.T) {
 	}
 
 }
+
+func TestCopyFileArrTo(t *testing.T) {
+
+	var err error
+
+	arr := []string{"dummy.pdb", "dummy.pdb", "dummy.pdb"}
+	err = os.WriteFile(arr[0], []byte("ATOM      1  N   ALA A   1      10.000  10.000  10.000  1.00  0.00           N\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.Remove("dummy.pdb")
+
+	err = os.MkdirAll("dummy", 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+	defer os.RemoveAll("dummy")
+
+	// Pass by copying the files
+	err = CopyFileArrTo(arr, "dummy")
+	if err != nil {
+		t.Errorf("Failed to copy files: %s", err)
+	}
+
+	// Fail by not being able to copy the files
+	err = CopyFileArrTo(arr, "does-not-exist")
+	if err == nil {
+		t.Errorf("Failed to detect wrong folder")
+	}
+
+}
