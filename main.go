@@ -189,8 +189,7 @@ func main() {
 
 			if haddockVersion == 2 {
 
-				_, errSetup2 := job.SetupHaddock24(inp.General.HaddockExecutable)
-
+				errSetup2 := job.SetupHaddock24(inp.General.HaddockExecutable)
 				if errSetup2 != nil {
 					glog.Error("Failed to setup HADDOCK: " + errSetup2.Error())
 					return
