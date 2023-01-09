@@ -9,8 +9,6 @@ general:
   work_dir: /Users/rvhonorato/repos/benchmark-tools/bm-goes-here
 
 scenarios:
-  #-----------------------------------------------
-  # Haddock2.4
   - name: true-interface
     parameters:
       run_cns:
@@ -41,6 +39,5 @@ scenarios:
         structures_0: 2
         structures_1: 2
         waterrefine: 2
-  #-----------------------------------------------
 
   #-----------------------------------------------
