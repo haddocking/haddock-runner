@@ -188,13 +188,15 @@ func TestLoadDataset(t *testing.T) {
 		t.Errorf("Failed to detect wrong dataset file")
 	}
 
-	// Fail by loading a dataset with files that do not exist
+	// Fail by loading a dataset that does not have a receptor suffix
 	err = os.WriteFile("pdb2.list",
 		[]byte(
-			"not-found.pdb\n"), 0644)
+			"root_r_u.pdb\n"+
+				"root_something.pdb\n"), 0644)
 	if err != nil {
 		t.Errorf("Failed to write dataset file: %s", err)
 	}
+
 	defer os.Remove("pdb2.list")
 	_, errData = LoadDataset(projectDir, "pdb2.list", "_r_u", "_l_u")
 	if errData == nil {
