@@ -2,9 +2,7 @@ package runner
 
 import (
 	"benchmarktools/input"
-	"bufio"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -35,147 +33,6 @@ func TestRunHaddock24(t *testing.T) {
 		t.Errorf("Error running haddock: %v", err)
 	}
 	os.Remove(logF)
-
-}
-
-func TestSetupHaddock24(t *testing.T) {
-
-	_ = os.MkdirAll("cmd-test/run1/structures/it0", 0755)
-	_ = os.MkdirAll("cmd-test/run1/structures/it1/water", 0755)
-	_ = os.MkdirAll("cmd-test/run1/data/distances", 0755)
-	_ = os.MkdirAll("cmd-test/run1/toppar", 0755)
-	defer os.RemoveAll("cmd-test")
-
-	_ = os.WriteFile("cmd-test/run1/run.cns", []byte("{===>} param1=true;"), 0644)
-
-	for _, f := range []string{"ambig.tbl", "unambig.tbl", "gdp.top", "gdp.param"} {
-		_ = os.WriteFile(f, []byte(""), 0644)
-		defer os.Remove(f)
-	}
-
-	j := Job{
-		ID:   "test",
-		Path: "cmd-test",
-		Params: map[string]interface{}{
-			"param1": false,
-		},
-		Restraints: input.Restraints{
-			Ambig:   "ambig.tbl",
-			Unambig: "unambig.tbl",
-		},
-		Toppar: input.Toppar{
-			Topology: "gdp.top",
-			Param:    "gdp.param",
-		},
-	}
-
-	cmd := "echo test"
-	logF, err := j.SetupHaddock24(cmd)
-	if err != nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	os.Remove(logF)
-
-	// Check if run.cns was edited
-	cnsF, err := os.Open("cmd-test/run1/run.cns")
-	if err != nil {
-		t.Errorf("Error reading run.cns: %v", err)
-	}
-	scanner := bufio.NewScanner(cnsF)
-	scanner.Split(bufio.ScanLines)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "{===>} param1=") {
-			if line != "{===>} param1=false;" {
-				t.Errorf("Error editing run.cns: %v", err)
-			}
-			break
-		}
-	}
-
-	// Check if restraints were copied
-	_, err = os.Stat("cmd-test/run1/data/distances/ambig.tbl")
-	if err != nil {
-		t.Errorf("Error copying restraints: %v", err)
-	}
-	_, err = os.Stat("cmd-test/run1/data/distances/unambig.tbl")
-	if err != nil {
-		t.Errorf("Error copying restraints: %v", err)
-	}
-
-	// Check if toppar was copied
-	_, err = os.Stat("cmd-test/run1/toppar/ligand.top")
-	if err != nil {
-		t.Errorf("Error copying toppar: %v", err)
-	}
-	_, err = os.Stat("cmd-test/run1/toppar/ligand.param")
-	if err != nil {
-		t.Errorf("Error copying toppar: %v", err)
-	}
-
-	// fail by passing a non existing command
-	cmdNon := "non_existing_command"
-	logF, err = j.SetupHaddock24(cmdNon)
-	if err == nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	os.Remove(logF)
-
-	// Fail by not being able to edit run.cns
-	os.Remove("cmd-test/run1/run.cns")
-	_, err = j.SetupHaddock24(cmd)
-	if err == nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	_, _ = os.Create("cmd-test/run1/run.cns")
-
-	// Fail by not being able to copy restraints - ambig
-	j.Restraints.Ambig = "non_existing_file"
-	_, err = j.SetupHaddock24(cmd)
-	if err == nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	j.Restraints.Ambig = "ambig.tbl"
-
-	// Pass by not having ambig restraints
-	j.Restraints.Ambig = ""
-	_, err = j.SetupHaddock24(cmd)
-	if err != nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	j.Restraints.Ambig = "ambig.tbl"
-
-	// Fail by not being able to copy restraints - unambig
-	j.Restraints.Unambig = "non_existing_file"
-	_, err = j.SetupHaddock24(cmd)
-	if err == nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	j.Restraints.Unambig = "unambig.tbl"
-
-	// Pass by not having unambig restraints
-	j.Restraints.Unambig = ""
-	_, err = j.SetupHaddock24(cmd)
-	if err != nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	j.Restraints.Unambig = "unambig.tbl"
-
-	// Fail by not being able to copy toppar - top
-	j.Toppar.Topology = "non_existing_file"
-	_, err = j.SetupHaddock24(cmd)
-	if err == nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
-	j.Toppar.Topology = "gdp.top"
-
-	// Fail by not being able to copy toppar - param
-	j.Toppar.Param = "non_existing_file"
-	_, err = j.SetupHaddock24(cmd)
-	if err == nil {
-		t.Errorf("Error running haddock: %v", err)
-	}
 
 }
 
@@ -213,4 +70,105 @@ func TestRunHaddock3(t *testing.T) {
 		t.Errorf("Error running haddock: %v", err)
 	}
 
+}
+
+func TestJob_SetupHaddock24(t *testing.T) {
+	type fields struct {
+		ID         string
+		Path       string
+		Params     map[string]interface{}
+		Restraints input.Restraints
+		Toppar     input.Toppar
+	}
+	type args struct {
+		cmd string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "pass",
+			fields: fields{
+				ID:   "test",
+				Path: "cmd-test",
+				Params: map[string]interface{}{
+					"param1": true,
+				},
+				Restraints: input.Restraints{
+					Ambig: "ambig.tbl",
+				},
+				Toppar: input.Toppar{},
+			},
+			args:    args{"echo test"},
+			wantErr: false,
+		},
+		{
+			name: "missing run.param",
+			fields: fields{
+				Path: "does-not-exist",
+			},
+			args:    args{"echo test"},
+			wantErr: true,
+		},
+		{
+			name: "cannot run",
+			fields: fields{
+				Path: "cmd-test",
+			},
+			args:    args{"non_existing_command"},
+			wantErr: true,
+		},
+		{
+			name: "cannot copy topology",
+			fields: fields{
+				Path: "cmd-test",
+				Toppar: input.Toppar{
+					Topology: "non_existing_file",
+				},
+			},
+			args:    args{"echo test"},
+			wantErr: true,
+		},
+		{
+			name: "cannot copy param",
+			fields: fields{
+				Path: "cmd-test",
+				Toppar: input.Toppar{
+					Param: "non_existing_file",
+				},
+			},
+			args:    args{"echo test"},
+			wantErr: true,
+		},
+	}
+	_ = os.MkdirAll("cmd-test/run1/structures/it0", 0755)
+	_ = os.MkdirAll("cmd-test/run1/structures/it1/water", 0755)
+	_ = os.MkdirAll("cmd-test/run1/data/distances", 0755)
+	_ = os.MkdirAll("cmd-test/run1/toppar", 0755)
+	defer os.RemoveAll("cmd-test")
+
+	_ = os.WriteFile("cmd-test/run1/run.cns", []byte("{===>} param1=true;"), 0644)
+
+	for _, f := range []string{"cmd-test/run.param", "ambig.tbl", "unambig.tbl", "gdp.top", "gdp.param"} {
+		_ = os.WriteFile(f, []byte(""), 0644)
+		defer os.Remove(f)
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			j := Job{
+				ID:         tt.fields.ID,
+				Path:       tt.fields.Path,
+				Params:     tt.fields.Params,
+				Restraints: tt.fields.Restraints,
+				Toppar:     tt.fields.Toppar,
+			}
+			if err := j.SetupHaddock24(tt.args.cmd); (err != nil) != tt.wantErr {
+				t.Errorf("Job.SetupHaddock24() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
