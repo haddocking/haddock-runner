@@ -139,3 +139,17 @@ func IsUnique(s []string) bool {
 	}
 	return true
 }
+
+// CopyFileArrTo copy files from an array to a location
+func CopyFileArrTo(files []string, dst string) error {
+
+	for _, f := range files {
+		_, file := filepath.Split(f)
+		err := CopyFile(f, filepath.Join(dst, file))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

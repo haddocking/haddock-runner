@@ -138,6 +138,7 @@ func TestLoadDataset(t *testing.T) {
 		[]byte(
 			"some/path/structure1_r_u.pdb\n"+
 				"some/path/structure1_l_u.pdb\n"+
+				"some/path/structure1_ref.pdb\n"+
 				"some/path/structure2_l_u.pdb\n"+
 				"some/path/structure2_r_u.pdb\n"+
 				"some/path/structure3_r_u_0.pdb\n"+
@@ -352,10 +353,19 @@ func TestOrganizeDataset(t *testing.T) {
 	var err error
 
 	fileArr := []string{
-		"receptor.pdb", "ligand.pdb", "receptor1.pdb",
-		"receptor2.pdb", "ligand1.pdb", "ligand2.pdb",
-		"ambig.tbl", "unambig.tbl", "receptor_list.txt",
-		"ligand_list.txt", "custom.top", "custom.param"}
+		"ref.pdb",
+		"receptor.pdb",
+		"ligand.pdb",
+		"receptor1.pdb",
+		"receptor2.pdb",
+		"ligand1.pdb",
+		"ligand2.pdb",
+		"ambig.tbl",
+		"unambig.tbl",
+		"receptor_list.txt",
+		"ligand_list.txt",
+		"custom.top",
+		"custom.param"}
 
 	for _, file := range fileArr {
 		err := os.WriteFile(file, []byte(""), 0644)
@@ -372,20 +382,19 @@ func TestOrganizeDataset(t *testing.T) {
 	}
 	defer os.RemoveAll(testBmPath)
 
-	arr := []Target{
-		{
-			ID:           "1",
-			Receptor:     []string{"receptor1.pdb", "receptor2.pdb"},
-			ReceptorList: "receptor_list.txt",
-			Ligand:       []string{"ligand1.pdb", "ligand2.pdb"},
-			LigandList:   "ligand_list.txt",
-			Restraints:   []string{"ambig.tbl", "unambig.tbl"},
-			Toppar:       []string{"custom.top", "custom.param"},
-		},
+	target := Target{
+		ID:           "1",
+		Receptor:     []string{"receptor1.pdb", "receptor2.pdb"},
+		ReceptorList: "receptor_list.txt",
+		Ligand:       []string{"ligand1.pdb", "ligand2.pdb"},
+		LigandList:   "ligand_list.txt",
+		Restraints:   []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+		MiscPDB:      []string{"ref.pdb"},
 	}
 
 	// Pass by organizing data in a valid directory
-	_, err = OrganizeDataset(testBmPath, arr)
+	_, err = OrganizeDataset(testBmPath, []Target{target})
 	if err != nil {
 		t.Errorf("Failed to organize data: %s", err)
 	}
@@ -407,40 +416,84 @@ func TestOrganizeDataset(t *testing.T) {
 	}
 
 	// Fail by organizing inexisting data - receptor
-	arr[0].Receptor = []string{"does_not_exist.pdb"}
-	_, err = OrganizeDataset(testBmPath, arr)
+	target = Target{
+		ID:           "1",
+		Receptor:     []string{"does-not-exist.pdb"},
+		ReceptorList: "receptor_list.txt",
+		Ligand:       []string{"ligand1.pdb", "ligand2.pdb"},
+		LigandList:   "ligand_list.txt",
+		Restraints:   []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+		MiscPDB:      []string{"ref.pdb"},
+	}
+	_, err = OrganizeDataset(testBmPath, []Target{target})
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
-	arr[0].Receptor = []string{"receptor.pdb"}
 
 	// Fail by organizing inexisting data - ligand
-	arr[0].Ligand = []string{"does_not_exist.pdb"}
-	_, err = OrganizeDataset(testBmPath, arr)
+	target = Target{
+		ID:           "1",
+		Receptor:     []string{"receptor1.pdb", "receptor2.pdb"},
+		ReceptorList: "receptor_list.txt",
+		Ligand:       []string{"does-not-exist.pdb"},
+		LigandList:   "ligand_list.txt",
+		Restraints:   []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+		MiscPDB:      []string{"ref.pdb"},
+	}
+	_, err = OrganizeDataset(testBmPath, []Target{target})
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
-	arr[0].Ligand = []string{"ligand.pdb"}
 
 	// Fail by trying to copy unexisting restraints
-	arr[0].Restraints = []string{"does_not_exist.tbl"}
-	_, err = OrganizeDataset(testBmPath, arr)
+	target = Target{
+		ID:           "1",
+		Receptor:     []string{"receptor1.pdb", "receptor2.pdb"},
+		ReceptorList: "receptor_list.txt",
+		Ligand:       []string{"ligand1.pdb", "ligand2.pdb"},
+		LigandList:   "ligand_list.txt",
+		Restraints:   []string{"does-not-exist.tbl", "unambig.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+		MiscPDB:      []string{"ref.pdb"},
+	}
+	_, err = OrganizeDataset(testBmPath, []Target{target})
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
-	arr[0].Restraints = []string{"ambig.tbl", "unambig.tbl"}
-	_, _ = os.Create("receptor_list.txt")
-	_, _ = os.Create("ligand_list.txt")
 
 	// Fail by trying to copy unexisting toppar
-	arr[0].Toppar = []string{"does_not_exist.top"}
-	_, err = OrganizeDataset(testBmPath, arr)
+	target = Target{
+		ID:           "1",
+		Receptor:     []string{"receptor1.pdb", "receptor2.pdb"},
+		ReceptorList: "receptor_list.txt",
+		Ligand:       []string{"ligand1.pdb", "ligand2.pdb"},
+		LigandList:   "ligand_list.txt",
+		Restraints:   []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:       []string{"does-not-exist.top"},
+		MiscPDB:      []string{"ref.pdb"},
+	}
+	_, err = OrganizeDataset(testBmPath, []Target{target})
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
-	arr[0].Toppar = []string{"custom.top", "custom.param"}
-	_, _ = os.Create("receptor_list.txt")
-	_, _ = os.Create("ligand_list.txt")
+
+	// Fail by trying to copy unexisting miscpdbs
+	target = Target{
+		ID:           "1",
+		Receptor:     []string{"receptor1.pdb", "receptor2.pdb"},
+		ReceptorList: "receptor_list.txt",
+		Ligand:       []string{"ligand1.pdb", "ligand2.pdb"},
+		LigandList:   "ligand_list.txt",
+		Restraints:   []string{"ambig.tbl", "unambig.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+		MiscPDB:      []string{"does-not-exist.pdb"},
+	}
+	_, err = OrganizeDataset(testBmPath, []Target{target})
+	if err == nil {
+		t.Errorf("Failed to detect wrong directory")
+	}
 
 }
 
@@ -555,6 +608,7 @@ func TestWriteRunToml(t *testing.T) {
 		Ligand:     []string{"ligand.pdb"},
 		Restraints: []string{"ambig.tbl", "unambig.tbl", "something.tbl"},
 		Toppar:     []string{"custom1.top", "custom2.param"},
+		MiscPDB:    []string{"ref.pdb"},
 	}
 
 	m := input.ModuleParams{
@@ -563,11 +617,12 @@ func TestWriteRunToml(t *testing.T) {
 			"some-param": "some-value",
 		},
 		Rigidbody: map[string]interface{}{
-			"some-other-param": 10,
-			"some_fname":       "ambig",
-			"another_fname":    "unambig",
-			"other_fname":      "custom1",
-			"someother_fname":  "custom2",
+			"some-other-param":   10,
+			"some_fname":         "ambig",
+			"another_fname":      "unambig",
+			"other_fname":        "custom1",
+			"someother_fname":    "custom2",
+			"thereference_fname": "ref",
 		},
 		Flexref: map[string]interface{}{
 			"some-other-param": 3.5,

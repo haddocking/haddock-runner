@@ -18,7 +18,7 @@ scenarios:
         ncores: 1
 
       modules:
-        order: [topoaa, rigidbody, seletop, flexref, emref]
+        order: [topoaa, rigidbody, seletop, flexref, emref, caprieval]
         topoaa:
           autohis: true
         rigidbody:
@@ -35,6 +35,8 @@ scenarios:
           ligand_top_fname: _custom_top
           ligand_param_fname: _custom_param
         emref:
+        caprieval:
+          reference_fname: _ref
 
   - name: center-of-mass
     parameters:
