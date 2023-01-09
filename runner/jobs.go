@@ -25,56 +25,68 @@ type Job struct {
 // - Edit the `run.cns` file
 // - Copy the restraints
 // - Copy the custom toppar
-func (j Job) SetupHaddock24(cmd string) (string, error) {
+func (j Job) SetupHaddock24(cmd string) error {
 
-	logF, err := Run(cmd, j.Path)
+	// TODO: Refactor this as a separate function
+	// Append the restraints to run.param
+	m := map[string]string{
+		j.Restraints.Ambig:     "AMBIG_TBL",
+		j.Restraints.Unambig:   "UNAMBIG_TBL",
+		j.Restraints.Hbonds:    "HBOND_FILE",
+		j.Restraints.Dihedrals: "DIHED_FILE",
+		j.Restraints.Hbonds:    "HBOND_FILE",
+		j.Restraints.Tensor:    "TENSOR_FILE",
+		j.Restraints.Cryoem:    "CRYO-EM_FILE",
+		j.Restraints.Rdc1:      "RDC1_FILE",
+		j.Restraints.Rdc2:      "RDC2_FILE",
+		j.Restraints.Rdc3:      "RDC3_FILE",
+		j.Restraints.Rdc4:      "RDC4_FILE",
+		j.Restraints.Rdc5:      "RDC5_FILE",
+		j.Restraints.Rdc6:      "RDC6_FILE",
+		j.Restraints.Rdc7:      "RDC7_FILE",
+		j.Restraints.Rdc8:      "RDC8_FILE",
+		j.Restraints.Rdc9:      "RDC9_FILE",
+		j.Restraints.Rdc10:     "RDC10_FILE",
+		j.Restraints.Dani1:     "DANI1_FILE",
+		j.Restraints.Dani2:     "DANI2_FILE",
+		j.Restraints.Dani3:     "DANI3_FILE",
+		j.Restraints.Dani4:     "DANI4_FILE",
+		j.Restraints.Dani5:     "DANI5_FILE",
+		j.Restraints.Pcs1:      "PCS1_FILE",
+		j.Restraints.Pcs2:      "PCS2_FILE",
+		j.Restraints.Pcs3:      "PCS3_FILE",
+		j.Restraints.Pcs4:      "PCS4_FILE",
+		j.Restraints.Pcs5:      "PCS5_FILE",
+		j.Restraints.Pcs6:      "PCS6_FILE",
+		j.Restraints.Pcs7:      "PCS7_FILE",
+		j.Restraints.Pcs8:      "PCS8_FILE",
+		j.Restraints.Pcs9:      "PCS9_FILE",
+		j.Restraints.Pcs10:     "PCS10_FILE",
+	}
+	runParam := filepath.Join(j.Path, "run.param")
+	f, err := os.OpenFile(runParam, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		err := errors.New("Error opening run.param: " + err.Error())
+		return err
+	}
+
+	for k, v := range m {
+		if k != "" {
+			_, _ = f.WriteString(v + "=" + k + "\n")
+		}
+	}
+
+	f.Close()
+
+	_, err = Run(cmd, j.Path)
 	if err != nil {
 		err := errors.New("Error running HADDOCK: " + err.Error())
-		return logF, err
+		return err
 	}
 
 	// Edit run.cns
 	runCns := filepath.Join(j.Path, "run1", "run.cns")
-	if err := haddock2.EditRunCns(runCns, j.Params); err != nil {
-		err := errors.New("Error editing run.cns: " + err.Error())
-		return logF, err
-	}
-
-	// Copy restraints
-	targetPaths := []string{
-		filepath.Join(j.Path, "run1", "data", "distances"),
-		filepath.Join(j.Path, "run1", "structures", "it0"),
-		filepath.Join(j.Path, "run1", "structures", "it1"),
-		filepath.Join(j.Path, "run1", "structures", "it1", "water"),
-	}
-	for _, target := range targetPaths {
-
-		ambigF := filepath.Join(target, "ambig.tbl")
-		if j.Restraints.Ambig != "" {
-			// Copy ambig file
-			if err := utils.CopyFile(j.Restraints.Ambig, ambigF); err != nil {
-				err := errors.New("Error copying ambig.tbl: " + err.Error())
-				return logF, err
-			}
-		} else {
-			// Create empty ambig.tbl
-			_, _ = os.Create(ambigF)
-
-		}
-
-		unambigF := filepath.Join(target, "unambig.tbl")
-		if j.Restraints.Unambig != "" {
-			// Copy unambig file
-			if err := utils.CopyFile(j.Restraints.Unambig, unambigF); err != nil {
-				err := errors.New("Error copying unambig.tbl: " + err.Error())
-				return logF, err
-			}
-		} else {
-			// Create empty unambig.tbl
-			_, _ = os.Create(unambigF)
-
-		}
-	}
+	_ = haddock2.EditRunCns(runCns, j.Params)
 
 	// Copy toppar
 	topparPath := filepath.Join(j.Path, "run1", "toppar")
@@ -82,18 +94,18 @@ func (j Job) SetupHaddock24(cmd string) (string, error) {
 		dest := filepath.Join(topparPath, "ligand.top")
 		if err := utils.CopyFile(j.Toppar.Topology, dest); err != nil {
 			err := errors.New("Error copying custom topology: " + err.Error())
-			return logF, err
+			return err
 		}
 	}
 	if j.Toppar.Param != "" {
 		dest := filepath.Join(topparPath, "ligand.param")
 		if err := utils.CopyFile(j.Toppar.Param, dest); err != nil {
 			err := errors.New("Error copying custom param: " + err.Error())
-			return logF, err
+			return err
 		}
 	}
 
-	return logF, nil
+	return nil
 }
 
 // RunHaddock24 runs the HADDOCK job in run1 directory
