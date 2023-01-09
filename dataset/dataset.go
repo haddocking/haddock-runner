@@ -29,6 +29,7 @@ type Target struct {
 	LigandList   string
 	Restraints   []string
 	Toppar       []string
+	MiscPDB      []string
 }
 
 // Validate validates the Target checking if
@@ -260,6 +261,12 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 								runTomlString += k + " = \"" + r + "\"\n"
 							}
 						}
+						// Find a PDB that matches the pattern
+						for _, r := range t.MiscPDB {
+							if strings.Contains(r, v.(string)) {
+								runTomlString += k + " = \"" + r + "\"\n"
+							}
+						}
 
 					} else {
 						switch v := v.(type) {
@@ -306,6 +313,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 	s.Split(bufio.ScanLines)
 
 	m := make(map[string]Target)
+	pdbArr := []string{}
 	for s.Scan() {
 		line := s.Text()
 		if !strings.HasSuffix(line, ".pdb") {
@@ -319,7 +327,8 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		// Find root and receptor/ligand names
 		match := rootRegex.FindStringSubmatch(basePath)
 		if len(match) == 0 {
-			// Neither receptor nor ligand, skip
+			// Neither receptor nor ligand, add to a list of PDBs
+			pdbArr = append(pdbArr, fullPath)
 			continue
 		}
 		root = match[1]
@@ -391,6 +400,17 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 			if len(topparMatch) != 0 {
 				v.Toppar = append(v.Toppar, s.Text())
 			}
+
+			m[k] = v
+		}
+	}
+
+	// Add the misc PDBs
+	for _, pdb := range pdbArr {
+		for k, v := range m {
+			if strings.Contains(pdb, k) {
+				v.MiscPDB = append(v.MiscPDB, pdb)
+			}
 			m[k] = v
 		}
 	}
@@ -453,6 +473,16 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			newT.Ligand = append(newT.Ligand, ldest)
 		}
 
+		for _, p := range t.MiscPDB {
+			mdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(p))
+			err := utils.CopyFile(p, mdest)
+			if err != nil {
+				// os.RemoveAll(bmPath)
+				return nil, err
+			}
+			newT.MiscPDB = append(newT.MiscPDB, mdest)
+		}
+
 		// Create lists
 		if len(newT.Receptor) > 1 {
 			l := ""
@@ -474,28 +504,16 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			newT.LigandList = ligandListFile
 		}
 
-		if len(t.Restraints) > 0 {
-			for _, r := range t.Restraints {
-				rdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(r))
-				err := utils.CopyFile(r, rdest)
-				if err != nil {
-					// os.RemoveAll(bmPath)
-					return nil, err
-				}
-				newT.Restraints = append(newT.Restraints, rdest)
-			}
+		dataDir := filepath.Join(bmPath, t.ID, "data")
+
+		errRest := utils.CopyFileArrTo(t.Restraints, dataDir)
+		if errRest != nil {
+			return nil, errRest
 		}
 
-		if len(t.Toppar) > 0 {
-			for _, toppar := range t.Toppar {
-				tdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(toppar))
-				err := utils.CopyFile(toppar, tdest)
-				if err != nil {
-					// os.RemoveAll(bmPath)
-					return nil, err
-				}
-				newT.Toppar = append(newT.Toppar, tdest)
-			}
+		errToppar := utils.CopyFileArrTo(t.Toppar, dataDir)
+		if errToppar != nil {
+			return nil, errToppar
 		}
 
 		tArr = append(tArr, newT)
