@@ -13,7 +13,7 @@ import (
 	"github.com/golang/glog"
 )
 
-const version = "v1.1.0"
+const version = "v1.2.0"
 
 func init() {
 	var versionPrint bool
@@ -66,6 +66,12 @@ func main() {
 	errExec := inp.ValidateExecutable()
 	if errExec != nil {
 		glog.Error("Failed to validate executable: " + errExec.Error())
+		return
+	}
+
+	errPatt := inp.ValidatePatterns()
+	if errPatt != nil {
+		glog.Error("ERROR: " + errPatt.Error())
 		return
 	}
 

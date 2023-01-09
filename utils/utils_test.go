@@ -165,3 +165,17 @@ func TestCreateEnsemble(t *testing.T) {
 		t.Errorf("Failed to detect wrong file")
 	}
 }
+
+func TestIsUnique(t *testing.T) {
+
+	// Pass by passing a list of unique elements
+	if !IsUnique([]string{"a", "b", "c"}) {
+		t.Errorf("Failed to detect unique elements")
+	}
+
+	// Fail by passing a list of non-unique elements
+	if IsUnique([]string{"a", "b", "a"}) {
+		t.Errorf("Failed to detect non-unique elements")
+	}
+
+}

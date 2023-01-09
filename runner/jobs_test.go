@@ -64,8 +64,8 @@ func TestSetupHaddock24(t *testing.T) {
 			Unambig: "unambig.tbl",
 		},
 		Toppar: input.Toppar{
-			Top:   "gdp.top",
-			Param: "gdp.param",
+			Topology: "gdp.top",
+			Param:    "gdp.param",
 		},
 	}
 
@@ -163,12 +163,12 @@ func TestSetupHaddock24(t *testing.T) {
 	j.Restraints.Unambig = "unambig.tbl"
 
 	// Fail by not being able to copy toppar - top
-	j.Toppar.Top = "non_existing_file"
+	j.Toppar.Topology = "non_existing_file"
 	_, err = j.SetupHaddock24(cmd)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
-	j.Toppar.Top = "gdp.top"
+	j.Toppar.Topology = "gdp.top"
 
 	// Fail by not being able to copy toppar - param
 	j.Toppar.Param = "non_existing_file"

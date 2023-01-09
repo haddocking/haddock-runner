@@ -19,12 +19,12 @@ scenarios:
         structures_1: 2
         waterrefine: 2
       restraints:
-        ambig: "ti"
-        unambig: "unambig"
-        hbonds: "hb"
+        ambig: ti
+        unambig: unambig
+        hbonds: hb
       custom_toppar:
-        topology: "_ligand.top"
-        param: "_ligand.param"
+        topology: _ligand.top
+        param: _ligand.param
 
   - name: center-of-mass
     parameters:
@@ -43,44 +43,4 @@ scenarios:
         waterrefine: 2
   #-----------------------------------------------
 
-  #-----------------------------------------------
-  # Haddock3.0
-  # true-interface:
-  #   general:
-  #     mode: local
-  #   topoaa:
-  #     autohis: true
-  #     mol1:
-  #       nhisd: 0
-  #       nhise: 1
-  #       hise_1: 75
-  #     mol2:
-  #       nhisd: 1
-  #       hisd_1: 76
-  #       nhise: 1
-  #       hise_1: 15
-
-  #   rigidbody:
-  #     tolerance: 20
-  #     ambig_fname: ./ambig.tbl
-  #     sampling: 20
-
-  # center-of-mass:
-  #   general:
-  #     mode: local
-  #   topoaa:
-  #     autohis: true
-  #     mol1:
-  #       nhisd: 0
-  #       nhise: 1
-  #       hise_1: 75
-  #     mol2:
-  #       nhisd: 1
-  #       hisd_1: 76
-  #       nhise: 1
-  #       hise_1: 15
-
-  #   rigidbody:
-  #     noecv: true
-  #     sampling: 20
   #-----------------------------------------------

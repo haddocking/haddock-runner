@@ -2,6 +2,7 @@
 package input
 
 import (
+	"benchmarktools/utils"
 	"bufio"
 	"errors"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -57,8 +59,8 @@ type Restraints struct {
 
 // Toppar is the toppar structure
 type Toppar struct {
-	Top   string
-	Param string
+	Topology string
+	Param    string
 }
 
 // ModuleParams is the module parameters structure
@@ -101,6 +103,69 @@ func (inp *Input) ValidateExecutable() error {
 		return nil
 	}
 	return errors.New("executable not executable")
+
+}
+
+// ValidatePatterns checks if there are duplicated patterns in the input struct
+func (inp *Input) ValidatePatterns() error {
+
+	// ReceptorSuffix and LigandSuffix
+	if inp.General.ReceptorSuffix == "" || inp.General.LigandSuffix == "" {
+		err := errors.New("receptor_suffix or ligand_suffix not defined in `general` section")
+		return err
+	} else if inp.General.ReceptorSuffix == inp.General.LigandSuffix {
+		err := errors.New("receptor_suffix and ligand_suffix are the same at `general` section")
+		return err
+	}
+
+	for _, scenario := range inp.Scenarios {
+		// Ambig and Unambig
+		if scenario.Parameters.Restraints.Ambig != "" || scenario.Parameters.Restraints.Unambig != "" {
+			if scenario.Parameters.Restraints.Ambig == scenario.Parameters.Restraints.Unambig {
+				err := errors.New("ambig and unambig patterns are the same at`" + scenario.Name + "`scenario")
+				return err
+			}
+		}
+
+		// Topology and Param
+		if scenario.Parameters.Toppar.Topology != "" || scenario.Parameters.Toppar.Param != "" {
+			if scenario.Parameters.Toppar.Topology == scenario.Parameters.Toppar.Param {
+				err := errors.New("topology and param patterns are the same at `" + scenario.Name + "` scenario")
+				return err
+			}
+		}
+
+		v := reflect.ValueOf(scenario.Parameters.Modules)
+		types := v.Type()
+
+		for _, m := range scenario.Parameters.Modules.Order {
+			fnameArr := []string{}
+			for i := 0; i < v.NumField(); i++ {
+				field := v.Field(i)
+				fieldName := types.Field(i).Name
+				if m == strings.ToLower(fieldName) {
+
+					if field.Kind() == reflect.Map {
+						for key, value := range field.Interface().(map[string]interface{}) {
+							if strings.Contains(key, "_fname") {
+								if value != nil {
+									fnameArr = append(fnameArr, value.(string))
+								}
+							}
+						}
+					}
+				}
+			}
+			// Check if there are duplicated patterns
+			if !utils.IsUnique(fnameArr) {
+				err := errors.New("duplicated patterns in `" + m + "` modules' `fname` parameters")
+				return err
+			}
+		}
+
+	}
+
+	return nil
 
 }
 
