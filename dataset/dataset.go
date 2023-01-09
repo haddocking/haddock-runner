@@ -319,8 +319,8 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		// Find root and receptor/ligand names
 		match := rootRegex.FindStringSubmatch(basePath)
 		if len(match) == 0 {
-			err := errors.New("root name not found with suffixes " + rsuf + " and " + lsuf)
-			return nil, err
+			// Neither receptor nor ligand, skip
+			continue
 		}
 		root = match[1]
 
@@ -359,6 +359,14 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 				entry.Ligand = append(entry.Ligand, ligand)
 			}
 			m[root] = entry
+		}
+	}
+
+	// Check if Targets have both receptor and ligand
+	for _, v := range m {
+		if len(v.Receptor) == 0 || len(v.Ligand) == 0 {
+			err := errors.New("Target " + v.ID + " does not have both receptor and ligand")
+			return nil, err
 		}
 	}
 
