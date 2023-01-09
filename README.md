@@ -20,7 +20,7 @@
 
 #### What is this repository for?
 
-This repository contains a set of tools to benchmark the performance of HADDOCK2.4.
+This repository contains a set of tools to benchmark the performance of **HADDOCK2.4**/**HADDOCK3.0**.
 
 These can be used to compare the perfomance of HADDOCK against other software
 packages, to compare the performance of different versions of HADDOCK, or to
@@ -79,11 +79,13 @@ go build -o benchmark-tools
 
 OR
 
-Use the pre-compiled binaries
+Use the pre-compiled binaries from the latest release
 
-\<pending>
+- [haddocking/benchmark-tools/releases/latest](https://github.com/haddocking/benchmark-tools/releases/latest)
 
 #### Usage
+
+**Check the step-by-step tutorial at [bonvinlab.org/education/benchmark-tools](https://www.bonvinlab.org/education/benchmark-tools/)**
 
 ```bash
 Usage: benchmarktools [options] <input file>
