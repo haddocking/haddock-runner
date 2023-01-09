@@ -702,6 +702,9 @@ func TestTarget_SetupHaddock24Scenario(t *testing.T) {
 			wantErr: true,
 		},
 	}
+
+	defer os.RemoveAll("some-workdir")
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &Target{
