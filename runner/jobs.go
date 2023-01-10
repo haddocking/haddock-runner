@@ -34,7 +34,6 @@ func (j Job) SetupHaddock24(cmd string) error {
 		j.Restraints.Unambig:   "UNAMBIG_TBL",
 		j.Restraints.Hbonds:    "HBOND_FILE",
 		j.Restraints.Dihedrals: "DIHED_FILE",
-		j.Restraints.Hbonds:    "HBOND_FILE",
 		j.Restraints.Tensor:    "TENSOR_FILE",
 		j.Restraints.Cryoem:    "CRYO-EM_FILE",
 		j.Restraints.Rdc1:      "RDC1_FILE",
