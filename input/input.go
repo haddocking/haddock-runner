@@ -53,8 +53,37 @@ type ScenarioParams struct {
 
 // Restraints is the restraints structure
 type Restraints struct {
-	Ambig   string
-	Unambig string
+	Ambig     string
+	Unambig   string
+	Dihedrals string
+	Hbonds    string
+	Tensor    string
+	Cryoem    string
+	Rdc1      string
+	Rdc2      string
+	Rdc3      string
+	Rdc4      string
+	Rdc5      string
+	Rdc6      string
+	Rdc7      string
+	Rdc8      string
+	Rdc9      string
+	Rdc10     string
+	Dani1     string
+	Dani2     string
+	Dani3     string
+	Dani4     string
+	Dani5     string
+	Pcs1      string
+	Pcs2      string
+	Pcs3      string
+	Pcs4      string
+	Pcs5      string
+	Pcs6      string
+	Pcs7      string
+	Pcs8      string
+	Pcs9      string
+	Pcs10     string
 }
 
 // Toppar is the toppar structure

@@ -2,12 +2,14 @@ package dataset
 
 import (
 	"benchmarktools/input"
+	"benchmarktools/runner"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
-func TestWriteRunParam(t *testing.T) {
+func TestWriteRunParamStub(t *testing.T) {
 
 	_ = os.Mkdir("1abc", 0755)
 	defer os.RemoveAll("1abc")
@@ -27,7 +29,7 @@ func TestWriteRunParam(t *testing.T) {
 		LigandList:   "some/path/ligand.list",
 	}
 
-	_, err := target.WriteRunParam(projectDir, haddockDir)
+	_, err := target.WriteRunParamStub(projectDir, haddockDir)
 	if err != nil {
 		t.Error(err)
 	}
@@ -35,7 +37,7 @@ func TestWriteRunParam(t *testing.T) {
 	// Fail by writing a run parameter file with an empty target
 	target = Target{}
 
-	_, err = target.WriteRunParam(projectDir, haddockDir)
+	_, err = target.WriteRunParamStub(projectDir, haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -47,7 +49,7 @@ func TestWriteRunParam(t *testing.T) {
 		Ligand:   []string{"1abc.pdb"},
 	}
 
-	_, err = target.WriteRunParam(projectDir, haddockDir)
+	_, err = target.WriteRunParamStub(projectDir, haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -59,7 +61,7 @@ func TestWriteRunParam(t *testing.T) {
 		Ligand:   []string{},
 	}
 
-	_, err = target.WriteRunParam(projectDir, haddockDir)
+	_, err = target.WriteRunParamStub(projectDir, haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -71,7 +73,7 @@ func TestWriteRunParam(t *testing.T) {
 		Ligand:   []string{"1abc.pdb"},
 	}
 
-	_, err = target.WriteRunParam(projectDir, "")
+	_, err = target.WriteRunParamStub(projectDir, "")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -83,7 +85,7 @@ func TestWriteRunParam(t *testing.T) {
 		Ligand:   []string{"1abc.pdb"},
 	}
 
-	_, err = target.WriteRunParam("", haddockDir)
+	_, err = target.WriteRunParamStub("", haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -95,7 +97,7 @@ func TestWriteRunParam(t *testing.T) {
 		Ligand:   []string{"1abc.pdb"},
 	}
 
-	_, err = target.WriteRunParam("", haddockDir)
+	_, err = target.WriteRunParamStub("", haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -107,7 +109,7 @@ func TestWriteRunParam(t *testing.T) {
 		Ligand:   []string{"1abc.pdb"},
 	}
 
-	_, err = target.WriteRunParam("some/path/that/does/not/exist", haddockDir)
+	_, err = target.WriteRunParamStub("some/path/that/does/not/exist", haddockDir)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -497,40 +499,6 @@ func TestOrganizeDataset(t *testing.T) {
 
 }
 
-func TestSetupHaddock24Scenario(t *testing.T) {
-
-	s := input.Scenario{
-		Name: "scenario1",
-	}
-	target := Target{
-		ID:         "1abc",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"ligand.pdb"},
-		Restraints: []string{"ambig.tbl", "unambig.tbl"},
-		Toppar:     []string{"custom.top", "custom.param"},
-	}
-	wd := "some-workdir"
-	hdir := "haddock-dir"
-	defer os.RemoveAll(wd)
-
-	j, err := target.SetupHaddock24Scenario(wd, hdir, s)
-	if err != nil {
-		t.Errorf("Failed to setup scenario: %s", err)
-	}
-
-	if j.ID != target.ID+"_"+s.Name {
-		t.Errorf("Wrong scenario name: %s", j.ID)
-	}
-
-	// Fail by trying to setup a scenario without defining the HaddockDir field
-	hdir = ""
-	_, err = target.SetupHaddock24Scenario(wd, hdir, s)
-	if err == nil {
-		t.Errorf("Failed to detect wrong input")
-	}
-
-}
-
 func TestSetupHaddock3Scenario(t *testing.T) {
 
 	inp := input.Input{}
@@ -656,4 +624,107 @@ func TestWriteRunToml(t *testing.T) {
 		t.Errorf("Failed to detect wrong input")
 	}
 
+}
+
+func TestTarget_SetupHaddock24Scenario(t *testing.T) {
+	type fields struct {
+		ID           string
+		Receptor     []string
+		ReceptorList string
+		Ligand       []string
+		LigandList   string
+		Restraints   []string
+		Toppar       []string
+		MiscPDB      []string
+	}
+	type args struct {
+		wd   string
+		hdir string
+		s    input.Scenario
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    runner.Job
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			name: "pass",
+			fields: fields{
+				ID:         "1abc",
+				Receptor:   []string{"receptor.pdb"},
+				Ligand:     []string{"ligand.pdb"},
+				Restraints: []string{"ambig_ti.tbl", "other_unambig.tbl", "something.tbl"},
+				Toppar:     []string{"custom1.top", "custom2.param"},
+			},
+			args: args{
+				wd:   "some-workdir",
+				hdir: "haddock-dir",
+				s: input.Scenario{
+					Name: "some-scenario",
+					Parameters: input.ScenarioParams{
+						Restraints: input.Restraints{
+							Ambig:   "_ti",
+							Unambig: "_unambig",
+						},
+					},
+				},
+			},
+			want: runner.Job{
+				ID:   "1abc_some-scenario",
+				Path: "some-workdir/1abc/scenario-some-scenario",
+				Restraints: input.Restraints{
+					Ambig:   "ambig_ti.tbl",
+					Unambig: "other_unambig.tbl",
+				},
+				Toppar: input.Toppar{
+					Topology: "custom1.top",
+					Param:    "custom2.param",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "fail",
+			fields: fields{
+				ID: "1abc",
+			},
+			args: args{
+				wd:   "some-workdir",
+				hdir: "",
+				s: input.Scenario{
+					Name: "some-scenario",
+				},
+			},
+			want:    runner.Job{},
+			wantErr: true,
+		},
+	}
+
+	defer os.RemoveAll("some-workdir")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Target{
+				ID:           tt.fields.ID,
+				Receptor:     tt.fields.Receptor,
+				ReceptorList: tt.fields.ReceptorList,
+				Ligand:       tt.fields.Ligand,
+				LigandList:   tt.fields.LigandList,
+				Restraints:   tt.fields.Restraints,
+				Toppar:       tt.fields.Toppar,
+				MiscPDB:      tt.fields.MiscPDB,
+			}
+			got, err := tr.SetupHaddock24Scenario(tt.args.wd, tt.args.hdir, tt.args.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Target.SetupHaddock24Scenario() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Target.SetupHaddock24Scenario() =\ngot   %v,\n want %v", got, tt.want)
+			}
+		})
+	}
 }

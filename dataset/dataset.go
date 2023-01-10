@@ -80,19 +80,28 @@ func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario
 	_ = os.MkdirAll(sPath, 0755)
 
 	// Generate the run.params file
-	_, err := t.WriteRunParam(sPath, hdir)
+	_, err := t.WriteRunParamStub(sPath, hdir)
 	if err != nil {
 		return runner.Job{}, err
 	}
 
 	// Find which restraints need to be used
+	// FIXME: there's probably a better way to do this
 	restraints := input.Restraints{}
-	for _, r := range t.Restraints {
-		if strings.Contains(r, s.Parameters.Restraints.Ambig) {
-			restraints.Ambig = r
-		}
-		if strings.Contains(r, s.Parameters.Restraints.Unambig) {
-			restraints.Unambig = r
+
+	v := reflect.ValueOf(&s.Parameters.Restraints).Elem()
+	k := reflect.ValueOf(&restraints).Elem()
+
+	types := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i).String()
+		name := types.Field(i).Name
+		for _, r := range t.Restraints {
+			if field != "" {
+				if strings.Contains(r, field) {
+					k.FieldByName(name).SetString(r)
+				}
+			}
 		}
 	}
 
@@ -119,8 +128,8 @@ func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario
 
 }
 
-// WriteRunParam writes the run.param file
-func (t *Target) WriteRunParam(projectDir string, haddockDir string) (string, error) {
+// WriteRunParamStub writes the run.param file
+func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string, error) {
 
 	var runParamString string
 
@@ -453,34 +462,41 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			ID: t.ID,
 		}
 
+		// Update the paths in the Target struct
 		for _, r := range t.Receptor {
 			rdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(r))
-			err := utils.CopyFile(r, rdest)
-			if err != nil {
-				// os.RemoveAll(bmPath)
-				return nil, err
-			}
 			newT.Receptor = append(newT.Receptor, rdest)
 		}
 
 		for _, l := range t.Ligand {
 			ldest := filepath.Join(bmPath, t.ID, "data", filepath.Base(l))
-			err := utils.CopyFile(l, ldest)
-			if err != nil {
-				// os.RemoveAll(bmPath)
-				return nil, err
-			}
 			newT.Ligand = append(newT.Ligand, ldest)
 		}
 
 		for _, p := range t.MiscPDB {
 			mdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(p))
-			err := utils.CopyFile(p, mdest)
+			newT.MiscPDB = append(newT.MiscPDB, mdest)
+		}
+
+		for _, r := range t.Restraints {
+			rdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(r))
+			newT.Restraints = append(newT.Restraints, rdest)
+		}
+
+		for _, toppar := range t.Toppar {
+			tdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(toppar))
+			newT.Toppar = append(newT.Toppar, tdest)
+		}
+
+		// Copy to the data folder
+		dataDir := filepath.Join(bmPath, t.ID, "data")
+		objArr := [][]string{t.Receptor, t.Ligand, t.MiscPDB, t.Restraints, t.Toppar}
+
+		for _, obj := range objArr {
+			err := utils.CopyFileArrTo(obj, dataDir)
 			if err != nil {
-				// os.RemoveAll(bmPath)
 				return nil, err
 			}
-			newT.MiscPDB = append(newT.MiscPDB, mdest)
 		}
 
 		// Create lists
@@ -502,18 +518,6 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			ligandListFile := filepath.Join(bmPath, t.ID, "data", t.ID+"_ligand.list")
 			_ = os.WriteFile(ligandListFile, []byte(l), 0644)
 			newT.LigandList = ligandListFile
-		}
-
-		dataDir := filepath.Join(bmPath, t.ID, "data")
-
-		errRest := utils.CopyFileArrTo(t.Restraints, dataDir)
-		if errRest != nil {
-			return nil, errRest
-		}
-
-		errToppar := utils.CopyFileArrTo(t.Toppar, dataDir)
-		if errToppar != nil {
-			return nil, errToppar
 		}
 
 		tArr = append(tArr, newT)
