@@ -49,6 +49,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	if len(os.Args) < 2 {
+		glog.Error("No arguments were provided\n\n")
+		flag.Usage()
+		return
+	}
 	args := os.Args[1:]
 	inputF := args[0]
 
