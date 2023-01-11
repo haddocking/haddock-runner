@@ -71,7 +71,7 @@ func (j Job) SetupHaddock24(cmd string) error {
 
 	for k, v := range m {
 		if k != "" {
-			_, _ = f.WriteString(v + "=" + k + "\n")
+			_, _ = f.WriteString(v + "=../data/" + filepath.Base(k) + "\n")
 		}
 	}
 
@@ -91,14 +91,16 @@ func (j Job) SetupHaddock24(cmd string) error {
 	topparPath := filepath.Join(j.Path, "run1", "toppar")
 	if j.Toppar.Topology != "" {
 		dest := filepath.Join(topparPath, "ligand.top")
-		if err := utils.CopyFile(j.Toppar.Topology, dest); err != nil {
+		src := j.Toppar.Topology
+		if err := utils.CopyFile(src, dest); err != nil {
 			err := errors.New("Error copying custom topology: " + err.Error())
 			return err
 		}
 	}
 	if j.Toppar.Param != "" {
 		dest := filepath.Join(topparPath, "ligand.param")
-		if err := utils.CopyFile(j.Toppar.Param, dest); err != nil {
+		src := j.Toppar.Param
+		if err := utils.CopyFile(src, dest); err != nil {
 			err := errors.New("Error copying custom param: " + err.Error())
 			return err
 		}

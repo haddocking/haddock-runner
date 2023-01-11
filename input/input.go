@@ -123,6 +123,11 @@ func (inp *Input) ValidateExecutable() error {
 		return err
 	}
 
+	if !filepath.IsAbs(inp.General.HaddockExecutable) {
+		err := errors.New("`" + inp.General.HaddockExecutable + "` is not an absolute path")
+		return err
+	}
+
 	info, err := os.Stat(inp.General.HaddockExecutable)
 	if err != nil {
 		return err

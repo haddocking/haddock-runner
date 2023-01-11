@@ -155,23 +155,23 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 
 	runParamString += "N_COMP=2\n"
 	runParamString += "RUN_NUMBER=1\n"
-	runParamString += "PROJECT_DIR=" + projectDir + "\n"
+	runParamString += "PROJECT_DIR=./\n"
 	runParamString += "HADDOCK_DIR=" + haddockDir + "\n"
 
 	// Write receptor files
-	runParamString += "PDB_FILE1=" + t.Receptor[0] + "\n"
+	runParamString += "PDB_FILE1=../data/" + filepath.Base(t.Receptor[0]) + "\n"
 
 	// Write receptor list file
 	if t.ReceptorList != "" {
-		runParamString += "PDB_LIST1=" + t.ReceptorList + "\n"
+		runParamString += "PDB_LIST1=../data" + filepath.Base(t.ReceptorList) + "\n"
 	}
 
 	// Write ligand files
-	runParamString += "PDB_FILE2=" + t.Ligand[0] + "\n"
+	runParamString += "PDB_FILE2=../data/" + filepath.Base(t.Ligand[0]) + "\n"
 
 	// write ligand list files
 	if t.LigandList != "" {
-		runParamString += "PDB_LIST2=" + t.LigandList + "\n"
+		runParamString += "PDB_LIST2=../data" + filepath.Base(t.LigandList) + "\n"
 	}
 
 	runParamF := filepath.Join(projectDir, "/run.param")
@@ -238,10 +238,10 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 	runTomlString += "run_dir = \"run1\"\n"
 	runTomlString += "molecules = [\n"
 	for _, r := range t.Receptor {
-		runTomlString += "    \"" + r + "\",\n"
+		runTomlString += "    \"../data/" + filepath.Base(r) + "\",\n"
 	}
 	for _, l := range t.Ligand {
-		runTomlString += "    \"" + l + "\",\n"
+		runTomlString += "    \"../data/" + filepath.Base(l) + "\",\n"
 	}
 	runTomlString += "]\n\n"
 
@@ -261,19 +261,19 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 						// Find the restraint that matches the pattern
 						for _, r := range t.Restraints {
 							if strings.Contains(r, v.(string)) {
-								runTomlString += k + " = \"" + r + "\"\n"
+								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
 							}
 						}
 						// Find the toppar that matches the pattern
 						for _, r := range t.Toppar {
 							if strings.Contains(r, v.(string)) {
-								runTomlString += k + " = \"" + r + "\"\n"
+								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
 							}
 						}
 						// Find a PDB that matches the pattern
 						for _, r := range t.MiscPDB {
 							if strings.Contains(r, v.(string)) {
-								runTomlString += k + " = \"" + r + "\"\n"
+								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
 							}
 						}
 
