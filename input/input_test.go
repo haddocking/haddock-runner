@@ -78,78 +78,6 @@ func TestLoadInput(t *testing.T) {
 
 }
 
-func TestValidateExecutable(t *testing.T) {
-
-	// Pass by creating an executable
-	// Create an executable
-	haddockDir := "_test"
-	_ = os.MkdirAll(haddockDir, 0755)
-	defer os.RemoveAll(haddockDir)
-
-	haddockF := "_test/haddock.sh"
-	err := os.WriteFile(haddockF, []byte("#!/bin/bash"), 0755)
-	if err != nil {
-		t.Errorf("Failed to write executable: %s", err)
-	}
-
-	// Pass by finding the executable in the same directory
-	inp := Input{
-		General: GeneralStruct{
-			HaddockExecutable: haddockF,
-		},
-	}
-
-	err = inp.ValidateExecutable()
-
-	if err != nil {
-		t.Errorf("Failed to validate executable: %s", err)
-	}
-
-	// Fail by not finding the executable in the same directory
-	inp = Input{
-		General: GeneralStruct{
-			HaddockExecutable: "does_not_exist",
-		},
-	}
-
-	err = inp.ValidateExecutable()
-	if err == nil {
-		t.Errorf("Failed to detect wrong executable")
-	}
-
-	// Fail by finding a file with the wrong permissions
-	haddockF = "_test/haddock_wrong.sh"
-	err = os.WriteFile(haddockF, []byte("#!/bin/bash"), 0644)
-	if err != nil {
-		t.Errorf("Failed to write executable: %s", err)
-	}
-
-	inp = Input{
-		General: GeneralStruct{
-			HaddockExecutable: haddockF,
-		},
-	}
-
-	err = inp.ValidateExecutable()
-	if err == nil {
-		t.Errorf("Failed to detect wrong executable")
-	}
-
-	// Fail because no executable is defined
-	inp = Input{
-		General: GeneralStruct{
-			HaddockExecutable: "",
-		},
-	}
-
-	err = inp.ValidateExecutable()
-
-	if err == nil {
-		t.Errorf("Failed to detect wrong executable")
-	}
-
-}
-
 func TestValidatePatterns(t *testing.T) {
 
 	inp := Input{
@@ -486,4 +414,92 @@ func TestValidateHaddock3Params(t *testing.T) {
 		t.Errorf("Failed to detect wrong parameters")
 	}
 
+}
+
+func TestInput_ValidateExecutable(t *testing.T) {
+	// Create a dummy executable
+	wd, _ := os.Getwd()
+	haddockDir := filepath.Join(wd, "_test")
+	_ = os.MkdirAll(haddockDir, 0755)
+
+	defer os.RemoveAll(haddockDir)
+
+	haddockF := filepath.Join(haddockDir, "/haddock.sh")
+	err := os.WriteFile(haddockF, []byte("#!/bin/bash"), 0755)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
+	nonExecHaddockF := filepath.Join(haddockDir, "/nonExec-haddock.sh")
+	err = os.WriteFile(nonExecHaddockF, []byte("#!/bin/bash"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
+	nonExistHaddockF := filepath.Join(haddockDir, "/does-not-exist.sh")
+
+	type fields struct {
+		General   GeneralStruct
+		Scenarios []Scenario
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "pass",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: haddockF,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "relative path",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: "haddock.sh",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "undefined",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: "",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "not executable",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: nonExecHaddockF,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "non-existing",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: nonExistHaddockF,
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inp := &Input{
+				General:   tt.fields.General,
+				Scenarios: tt.fields.Scenarios,
+			}
+			if err := inp.ValidateExecutable(); (err != nil) != tt.wantErr {
+				t.Errorf("Input.ValidateExecutable() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/golang/glog"
 )
 
-const version = "v1.2.0"
+const version = "v1.3.1"
 
 func init() {
 	var versionPrint bool
