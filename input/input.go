@@ -308,13 +308,15 @@ func LoadHaddock24Params(filename string) (map[string]interface{}, error) {
 //	It returns an array of `Module` structs
 func LoadHaddock3Params(p string) (ModuleParams, error) {
 
+	paramPath := filepath.Join(p, "src/")
 	// Check if path exists
-	if _, err := os.Stat(p); os.IsNotExist(err) {
+	if _, err := os.Stat(paramPath); os.IsNotExist(err) {
+		err := errors.New("path `" + paramPath + "` does not exist, is the `haddock_dir` correct?")
 		return ModuleParams{}, err
 	}
 
 	m := ModuleParams{}
-	err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(paramPath, func(path string, info os.FileInfo, err error) error {
 		if filepath.Ext(path) == ".yaml" {
 
 			moduleName := filepath.Base(filepath.Dir(path))
