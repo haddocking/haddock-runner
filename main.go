@@ -9,11 +9,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/golang/glog"
 )
 
-const version = "v1.3.2"
+const version = "v1.3.3"
 
 func init() {
 	var versionPrint bool
@@ -167,7 +168,10 @@ func main() {
 		}
 	}
 
-	// glog.Exit("Exiting for now...")
+	// Sort the job array
+	sort.Slice(jobArr, func(i, j int) bool {
+		return jobArr[i].ID < jobArr[j].ID
+	})
 
 	// Taken form:
 	// `https://gist.github.com/AntoineAugusti/80e99edfe205baf7a094`
