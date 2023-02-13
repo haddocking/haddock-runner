@@ -1,9 +1,5 @@
 name: unittests
 
-env:
-  CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
-  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
 on: push
 
 jobs:
@@ -28,11 +24,14 @@ jobs:
         run: go test -v ./... -coverprofile=coverage.out
 
       - name: Run codacy-coverage-reporter
-        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --force-coverage-parser go -r coverage.out
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codacy/codacy-coverage-reporter-action@v1
         with:
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.out
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.out
+          
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     fail_ci_if_error: false
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     file: ./coverage.out
