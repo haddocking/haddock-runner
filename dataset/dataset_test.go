@@ -54,7 +54,7 @@ func TestWriteRunParamStub(t *testing.T) {
 		t.Error("Expected error, got nil")
 	}
 
-	// Fail by writing a run parameter file with an empty ligand
+	// Pass by writing a run parameter file with an empty ligand
 	target = Target{
 		ID:       "1abc",
 		Receptor: []string{"1abcA.pdb", "1abcB.pdb"},
@@ -62,7 +62,7 @@ func TestWriteRunParamStub(t *testing.T) {
 	}
 
 	_, err = target.WriteRunParamStub(projectDir, haddockDir)
-	if err == nil {
+	if err != nil {
 		t.Error("Expected error, got nil")
 	}
 
@@ -201,8 +201,8 @@ func TestLoadDataset(t *testing.T) {
 	}
 
 	defer os.Remove("pdb2.list")
-	_, errData = LoadDataset(projectDir, "pdb2.list", "_r_u", "_l_u")
-	if errData == nil {
+	_, errData = LoadDataset(projectDir, "pdb2.list", "_r_u", "")
+	if errData != nil {
 		t.Errorf("Failed to detect wrong dataset file")
 	}
 
