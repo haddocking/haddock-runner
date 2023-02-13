@@ -3,6 +3,7 @@ package utils
 import (
 	"flag"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -209,4 +210,89 @@ func TestCopyFileArrTo(t *testing.T) {
 		t.Errorf("Failed to detect wrong folder")
 	}
 
+}
+
+func TestIntSliceToStringSlice(t *testing.T) {
+	type args struct {
+		intSlice []int
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "TestIntSliceToStringSlice",
+			args: args{
+				intSlice: []int{1, 2, 3},
+			},
+			want: []string{"1", "2", "3"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IntSliceToStringSlice(tt.args.intSlice); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("IntSliceToStringSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestInterfaceSliceToStringSlice(t *testing.T) {
+	type args struct {
+		slice []interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "TestInterfaceSliceToStringSlice",
+			args: args{
+				slice: []interface{}{"1", "2", "3"},
+			},
+			want: []string{"1", "2", "3"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := InterfaceSliceToStringSlice(tt.args.slice); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("InterfaceSliceToStringSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFloatSliceToStringSlice(t *testing.T) {
+	type args struct {
+		slice []float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "TestFloatSliceToStringSlice",
+			args: args{
+				slice: []float64{1.0, 2.0, 3.0},
+			},
+			want: []string{"1", "2", "3"},
+		},
+		{
+			name: "TestFloatSliceToStringSlice",
+			args: args{
+				slice: []float64{1.6, 2.1, 3.3},
+			},
+			want: []string{"1.6", "2.1", "3.3"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FloatSliceToStringSlice(tt.args.slice); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FloatSliceToStringSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
