@@ -254,6 +254,13 @@ func TestInterfaceSliceToStringSlice(t *testing.T) {
 			},
 			want: []string{"1", "2", "3"},
 		},
+		{
+			name: "TestInterfaceSliceToStringSlice-mutliple-types",
+			args: args{
+				slice: []interface{}{"1", 2, 3.5, true, nil},
+			},
+			want: []string{"1", "2", "3.5", "true", ""},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

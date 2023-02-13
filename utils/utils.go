@@ -168,7 +168,19 @@ func IntSliceToStringSlice(intSlice []int) []string {
 func InterfaceSliceToStringSlice(slice []interface{}) []string {
 	s := make([]string, len(slice))
 	for i, v := range slice {
-		s[i] = v.(string)
+		// this can be multiple things, so we need to convert it to a string
+		switch v := v.(type) {
+		case string:
+			s[i] = v
+		case int:
+			s[i] = strconv.Itoa(v)
+		case float64:
+			s[i] = strconv.FormatFloat(v, 'f', -1, 64)
+		case bool:
+			s[i] = strconv.FormatBool(v)
+		case nil:
+			s[i] = ""
+		}
 	}
 	return s
 }
