@@ -148,11 +148,6 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 		return "", err
 	}
 
-	if len(t.Ligand) == 0 {
-		err := errors.New("ligand not defined")
-		return "", err
-	}
-
 	runParamString += "N_COMP=2\n"
 	runParamString += "RUN_NUMBER=1\n"
 	runParamString += "PROJECT_DIR=./\n"
@@ -167,11 +162,13 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 	}
 
 	// Write ligand files
-	runParamString += "PDB_FILE2=../data/" + filepath.Base(t.Ligand[0]) + "\n"
+	if len(t.Ligand) > 1 {
+		runParamString += "PDB_FILE2=../data/" + filepath.Base(t.Ligand[0]) + "\n"
 
-	// write ligand list files
-	if t.LigandList != "" {
-		runParamString += "PDB_LIST2=../data" + filepath.Base(t.LigandList) + "\n"
+		// write ligand list files
+		if t.LigandList != "" {
+			runParamString += "PDB_LIST2=../data" + filepath.Base(t.LigandList) + "\n"
+		}
 	}
 
 	runParamF := filepath.Join(projectDir, "/run.param")
