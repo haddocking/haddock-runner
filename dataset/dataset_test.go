@@ -564,68 +564,6 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 
 }
 
-// func TestWriteRunToml(t *testing.T) {
-
-// 	// Create a temporary directory
-// 	_ = os.MkdirAll("_some-workdir", 0755)
-// 	defer os.RemoveAll("_some-workdir")
-
-// 	target := Target{
-// 		ID:         "1abc",
-// 		Receptor:   []string{"receptor.pdb"},
-// 		Ligand:     []string{"ligand.pdb"},
-// 		Restraints: []string{"ambig.tbl", "unambig.tbl", "something.tbl"},
-// 		Toppar:     []string{"custom1.top", "custom2.param"},
-// 		MiscPDB:    []string{"ref.pdb"},
-// 	}
-
-// 	m := input.ModuleParams{
-// 		Order: []string{"topoaa", "rigidbody", "flexref", "mdref"},
-// 		Topoaa: map[string]interface{}{
-// 			"some-param": "some-value",
-// 		},
-// 		Rigidbody: map[string]interface{}{
-// 			"some-other-param":   10,
-// 			"some_fname":         "ambig",
-// 			"another_fname":      "unambig",
-// 			"other_fname":        "custom1",
-// 			"someother_fname":    "custom2",
-// 			"thereference_fname": "ref",
-// 		},
-// 		Flexref: map[string]interface{}{
-// 			"some-other-param": 3.5,
-// 		},
-// 		Mdref: map[string]interface{}{
-// 			"some-other-param": false,
-// 		},
-// 	}
-
-// 	g := make(map[string]interface{})
-// 	g["general-param1"] = "general-value"
-// 	g["general-param2"] = 2.5
-// 	g["general-param3"] = false
-// 	g["general-param4"] = 1
-
-// 	_, err := target.WriteRunToml("_some-workdir", g, m)
-
-// 	if err != nil {
-// 		t.Errorf("Failed to write run.toml: %s", err)
-// 	}
-
-// 	// check if the run.toml was written to disk
-// 	runTomlPath := filepath.Join("_some-workdir", "run.toml")
-// 	if _, err := os.Stat(runTomlPath); os.IsNotExist(err) {
-// 		t.Errorf("run.toml was not written to disk")
-// 	}
-
-// 	// Fail by trying to write to a directory that does not exist
-// 	_, err = target.WriteRunToml("_some-workdir/does_not_exist", g, m)
-// 	if err == nil {
-// 		t.Errorf("Failed to detect wrong input")
-// 	}
-
-// }
-
 func TestTarget_SetupHaddock24Scenario(t *testing.T) {
 	type fields struct {
 		ID           string
