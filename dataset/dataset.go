@@ -308,7 +308,13 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 // LoadDataset loads a dataset from a list file
 func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([]Target, error) {
 
-	rootRegex := regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
+	var rootRegex *regexp.Regexp
+	if lsuf == "" {
+		rootRegex = regexp.MustCompile(`(.*)(?:` + rsuf + `)`)
+	} else {
+		rootRegex = regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
+	}
+
 	recRegex := regexp.MustCompile(`(.*)` + rsuf)
 	ligRegex := regexp.MustCompile(`(.*)` + lsuf)
 	_ = os.MkdirAll(projectDir, 0755)
@@ -383,8 +389,9 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 	// Check if Targets have both receptor and ligand
 	for _, v := range m {
 		if len(v.Receptor) == 0 || len(v.Ligand) == 0 {
-			err := errors.New("Target " + v.ID + " does not have both receptor and ligand")
-			return nil, err
+			glog.Warning("Target " + v.ID + " does not have both receptor and ligand")
+			// err := errors.New("Target " + v.ID + " does not have both receptor and ligand")
+			// return nil, err
 		}
 	}
 

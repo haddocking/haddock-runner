@@ -144,8 +144,8 @@ func (inp *Input) ValidateExecutable() error {
 func (inp *Input) ValidatePatterns() error {
 
 	// ReceptorSuffix and LigandSuffix
-	if inp.General.ReceptorSuffix == "" || inp.General.LigandSuffix == "" {
-		err := errors.New("receptor_suffix or ligand_suffix not defined in `general` section")
+	if inp.General.ReceptorSuffix == "" {
+		err := errors.New("receptor_suffix not defined in `general` section")
 		return err
 	} else if inp.General.ReceptorSuffix == inp.General.LigandSuffix {
 		err := errors.New("receptor_suffix and ligand_suffix are the same at `general` section")
