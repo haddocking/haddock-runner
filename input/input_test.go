@@ -519,6 +519,28 @@ func TestValidateHaddock3Params(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "pass-expandable-param",
+			args: args{
+				known: ModuleParams{
+					Rigidbody: map[string]any{
+						"param1_1": "value1",
+					},
+					Topoaa: map[string]any{
+						"param2_": "value2",
+					},
+				},
+				loaded: ModuleParams{
+					Rigidbody: map[string]any{
+						"param1_50": "value1",
+					},
+					Topoaa: map[string]any{
+						"param2_1": "value2",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -354,14 +354,20 @@ func ValidateHaddock3Params(known ModuleParams, loaded ModuleParams) error {
 	v := reflect.ValueOf(loaded)
 	k := reflect.ValueOf(known)
 
+	expandableRe := regexp.MustCompile(`(.)_\d?`)
+
 	types := v.Type()
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		if field.Kind() == reflect.Map {
 			for key := range field.Interface().(map[string]interface{}) {
 				if !k.Field(i).MapIndex(reflect.ValueOf(key)).IsValid() {
-					err := errors.New("`" + key + "` not valid for " + types.Field(i).Name)
-					return err
+					// Check if the key is an expandable parameter
+					match := expandableRe.MatchString(key)
+					if !match {
+						err := errors.New("`" + key + "` not valid for " + types.Field(i).Name)
+						return err
+					}
 				}
 			}
 		}
