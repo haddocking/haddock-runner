@@ -148,11 +148,6 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 		return "", err
 	}
 
-	if len(t.Ligand) == 0 {
-		err := errors.New("ligand not defined")
-		return "", err
-	}
-
 	runParamString += "N_COMP=2\n"
 	runParamString += "RUN_NUMBER=1\n"
 	runParamString += "PROJECT_DIR=./\n"
@@ -167,11 +162,13 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 	}
 
 	// Write ligand files
-	runParamString += "PDB_FILE2=../data/" + filepath.Base(t.Ligand[0]) + "\n"
+	if len(t.Ligand) > 1 {
+		runParamString += "PDB_FILE2=../data/" + filepath.Base(t.Ligand[0]) + "\n"
 
-	// write ligand list files
-	if t.LigandList != "" {
-		runParamString += "PDB_LIST2=../data" + filepath.Base(t.LigandList) + "\n"
+		// write ligand list files
+		if t.LigandList != "" {
+			runParamString += "PDB_LIST2=../data" + filepath.Base(t.LigandList) + "\n"
+		}
 	}
 
 	runParamF := filepath.Join(projectDir, "/run.param")
@@ -308,7 +305,13 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 // LoadDataset loads a dataset from a list file
 func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([]Target, error) {
 
-	rootRegex := regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
+	var rootRegex *regexp.Regexp
+	if lsuf == "" {
+		rootRegex = regexp.MustCompile(`(.*)(?:` + rsuf + `)`)
+	} else {
+		rootRegex = regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
+	}
+
 	recRegex := regexp.MustCompile(`(.*)` + rsuf)
 	ligRegex := regexp.MustCompile(`(.*)` + lsuf)
 	_ = os.MkdirAll(projectDir, 0755)
@@ -383,8 +386,9 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 	// Check if Targets have both receptor and ligand
 	for _, v := range m {
 		if len(v.Receptor) == 0 || len(v.Ligand) == 0 {
-			err := errors.New("Target " + v.ID + " does not have both receptor and ligand")
-			return nil, err
+			glog.Warning("Target " + v.ID + " does not have both receptor and ligand")
+			// err := errors.New("Target " + v.ID + " does not have both receptor and ligand")
+			// return nil, err
 		}
 	}
 
