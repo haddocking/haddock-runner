@@ -737,6 +737,8 @@ func TestTarget_WriteRunToml(t *testing.T) {
 						"array-float":      []float64{1.1, 2.2, 3.3},
 						"array-string":     []string{"a", "b", "c"},
 						"array-bool":       []bool{true, false, true},
+						"array-interface":  []interface{}{1, 2.2, "three", true},
+						"expandable_":      []int{1, 2, 3},
 					},
 					Mdref: map[string]interface{}{
 						"some-other-param": false,

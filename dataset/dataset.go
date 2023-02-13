@@ -297,6 +297,8 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 							runTomlString += k + " = [" + strings.Join(utils.IntSliceToStringSlice(v), ",") + "]\n"
 						case []float64:
 							runTomlString += k + " = [" + strings.Join(utils.FloatSliceToStringSlice(v), ",") + "]\n"
+						case []interface{}:
+							runTomlString += k + " = [" + strings.Join(utils.InterfaceSliceToStringSlice(v), ",") + "]\n"
 						}
 					}
 				}
