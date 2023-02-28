@@ -380,42 +380,6 @@ func TestLoadHaddock3DefaultParams(t *testing.T) {
 
 }
 
-func TestValidateHaddock3Params(t *testing.T) {
-
-	known := ModuleParams{}
-	known.Rigidbody = map[string]any{
-		"param1": "value1",
-	}
-	known.Topoaa = map[string]any{
-		"param2": "value2",
-	}
-
-	test := ModuleParams{}
-	test.Rigidbody = map[string]any{
-		"param1": "value1",
-	}
-	test.Topoaa = map[string]any{
-		"param2": "value2",
-	}
-
-	// Pass by finding the parameters
-	err := ValidateHaddock3Params(known, test)
-	if err != nil {
-		t.Errorf("Failed to validate parameters: %s", err)
-	}
-
-	// Fail by not finding a parameter
-	test.Rigidbody = map[string]any{
-		"param10": "value",
-	}
-
-	err = ValidateHaddock3Params(known, test)
-	if err == nil {
-		t.Errorf("Failed to detect wrong parameters")
-	}
-
-}
-
 func TestInput_ValidateExecutable(t *testing.T) {
 	// Create a dummy executable
 	wd, _ := os.Getwd()
@@ -499,6 +463,89 @@ func TestInput_ValidateExecutable(t *testing.T) {
 			}
 			if err := inp.ValidateExecutable(); (err != nil) != tt.wantErr {
 				t.Errorf("Input.ValidateExecutable() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateHaddock3Params(t *testing.T) {
+	type args struct {
+		known  ModuleParams
+		loaded ModuleParams
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "pass",
+			args: args{
+				known: ModuleParams{
+					Rigidbody: map[string]any{
+						"param1": "value1",
+					},
+					Topoaa: map[string]any{
+						"param2": "value2",
+					},
+				},
+				loaded: ModuleParams{
+					Rigidbody: map[string]any{
+						"param1": "value1",
+					},
+					Topoaa: map[string]any{
+						"param2": "value2",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "fail",
+			args: args{
+				known: ModuleParams{
+					Rigidbody: map[string]any{
+						"param1": "value1",
+					},
+					Topoaa: map[string]any{
+						"param2": "value2",
+					},
+				},
+				loaded: ModuleParams{
+					Rigidbody: map[string]any{
+						"param10": "value",
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "pass-expandable-param",
+			args: args{
+				known: ModuleParams{
+					Rigidbody: map[string]any{
+						"param1_1": "value1",
+					},
+					Topoaa: map[string]any{
+						"param2_": "value2",
+					},
+				},
+				loaded: ModuleParams{
+					Rigidbody: map[string]any{
+						"param1_50": "value1",
+					},
+					Topoaa: map[string]any{
+						"param2_1": "value2",
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := ValidateHaddock3Params(tt.args.known, tt.args.loaded); (err != nil) != tt.wantErr {
+				t.Errorf("ValidateHaddock3Params() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

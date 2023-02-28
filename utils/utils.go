@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -152,4 +153,43 @@ func CopyFileArrTo(files []string, dst string) error {
 	}
 
 	return nil
+}
+
+// IntSliceToStringSlice converts an int slice to a string slice
+func IntSliceToStringSlice(intSlice []int) []string {
+	var stringSlice []string
+	for _, v := range intSlice {
+		stringSlice = append(stringSlice, strconv.Itoa(v))
+	}
+	return stringSlice
+}
+
+// InterfaceSliceToStringSlice converts an interface slice to a string slice
+func InterfaceSliceToStringSlice(slice []interface{}) []string {
+	s := make([]string, len(slice))
+	for i, v := range slice {
+		// this can be multiple things, so we need to convert it to a string
+		switch v := v.(type) {
+		case string:
+			s[i] = v
+		case int:
+			s[i] = strconv.Itoa(v)
+		case float64:
+			s[i] = strconv.FormatFloat(v, 'f', -1, 64)
+		case bool:
+			s[i] = strconv.FormatBool(v)
+		case nil:
+			s[i] = ""
+		}
+	}
+	return s
+}
+
+// FloatSliceToStringSlice converts a float slice to a string slice
+func FloatSliceToStringSlice(slice []float64) []string {
+	s := make([]string, len(slice))
+	for i, v := range slice {
+		s[i] = strconv.FormatFloat(v, 'f', -1, 64)
+	}
+	return s
 }

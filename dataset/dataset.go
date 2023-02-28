@@ -229,7 +229,14 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 			runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
 		case bool:
 			runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+		case []string:
+			runTomlString += k + " = [" + strings.Join(v, ",") + "]\n"
+		case []int:
+			runTomlString += k + " = [" + strings.Join(utils.IntSliceToStringSlice(v), ",") + "]\n"
+		case []float64:
+			runTomlString += k + " = [" + strings.Join(utils.FloatSliceToStringSlice(v), ",") + "]\n"
 		}
+
 	}
 
 	runTomlString += "run_dir = \"run1\"\n"
@@ -284,6 +291,14 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 							runTomlString += k + " = " + strconv.FormatFloat(v, 'f', -1, 64) + "\n"
 						case bool:
 							runTomlString += k + " = " + strconv.FormatBool(v) + "\n"
+						case []string:
+							runTomlString += k + " = [" + strings.Join(v, ",") + "]\n"
+						case []int:
+							runTomlString += k + " = [" + strings.Join(utils.IntSliceToStringSlice(v), ",") + "]\n"
+						case []float64:
+							runTomlString += k + " = [" + strings.Join(utils.FloatSliceToStringSlice(v), ",") + "]\n"
+						case []interface{}:
+							runTomlString += k + " = [" + strings.Join(utils.InterfaceSliceToStringSlice(v), ",") + "]\n"
 						}
 					}
 				}

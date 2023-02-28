@@ -564,68 +564,6 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 
 }
 
-func TestWriteRunToml(t *testing.T) {
-
-	// Create a temporary directory
-	_ = os.MkdirAll("_some-workdir", 0755)
-	defer os.RemoveAll("_some-workdir")
-
-	target := Target{
-		ID:         "1abc",
-		Receptor:   []string{"receptor.pdb"},
-		Ligand:     []string{"ligand.pdb"},
-		Restraints: []string{"ambig.tbl", "unambig.tbl", "something.tbl"},
-		Toppar:     []string{"custom1.top", "custom2.param"},
-		MiscPDB:    []string{"ref.pdb"},
-	}
-
-	m := input.ModuleParams{
-		Order: []string{"topoaa", "rigidbody", "flexref", "mdref"},
-		Topoaa: map[string]interface{}{
-			"some-param": "some-value",
-		},
-		Rigidbody: map[string]interface{}{
-			"some-other-param":   10,
-			"some_fname":         "ambig",
-			"another_fname":      "unambig",
-			"other_fname":        "custom1",
-			"someother_fname":    "custom2",
-			"thereference_fname": "ref",
-		},
-		Flexref: map[string]interface{}{
-			"some-other-param": 3.5,
-		},
-		Mdref: map[string]interface{}{
-			"some-other-param": false,
-		},
-	}
-
-	g := make(map[string]interface{})
-	g["general-param1"] = "general-value"
-	g["general-param2"] = 2.5
-	g["general-param3"] = false
-	g["general-param4"] = 1
-
-	_, err := target.WriteRunToml("_some-workdir", g, m)
-
-	if err != nil {
-		t.Errorf("Failed to write run.toml: %s", err)
-	}
-
-	// check if the run.toml was written to disk
-	runTomlPath := filepath.Join("_some-workdir", "run.toml")
-	if _, err := os.Stat(runTomlPath); os.IsNotExist(err) {
-		t.Errorf("run.toml was not written to disk")
-	}
-
-	// Fail by trying to write to a directory that does not exist
-	_, err = target.WriteRunToml("_some-workdir/does_not_exist", g, m)
-	if err == nil {
-		t.Errorf("Failed to detect wrong input")
-	}
-
-}
-
 func TestTarget_SetupHaddock24Scenario(t *testing.T) {
 	type fields struct {
 		ID           string
@@ -724,6 +662,130 @@ func TestTarget_SetupHaddock24Scenario(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Target.SetupHaddock24Scenario() =\ngot   %v,\n want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTarget_WriteRunToml(t *testing.T) {
+	// make a directory to be used as the workdir
+	err := os.MkdirAll("_some-workdir", 0755)
+	if err != nil {
+		t.Errorf("Failed to create workdir: %s", err)
+	}
+	defer os.RemoveAll("_some-workdir")
+	type fields struct {
+		ID           string
+		Receptor     []string
+		ReceptorList string
+		Ligand       []string
+		LigandList   string
+		Restraints   []string
+		Toppar       []string
+		MiscPDB      []string
+	}
+	type args struct {
+		projectDir string
+		general    map[string]interface{}
+		mod        input.ModuleParams
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "pass",
+			fields: fields{
+				ID:         "1abc",
+				Receptor:   []string{"receptor.pdb"},
+				Ligand:     []string{"ligand.pdb"},
+				Restraints: []string{"ambig_ti.tbl", "other_unambig.tbl", "something.tbl"},
+				Toppar:     []string{"custom1.top", "custom2.param"},
+				MiscPDB:    []string{"ref.pdb"},
+			},
+			args: args{
+				projectDir: "_some-workdir",
+				general: map[string]interface{}{
+					"receptor":     "receptor.pdb",
+					"ligand":       "ligand.pdb",
+					"int":          10,
+					"float":        3.5,
+					"bool":         true,
+					"array-string": []string{"a", "b", "c"},
+					"array-int":    []int{1, 2, 3},
+					"array-float":  []float64{1.1, 2.2, 3.3},
+				},
+				mod: input.ModuleParams{
+					Order: []string{"topoaa", "rigidbody", "flexref", "mdref"},
+					Topoaa: map[string]interface{}{
+						"some-param": "some-value",
+					},
+					Rigidbody: map[string]interface{}{
+						"some-other-param":   10,
+						"some_fname":         "ambig",
+						"another_fname":      "unambig",
+						"other_fname":        "custom1",
+						"someother_fname":    "custom2",
+						"thereference_fname": "ref",
+					},
+					Flexref: map[string]interface{}{
+						"some-other-param": 3.5,
+						"array-int":        []int{1, 2, 3},
+						"array-float":      []float64{1.1, 2.2, 3.3},
+						"array-string":     []string{"a", "b", "c"},
+						"array-bool":       []bool{true, false, true},
+						"array-interface":  []interface{}{1, 2.2, "three", true},
+						"expandable_":      []int{1, 2, 3},
+					},
+					Mdref: map[string]interface{}{
+						"some-other-param": false,
+					},
+				},
+			},
+			want:    "_some-workdir/run.toml",
+			wantErr: false,
+		},
+		{
+			name: "fail-by-not-being-able-to-create-file",
+			fields: fields{
+				ID:         "1abc",
+				Receptor:   []string{"receptor.pdb"},
+				Ligand:     []string{"ligand.pdb"},
+				Restraints: []string{"ambig_ti.tbl", "other_unambig.tbl", "something.tbl"},
+				Toppar:     []string{"custom1.top", "custom2.param"},
+				MiscPDB:    []string{"ref.pdb"},
+			},
+			args: args{
+				projectDir: "unexisting-directory",
+				general:    map[string]interface{}{},
+				mod:        input.ModuleParams{},
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Target{
+				ID:           tt.fields.ID,
+				Receptor:     tt.fields.Receptor,
+				ReceptorList: tt.fields.ReceptorList,
+				Ligand:       tt.fields.Ligand,
+				LigandList:   tt.fields.LigandList,
+				Restraints:   tt.fields.Restraints,
+				Toppar:       tt.fields.Toppar,
+				MiscPDB:      tt.fields.MiscPDB,
+			}
+			got, err := tr.WriteRunToml(tt.args.projectDir, tt.args.general, tt.args.mod)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Target.WriteRunToml() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Target.WriteRunToml() = %v, want %v", got, tt.want)
 			}
 		})
 	}
