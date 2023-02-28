@@ -1,6 +1,7 @@
 # `benchmark-tools` for [HADDOCK](https://www.bonvinlab.org/software)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![linting](https://github.com/haddocking/benchmark-tools/actions/workflows/lint.yml/badge.svg)](https://github.com/haddocking/benchmark-tools/actions/workflows/lint.yml)
 [![unittests](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml/badge.svg)](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/benchmark-tools/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/benchmark-tools&utm_campaign=Badge_Coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/benchmark-tools/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/benchmark-tools&utm_campaign=Badge_Grade)
