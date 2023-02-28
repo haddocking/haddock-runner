@@ -14,15 +14,15 @@ import (
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // ---------------------------------------------------------------------
 
 // Input is the input structure
 type Input struct {
-	General   GeneralStruct `yaml:"general"`
-	Scenarios []Scenario    `yaml:"scenarios"`
+	General   GeneralStruct
+	Scenarios []Scenario
 }
 
 // GeneralStruct is the general structure
@@ -38,21 +38,21 @@ type GeneralStruct struct {
 
 // Scenario is the scenario structure
 type Scenario struct {
-	Name       string         `yaml:"name"`
-	Parameters ScenarioParams `yaml:"parameters"`
+	Name       string `yaml:"name"`
+	Parameters ParametersStruct
 }
 
-// ScenarioParams is the scenario parameters structure
-type ScenarioParams struct {
-	CnsParams  map[string]interface{} `yaml:"run_cns"`
-	Restraints Restraints             `yaml:"restraints"`
-	Toppar     Toppar                 `yaml:"custom_toppar"`
-	Modules    ModuleParams           `yaml:"modules"`
+// ParametersStruct is the parameters structure
+type ParametersStruct struct {
 	General    map[string]interface{} `yaml:"general"`
+	Restraints Airs                   `yaml:"restraints"`
+	Toppar     TopologyParams         `yaml:"custom_toppar"`
+	CnsParams  map[string]interface{} `yaml:"run_cns"`
+	Modules    ModuleParams
 }
 
-// Restraints is the restraints structure
-type Restraints struct {
+// Airs is the restraint structure
+type Airs struct {
 	Ambig     string
 	Unambig   string
 	Dihedrals string
@@ -86,8 +86,8 @@ type Restraints struct {
 	Pcs10     string
 }
 
-// Toppar is the toppar structure
-type Toppar struct {
+// TopologyParams is the topology parameters structure
+type TopologyParams struct {
 	Topology string
 	Param    string
 }
