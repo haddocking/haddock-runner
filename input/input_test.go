@@ -285,6 +285,39 @@ func TestInput_ValidatePatterns(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "invalid-fnames-match-each-other",
+			fields: fields{
+				General: GeneralStruct{
+					ReceptorSuffix: "_r_u",
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "",
+						Parameters: ParametersStruct{
+							Modules: ModuleParams{
+								Order: []string{"rigidbody"},
+								Rigidbody: map[string]any{
+									"something_fname": "_ti",
+								},
+							},
+						},
+					},
+					{
+						Name: "",
+						Parameters: ParametersStruct{
+							Modules: ModuleParams{
+								Order: []string{"rigidbody"},
+								Rigidbody: map[string]any{
+									"something_fname": "_ti_something",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
