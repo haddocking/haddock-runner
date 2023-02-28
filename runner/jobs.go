@@ -16,8 +16,8 @@ type Job struct {
 	ID         string
 	Path       string
 	Params     map[string]interface{}
-	Restraints input.Restraints
-	Toppar     input.Toppar
+	Restraints input.Airs
+	Toppar     input.TopologyParams
 }
 
 // SetupHaddock24 sets up the HADDOCK job

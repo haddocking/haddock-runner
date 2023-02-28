@@ -87,7 +87,7 @@ func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario
 
 	// Find which restraints need to be used
 	// FIXME: there's probably a better way to do this
-	restraints := input.Restraints{}
+	restraints := input.Airs{}
 
 	v := reflect.ValueOf(&s.Parameters.Restraints).Elem()
 	k := reflect.ValueOf(&restraints).Elem()
@@ -105,7 +105,7 @@ func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario
 		}
 	}
 
-	toppar := input.Toppar{}
+	toppar := input.TopologyParams{}
 	for _, t := range t.Toppar {
 		if filepath.Ext(t) == ".top" {
 			toppar.Topology = t

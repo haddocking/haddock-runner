@@ -77,8 +77,8 @@ func TestJob_SetupHaddock24(t *testing.T) {
 		ID         string
 		Path       string
 		Params     map[string]interface{}
-		Restraints input.Restraints
-		Toppar     input.Toppar
+		Restraints input.Airs
+		Toppar     input.TopologyParams
 	}
 	type args struct {
 		cmd string
@@ -89,7 +89,6 @@ func TestJob_SetupHaddock24(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "pass",
 			fields: fields{
@@ -98,10 +97,10 @@ func TestJob_SetupHaddock24(t *testing.T) {
 				Params: map[string]interface{}{
 					"param1": true,
 				},
-				Restraints: input.Restraints{
+				Restraints: input.Airs{
 					Ambig: "ambig.tbl",
 				},
-				Toppar: input.Toppar{},
+				Toppar: input.TopologyParams{},
 			},
 			args:    args{"echo test"},
 			wantErr: false,
@@ -126,7 +125,7 @@ func TestJob_SetupHaddock24(t *testing.T) {
 			name: "cannot copy topology",
 			fields: fields{
 				Path: "cmd-test",
-				Toppar: input.Toppar{
+				Toppar: input.TopologyParams{
 					Topology: "non_existing_file",
 				},
 			},
@@ -137,7 +136,7 @@ func TestJob_SetupHaddock24(t *testing.T) {
 			name: "cannot copy param",
 			fields: fields{
 				Path: "cmd-test",
-				Toppar: input.Toppar{
+				Toppar: input.TopologyParams{
 					Param: "non_existing_file",
 				},
 			},

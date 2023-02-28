@@ -505,7 +505,7 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 	inp.Scenarios = []input.Scenario{
 		{
 			Name: "scenario1",
-			Parameters: input.ScenarioParams{
+			Parameters: input.ParametersStruct{
 				Modules: input.ModuleParams{
 					Order: []string{"topoaa", "rigidbody"},
 					Topoaa: map[string]interface{}{
@@ -587,7 +587,6 @@ func TestTarget_SetupHaddock24Scenario(t *testing.T) {
 		want    runner.Job
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "pass",
 			fields: fields{
@@ -602,8 +601,8 @@ func TestTarget_SetupHaddock24Scenario(t *testing.T) {
 				hdir: "haddock-dir",
 				s: input.Scenario{
 					Name: "some-scenario",
-					Parameters: input.ScenarioParams{
-						Restraints: input.Restraints{
+					Parameters: input.ParametersStruct{
+						Restraints: input.Airs{
 							Ambig:   "_ti",
 							Unambig: "_unambig",
 						},
@@ -613,11 +612,11 @@ func TestTarget_SetupHaddock24Scenario(t *testing.T) {
 			want: runner.Job{
 				ID:   "1abc_some-scenario",
 				Path: "some-workdir/1abc/scenario-some-scenario",
-				Restraints: input.Restraints{
+				Restraints: input.Airs{
 					Ambig:   "ambig_ti.tbl",
 					Unambig: "other_unambig.tbl",
 				},
-				Toppar: input.Toppar{
+				Toppar: input.TopologyParams{
 					Topology: "custom1.top",
 					Param:    "custom2.param",
 				},
