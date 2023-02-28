@@ -152,6 +152,8 @@ func (inp *Input) ValidatePatterns() error {
 		return err
 	}
 
+	scenarioFnameArray := []string{}
+
 	for _, scenario := range inp.Scenarios {
 		// Ambig and Unambig
 		if scenario.Parameters.Restraints.Ambig != "" || scenario.Parameters.Restraints.Unambig != "" {
@@ -194,6 +196,22 @@ func (inp *Input) ValidatePatterns() error {
 			if !utils.IsUnique(fnameArr) {
 				err := errors.New("duplicated patterns in `" + m + "` modules' `fname` parameters")
 				return err
+			}
+
+			// Check if there are patterns that match each other
+			scenarioFnameArray = append(scenarioFnameArray, fnameArr...)
+		}
+		// Check if there are patterns that match each other
+		for i := 0; i < len(scenarioFnameArray); i++ {
+			for j := i + 1; j < len(scenarioFnameArray); j++ {
+
+				patternA := regexp.MustCompile(scenarioFnameArray[i])
+				patternB := regexp.MustCompile(scenarioFnameArray[j])
+
+				if scenarioFnameArray[i] != scenarioFnameArray[j] && (patternA.MatchString(scenarioFnameArray[j]) || patternB.MatchString(scenarioFnameArray[i])) {
+					err := errors.New("patterns `" + scenarioFnameArray[i] + "` and `" + scenarioFnameArray[j] + "` match each other, please rename them")
+					return err
+				}
 			}
 		}
 
