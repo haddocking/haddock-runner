@@ -3,197 +3,302 @@ package input
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
-	"gopkg.in/yaml.v2"
+	"github.com/go-test/deep"
+	"gopkg.in/yaml.v3"
 )
 
 func TestLoadInput(t *testing.T) {
-	var err error
-	// Pass by being able to load the input file
 	// Create a OK input file
-	inp := Input{
-		General: GeneralStruct{
-			HaddockExecutable: "haddock.sh",
-			HaddockDir:        "haddock_dir",
-			ReceptorSuffix:    "r_u",
-			LigandSuffix:      "l_u",
-		},
-		Scenarios: []Scenario{
-			{
-				Name: "scenario1",
-				Parameters: ScenarioParams{
-					CnsParams: map[string]interface{}{
-						"param1": false,
-						"param2": "string",
-						"param3": 1,
-						"param4": 1.5,
-					},
-					Restraints: Restraints{
-						Ambig:   "ambig",
-						Unambig: "unambig",
-					},
-					Toppar: Toppar{
-						Topology: "top",
-						Param:    "param",
-					},
-				},
-			},
-		},
-	}
+	d1 := []byte(`general:
+  executable: /home/rodrigo/repos/benchmark-tools/haddock3.sh
+  max_concurrent: 999
+  haddock_dir: ../haddock3
+  receptor_suffix: _r_u
+  ligand_suffix: _l_u
+  input_list: example/input_list.txt
+  work_dir: bm-goes-here
 
-	yamlData, err := yaml.Marshal(&inp)
-	if err != nil {
-		t.Errorf("Failed to marshal input file: %s", err)
-	}
+scenarios:
+  - name: true-interface
+    parameters:
+      run_cns:
+        noecv: false
+      restraints:
+        ambig: ti
+      custom_toppar:
+        topology: _ligand.top
+      general:
+        ncores: 1
+      modules:
+        order: [rigidbody]
+        rigidbody:
+          param1: value1
+`)
 
-	err = os.WriteFile("input.yml", yamlData, 0644)
+	d2 := []byte(`general:
+	executable: /home/rodrigo/repos/benchmark-tools/haddock3.sh
+  max_concurrent: 999
+  haddock_dir: ../haddock3
+  receptor_suffix: _r_u
+  ligand_suffix: _l_u
+  input_list: example/input_list.txt
+  work_dir: bm-goes-here
+
+scenarios:
+  - name: true-interface
+    parameters:
+      run_cns:
+        noecv: false
+      restraints:
+        ambig: ti
+      custom_toppar:
+        topology: _ligand.top
+      general:
+        ncores: 1
+      modules:
+        order: [rigidbody, rigidbody]
+        rigidbody:
+          param1: value1
+				rigidbody:
+          param1: value1
+`)
+
+	err := os.WriteFile("test-input.yaml", d1, 0644)
 	if err != nil {
 		t.Errorf("Failed to write input file: %s", err)
 	}
-	defer os.Remove("input.yml")
 
-	_, err = LoadInput("input.yml")
-	if err != nil {
-		t.Errorf("Failed to load input file: %s", err)
-	}
+	defer os.Remove("test-input.yaml")
 
-	// Fail by not being able to load the input file
-	err = os.WriteFile("wrong_input.yml", []byte("not a yml"), 0644)
+	err = os.WriteFile("test-input-wrong.yaml", d2, 0644)
 	if err != nil {
 		t.Errorf("Failed to write input file: %s", err)
 	}
-	defer os.Remove("wrong_input.yml")
 
-	_, err = LoadInput("wrong_input.yml")
-	if err == nil {
-		t.Errorf("Failed to detect wrong input file")
+	defer os.Remove("test-input-wrong.yaml")
+
+	type args struct {
+		filename string
 	}
-
-	// Fail by trying to load a file that does not exist
-	_, err = LoadInput("does_not_exist.yml")
-	if err == nil {
-		t.Errorf("Failed to detect wrong input file")
-	}
-
-}
-
-func TestValidatePatterns(t *testing.T) {
-
-	inp := Input{
-		General: GeneralStruct{
-			ReceptorSuffix: "r_u",
-			LigandSuffix:   "l_u",
-		},
-		Scenarios: []Scenario{
-			{
-				Name: "scenario1",
-				Parameters: ScenarioParams{
-					CnsParams:  map[string]interface{}{},
-					Restraints: Restraints{},
-					Toppar: Toppar{
-						Topology: "top",
-						Param:    "param",
-					},
-					Modules: ModuleParams{
-						Rigidbody: map[string]interface{}{
-							"param1_fname": "pattern1",
-							"param2_fname": "pattern2",
+	tests := []struct {
+		name    string
+		args    args
+		want    *Input
+		wantErr bool
+	}{
+		{
+			name: "valid-input",
+			args: args{
+				filename: "test-input.yaml",
+			},
+			want: &Input{
+				General: GeneralStruct{
+					HaddockExecutable: "/home/rodrigo/repos/benchmark-tools/haddock3.sh",
+					MaxConcurrent:     999,
+					HaddockDir:        "../haddock3",
+					ReceptorSuffix:    "_r_u",
+					LigandSuffix:      "_l_u",
+					InputList:         "example/input_list.txt",
+					WorkDir:           "bm-goes-here",
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "true-interface",
+						Parameters: ParametersStruct{
+							General: map[string]any{
+								"ncores": 1,
+							},
+							Restraints: Airs{
+								Ambig: "ti",
+							},
+							Toppar: TopologyParams{
+								Topology: "_ligand.top",
+							},
+							Modules: ModuleParams{
+								Order: []string{"rigidbody"},
+								Rigidbody: map[string]any{
+									"param1": "value1",
+								},
+							},
+							CnsParams: map[string]interface{}{
+								"noecv": false,
+							},
 						},
 					},
-					General: map[string]interface{}{},
 				},
 			},
+			wantErr: false,
+		},
+		{
+			name: "non-existing",
+			args: args{
+				filename: "does-not-exist.yaml",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "wrong-input",
+			args: args{
+				filename: "test-input-wrong.yaml",
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
-
-	// Pass by validating the patterns
-	err := inp.ValidatePatterns()
-	if err != nil {
-		t.Errorf("Failed to validate patterns: %s", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := LoadInput(tt.args.filename)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LoadInput() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := deep.Equal(got, tt.want); diff != nil {
+				t.Error(diff)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("LoadInput() \n\ngot:   %v\n, \n\n want: %v\n", got, tt.want)
+			}
+		})
 	}
+}
 
-	// Fail by not validating the patterns
-
-	// Fail because the fname parameters are repeated
-	badInp := Input{
-		General: GeneralStruct{
-			ReceptorSuffix: "r_u",
-			LigandSuffix:   "l_u",
-		},
-		Scenarios: []Scenario{
-			{
-				Name: "scenario1",
-				Parameters: ScenarioParams{
-					CnsParams:  map[string]interface{}{},
-					Restraints: Restraints{},
-					Toppar:     Toppar{},
-					Modules: ModuleParams{
-						Order: []string{"rigidbody"},
-						Rigidbody: map[string]interface{}{
-							"param1_fname": "pattern1",
-							"param2_fname": "pattern1",
+func TestInput_ValidatePatterns(t *testing.T) {
+	type fields struct {
+		General   GeneralStruct
+		Scenarios []Scenario
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "valid",
+			fields: fields{
+				General: GeneralStruct{
+					ReceptorSuffix: "_r_u",
+					LigandSuffix:   "_l_u",
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "true-interface",
+						Parameters: ParametersStruct{
+							Restraints: Airs{
+								Ambig: "ti",
+							},
+							Modules: ModuleParams{
+								Order: []string{"rigidbody"},
+								Rigidbody: map[string]any{
+									"something_fname": "pattern1",
+								},
+							},
 						},
 					},
-					General: map[string]interface{}{},
 				},
 			},
+			wantErr: false,
+		},
+		{
+			name: "invalid-empty-receptor-suffix",
+			fields: fields{
+				General: GeneralStruct{
+					ReceptorSuffix: "",
+				},
+				Scenarios: []Scenario{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid-receptor-ligand-equal",
+			fields: fields{
+				General: GeneralStruct{
+					ReceptorSuffix: "_r_u",
+					LigandSuffix:   "_r_u",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid-ambig-unambig-equal",
+			fields: fields{
+				General: GeneralStruct{
+					ReceptorSuffix: "_r_u",
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "",
+						Parameters: ParametersStruct{
+							Restraints: Airs{
+								Ambig:   "same",
+								Unambig: "same",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid-topology-params-equal",
+			fields: fields{
+				General: GeneralStruct{
+					ReceptorSuffix: "_r_u",
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "",
+						Parameters: ParametersStruct{
+							Toppar: TopologyParams{
+								Topology: "same",
+								Param:    "same",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid-multiple-fnames",
+			fields: fields{
+				General: GeneralStruct{
+					ReceptorSuffix: "_r_u",
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "",
+						Parameters: ParametersStruct{
+							Modules: ModuleParams{
+								Order: []string{"rigidbody"},
+								Rigidbody: map[string]any{
+									"something_fname":      "pattern1",
+									"something_else_fname": "pattern1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
 		},
 	}
-
-	err = badInp.ValidatePatterns()
-	if err == nil {
-		t.Errorf("Failed to detect repeated patterns")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inp := &Input{
+				General:   tt.fields.General,
+				Scenarios: tt.fields.Scenarios,
+			}
+			if err := inp.ValidatePatterns(); (err != nil) != tt.wantErr {
+				t.Errorf("Input.ValidatePatterns() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
-
-	// fail because the receptor and ligand suffixes are not defined
-	badInp.General.ReceptorSuffix = ""
-	badInp.General.LigandSuffix = ""
-
-	err = badInp.ValidatePatterns()
-	if err == nil {
-		t.Errorf("Failed to detect missing receptor and ligand suffixes")
-	}
-	badInp.General.ReceptorSuffix = "p1"
-	badInp.General.LigandSuffix = "p2"
-
-	// fail because the receptor/ligand suffixex are the same
-	badInp.General.ReceptorSuffix = "p1"
-	badInp.General.LigandSuffix = "p1"
-
-	err = badInp.ValidatePatterns()
-	if err == nil {
-		t.Errorf("Failed to detect same receptor and ligand suffixes")
-	}
-
-	badInp.General.ReceptorSuffix = "p1"
-	badInp.General.LigandSuffix = "p2"
-
-	// Fail because the Ambig/Unambig patterns are the same
-	badInp.Scenarios[0].Parameters.Restraints.Ambig = "p1"
-	badInp.Scenarios[0].Parameters.Restraints.Unambig = "p1"
-
-	err = badInp.ValidatePatterns()
-	if err == nil {
-		t.Errorf("Failed to detect same Ambig and Unambig patterns")
-	}
-
-	badInp.Scenarios[0].Parameters.Restraints.Ambig = "p1"
-	badInp.Scenarios[0].Parameters.Restraints.Unambig = "p2"
-
-	// Fail because Topology and Param are the same
-	badInp.Scenarios[0].Parameters.Toppar.Topology = "p1"
-	badInp.Scenarios[0].Parameters.Toppar.Param = "p1"
-
-	err = badInp.ValidatePatterns()
-	if err == nil {
-		t.Errorf("Failed to detect same Topology and Param patterns")
-	}
-
-	badInp.Scenarios[0].Parameters.Toppar.Topology = "p1"
-	badInp.Scenarios[0].Parameters.Toppar.Param = "p2"
-
 }
+
 func TestValidateHaddock3Executable(t *testing.T) {
 
 }
@@ -446,7 +551,7 @@ func TestInput_ValidateExecutable(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "pass",
+			name: "valid-executable",
 			fields: fields{
 				General: GeneralStruct{
 					HaddockExecutable: haddockF,
@@ -455,25 +560,7 @@ func TestInput_ValidateExecutable(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "relative path",
-			fields: fields{
-				General: GeneralStruct{
-					HaddockExecutable: "haddock.sh",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "undefined",
-			fields: fields{
-				General: GeneralStruct{
-					HaddockExecutable: "",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "not executable",
+			name: "non-executable",
 			fields: fields{
 				General: GeneralStruct{
 					HaddockExecutable: nonExecHaddockF,
@@ -486,6 +573,24 @@ func TestInput_ValidateExecutable(t *testing.T) {
 			fields: fields{
 				General: GeneralStruct{
 					HaddockExecutable: nonExistHaddockF,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: "",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "relative-path",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: "haddock.sh",
 				},
 			},
 			wantErr: true,
