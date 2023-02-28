@@ -53,7 +53,7 @@ func main() {
 	if len(os.Args) < 2 {
 		glog.Error("No arguments were provided\n\n")
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 	args := os.Args[1:]
 	inputF := args[0]
@@ -65,20 +65,17 @@ func main() {
 
 	inp, errInp := input.LoadInput(inputF)
 	if errInp != nil {
-		glog.Error("Failed to load input file: " + errInp.Error())
-		return
+		glog.Exit("Failed to load input file: " + errInp.Error())
 	}
 
 	errExec := inp.ValidateExecutable()
 	if errExec != nil {
-		glog.Error("Failed to validate executable: " + errExec.Error())
-		return
+		glog.Exit("Failed to validate executable: " + errExec.Error())
 	}
 
 	errPatt := inp.ValidatePatterns()
 	if errPatt != nil {
-		glog.Error("ERROR: " + errPatt.Error())
-		return
+		glog.Exit("ERROR: " + errPatt.Error())
 	}
 
 	// haddockVersion := inp.General.HaddockVersion
@@ -92,38 +89,33 @@ func main() {
 	if haddockVersion == 2 {
 		runCns, errFind := input.FindHaddock24RunCns(inp.General.HaddockDir)
 		if errFind != nil {
-			glog.Error("Failed to find run.cns-conf: " + errFind.Error())
-			return
+			glog.Exit("Failed to find run.cns-conf: " + errFind.Error())
 		}
 
 		runCnsParams, errLoad := input.LoadHaddock24Params(runCns)
 		if errLoad != nil {
-			glog.Error("Failed to load run.cns-conf parameters" + errLoad.Error())
-			return
+			glog.Exit("Failed to load run.cns-conf parameters" + errLoad.Error())
 		}
 
 		for _, scenario := range inp.Scenarios {
 			scenarioParams := scenario.Parameters.CnsParams
 			errValidate := input.ValidateRunCNSParams(runCnsParams, scenarioParams)
 			if errValidate != nil {
-				glog.Error("Failed to validate scenario parameters: " + errValidate.Error())
-				return
+				glog.Exit("Failed to validate scenario parameters: " + errValidate.Error())
 			}
 		}
 	} else if haddockVersion == 3 {
 
 		moduleArr, errParams := input.LoadHaddock3Params(inp.General.HaddockDir)
 		if errParams != nil {
-			glog.Error("Failed to load HADDOCK3 parameters: " + errParams.Error())
-			return
+			glog.Exit("Failed to load HADDOCK3 parameters: " + errParams.Error())
 		}
 
 		for _, scenario := range inp.Scenarios {
 			scenarioModules := scenario.Parameters.Modules
 			errValidate := input.ValidateHaddock3Params(moduleArr, scenarioModules)
 			if errValidate != nil {
-				glog.Error("Failed to validate scenario parameters: " + errValidate.Error())
-				return
+				glog.Exit("Failed to validate scenario parameters: " + errValidate.Error())
 			}
 		}
 
@@ -132,15 +124,13 @@ func main() {
 	// Load the dataset
 	data, errDataset := dataset.LoadDataset(inp.General.WorkDir, inp.General.InputList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
 	if errDataset != nil {
-		glog.Error("Failed to load dataset: " + errDataset.Error())
-		return
+		glog.Exit("Failed to load dataset: " + errDataset.Error())
 	}
 
 	// Organize the dataset
 	orgData, errOrganize := dataset.OrganizeDataset(inp.General.WorkDir, data)
 	if errOrganize != nil {
-		glog.Error("Failed to organize dataset: " + errOrganize.Error())
-		return
+		glog.Exit("Failed to organize dataset: " + errOrganize.Error())
 	}
 
 	// Setup the scenarios & create the jobs
@@ -153,15 +143,13 @@ func main() {
 			if haddockVersion == 2 {
 				job, errSetup := target.SetupHaddock24Scenario(inp.General.WorkDir, inp.General.HaddockDir, scenario)
 				if errSetup != nil {
-					glog.Error("Failed to setup scenario: " + errSetup.Error())
-					return
+					glog.Exit("Failed to setup scenario: " + errSetup.Error())
 				}
 				jobArr = append(jobArr, job)
 			} else if haddockVersion == 3 {
 				job, errSetup := target.SetupHaddock3Scenario(inp.General.WorkDir, scenario)
 				if errSetup != nil {
-					glog.Error("Failed to setup scenario: " + errSetup.Error())
-					return
+					glog.Exit("Failed to setup scenario: " + errSetup.Error())
 				}
 				jobArr = append(jobArr, job)
 			}
@@ -200,19 +188,16 @@ func main() {
 
 				errSetup2 := job.SetupHaddock24(inp.General.HaddockExecutable)
 				if errSetup2 != nil {
-					glog.Error("Failed to setup HADDOCK: " + errSetup2.Error())
-					return
+					glog.Exit("Failed to setup HADDOCK: " + errSetup2.Error())
 				}
 				_, errRun2 := job.RunHaddock24(inp.General.HaddockExecutable)
 				if errRun2 != nil {
-					glog.Error("Failed to run HADDOCK: " + errRun2.Error())
-					return
+					glog.Exit("Failed to run HADDOCK: " + errRun2.Error())
 				}
 			} else if haddockVersion == 3 {
 				_, errRun3 := job.RunHaddock3(inp.General.HaddockExecutable)
 				if errRun3 != nil {
-					glog.Error("Failed to run HADDOCK: " + errRun3.Error())
-					return
+					glog.Exit("Failed to run HADDOCK: " + errRun3.Error())
 				}
 			}
 
