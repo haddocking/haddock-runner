@@ -1,9 +1,6 @@
-
 builds:
   # You can have multiple builds defined as a yaml list
-  -
-
-    # GOOS list to build for.
+  - # GOOS list to build for.
     # For more info refer to: https://golang.org/doc/install/source#environment
     # Defaults are darwin, linux, and windows.
     goos:
@@ -29,4 +26,3 @@ builds:
     #   - goarm: mips64
     #   - gomips: hardfloat
     #   - goamd64: v4
-
