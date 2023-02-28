@@ -132,6 +132,7 @@ func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario
 func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string, error) {
 
 	var runParamString string
+	nMol := 1
 
 	if haddockDir == "" {
 		err := errors.New("haddock directory not defined")
@@ -148,7 +149,6 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 		return "", err
 	}
 
-	runParamString += "N_COMP=2\n"
 	runParamString += "RUN_NUMBER=1\n"
 	runParamString += "PROJECT_DIR=./\n"
 	runParamString += "HADDOCK_DIR=" + haddockDir + "\n"
@@ -162,14 +162,17 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 	}
 
 	// Write ligand files
-	if len(t.Ligand) > 1 {
+	if len(t.Ligand) >= 1 {
 		runParamString += "PDB_FILE2=../data/" + filepath.Base(t.Ligand[0]) + "\n"
+		nMol++
 
 		// write ligand list files
 		if t.LigandList != "" {
-			runParamString += "PDB_LIST2=../data" + filepath.Base(t.LigandList) + "\n"
+			runParamString += "PDB_LIST2=../data/" + filepath.Base(t.LigandList) + "\n"
 		}
 	}
+
+	runParamString += "N_COMP=" + strconv.Itoa(nMol) + "\n"
 
 	runParamF := filepath.Join(projectDir, "/run.param")
 	err := os.WriteFile(runParamF, []byte(runParamString), 0644)
