@@ -148,7 +148,9 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 		return "", err
 	}
 
-	runParamString += "N_COMP=2\n"
+	nMol := len(t.Ligand) + len(t.Receptor)
+
+	runParamString += "N_COMP=" + strconv.Itoa(nMol) + "\n"
 	runParamString += "RUN_NUMBER=1\n"
 	runParamString += "PROJECT_DIR=./\n"
 	runParamString += "HADDOCK_DIR=" + haddockDir + "\n"
