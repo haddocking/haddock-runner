@@ -63,4 +63,3 @@ conda activate haddock3
 # mind the $@ at the end, it passes all the arguments to haddock3
 haddock3 "$@"
 ```
-
