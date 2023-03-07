@@ -1,4 +1,4 @@
-module benchmarktools
+module haddockrunner
 
 go 1.19
 

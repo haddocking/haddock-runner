@@ -1,4 +1,4 @@
-# `benchmark-tools` and [HADDOCK3](https://github.com/haddocking/haddock3)
+# `haddock-runner` and [HADDOCK3](https://github.com/haddocking/haddock3)
 
 IMPORTANT: HADDOCK v3.0 is still under development and is
 **not ready for production use**!! Please use HADDOCK v2.4.

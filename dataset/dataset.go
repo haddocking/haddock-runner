@@ -2,15 +2,15 @@
 package dataset
 
 import (
-	"benchmarktools/input"
-	"benchmarktools/runner"
-	"benchmarktools/utils"
+	"haddockrunner/input"
+	"haddockrunner/runner"
+	"haddockrunner/utils"
 	"io"
 	"reflect"
 	"strconv"
 	"strings"
 
-	// "benchmarktools/wrapper/haddock2"
+	// "haddockrunner/wrapper/haddock2"
 	"bufio"
 	"errors"
 	"os"

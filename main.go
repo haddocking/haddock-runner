@@ -2,12 +2,12 @@
 package main
 
 import (
-	"benchmarktools/dataset"
-	"benchmarktools/input"
-	"benchmarktools/runner"
-	"benchmarktools/utils"
 	"flag"
 	"fmt"
+	"haddockrunner/dataset"
+	"haddockrunner/input"
+	"haddockrunner/runner"
+	"haddockrunner/utils"
 	"os"
 	"sort"
 
@@ -20,7 +20,7 @@ func init() {
 	var versionPrint bool
 	const usage = `Usage: %s [options] <input file>
 
-Run HADDOCK benchmarking
+Run HADDOCK on a dataset of complexes
 
 Options:
 `
@@ -31,7 +31,7 @@ Options:
 	flag.BoolVar(&versionPrint, "version", false, "Print version and exit")
 	flag.Usage = func() {
 		flagSet := flag.CommandLine
-		fmt.Fprintf(flag.CommandLine.Output(), usage, "benchmarktools")
+		fmt.Fprintf(flag.CommandLine.Output(), usage, "`executable`")
 		for _, f := range []string{"version"} {
 			flag := flagSet.Lookup(f)
 			fmt.Printf("  -%s: %s\n", f, flag.Usage)
@@ -46,7 +46,7 @@ func main() {
 	flag.Parse()
 
 	if utils.IsFlagPassed("version") {
-		fmt.Printf("benchmarktools version %s\n", version)
+		fmt.Printf("haddockrunner version %s\n", version)
 		os.Exit(0)
 	}
 
@@ -59,7 +59,7 @@ func main() {
 	inputF := args[0]
 
 	glog.Info("###########################################")
-	glog.Info(" Starting benchmarktools " + version)
+	glog.Info(" Starting haddockrunner " + version)
 	glog.Info("###########################################")
 	glog.Info("Loading input file: " + inputF)
 

@@ -41,7 +41,7 @@ func TestCopyFile(t *testing.T) {
 func TestIsFlagPassed(t *testing.T) {
 
 	// Pass by passing a flag
-	os.Args = []string{"benchmarktools", "-option1"}
+	os.Args = []string{"haddockrunner", "-option1"}
 	var option1 bool
 	flag.BoolVar(&option1, "option1", false, "")
 	flag.Parse()

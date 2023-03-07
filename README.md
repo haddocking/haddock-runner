@@ -1,10 +1,10 @@
-# `benchmark-tools` for [HADDOCK](https://www.bonvinlab.org/software)
+# `haddock-runner` for [HADDOCK](https://www.bonvinlab.org/software)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![linting](https://github.com/haddocking/benchmark-tools/actions/workflows/lint.yml/badge.svg)](https://github.com/haddocking/benchmark-tools/actions/workflows/lint.yml)
-[![unittests](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml/badge.svg)](https://github.com/haddocking/benchmark-tools/actions/workflows/unittests.yml)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/benchmark-tools/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/benchmark-tools&utm_campaign=Badge_Coverage)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/benchmark-tools/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/benchmark-tools&utm_campaign=Badge_Grade)
+[![linting](https://github.com/haddocking/haddock-runner/actions/workflows/lint.yml/badge.svg)](https://github.com/haddocking/haddock-runner/actions/workflows/lint.yml)
+[![unittests](https://github.com/haddocking/haddock-runner/actions/workflows/unittests.yml/badge.svg)](https://github.com/haddocking/haddock-runner/actions/workflows/unittests.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/haddock-runner/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/haddock-runner&utm_campaign=Badge_Coverage)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/haddock-runner/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/haddock-runner&utm_campaign=Badge_Grade)
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8B%20%20%E2%97%8F-orange)](https://fair-software.eu)
 [![SQAaaS badge shields.io](https://img.shields.io/badge/sqaaas%20software-bronze-e6ae77)](https://api.eu.badgr.io/public/assertions/cf1FQ2HAR9ywr3SCycW-QQ "SQAaaS bronze badge achieved")
 
@@ -61,7 +61,7 @@ very efficient (or well designed) also it had no tests...! The Go version is fas
 efficient and easier to maintain - see the code coverage.
 
 However you can still find the Python version as the v0.2.1 tag in this
-repository [HERE](https://github.com/haddocking/benchmark-tools/tree/v0.2.1).
+repository [HERE](https://github.com/haddocking/haddock-runner/tree/v0.2.1).
 
 ### [Installation](#installation)
 
@@ -74,24 +74,24 @@ repository [HERE](https://github.com/haddocking/benchmark-tools/tree/v0.2.1).
 Clone the repository
 
 ```bash
-git clone https://github.com/haddocking/benchmark-tools.git
-cd benchmark-tools
-go build -o benchmark-tools
-./benchmark-tools -version
+git clone https://github.com/haddocking/haddock-runner.git
+cd haddock-runner
+go build -o haddock-runner
+./haddock-runner -version
 ```
 
 OR
 
 Use the pre-compiled binaries from the latest release
 
-- [haddocking/benchmark-tools/releases/latest](https://github.com/haddocking/benchmark-tools/releases/latest)
+- [haddocking/haddock-runner/releases/latest](https://github.com/haddocking/haddock-runner/releases/latest)
 
 #### Usage
 
-**Check the step-by-step tutorial at [bonvinlab.org/education/benchmark-tools](https://www.bonvinlab.org/education/benchmark-tools/)**
+**Check the step-by-step tutorial at [bonvinlab.org/education/haddock-runner](https://www.bonvinlab.org/education/haddock-runner/)**
 
 ```bash
-Usage: benchmarktools [options] <input file>
+Usage: haddockrunner [options] <input file>
 
 Run HADDOCK benchmarking
 
@@ -101,12 +101,12 @@ Options:
 
 - `input.yml`
 
-The input of `benchmark-tools` is a `.yml` file; YAML is a human-readable
+The input of `haddock-runner` is a `.yml` file; YAML is a human-readable
 data-serialization language. It is commonly used for configuration files and
 in applications where data is being stored or transmitted. For more information,
 please refer to the [YAML website](https://yaml.org/).
 
-Currently `benchmark-tools` can be executed for both the production-stable version
+Currently `haddock-runner` can be executed for both the production-stable version
 2.4 and the experimental 3.0.0-beta2. The input file is slightly different for
 each version. The input file for version 2.4 is described below, while the input
 file for version 3.0.0-beta2 is described [HERE](HADDOCK3.md).
@@ -170,7 +170,7 @@ scenarios:
 
 The `haddock24.sh` script is a wrapper around the HADDOCK2.4 executable.
 It is used to run HADDOCK in a given folder, and it is called by
-`benchmark-tools` for each scenario. The script is provided in the
+`haddock-runner` for each scenario. The script is provided in the
 `examples` folder (`haddock24.sh`) and also below.
 
 **Important: Keep in mind that HADDOCK2.4 runs on Python2.7,
@@ -206,7 +206,7 @@ files. The input files must be:
 - `.param` : for custom parameter files (used for small-molecules)
 - `.tbl`: a table file containing the restraints to be used in the docking experiment
 
-This list is parsed by `benchmark-tools` and are identified according to the patterns
+This list is parsed by `haddock-runner` and are identified according to the patterns
 set in `input.yml`. Lines begining with `#` are ignored and can be used to document
 the input list for future reference - in-line comments are not supported.
 
