@@ -2,9 +2,9 @@
 package input
 
 import (
-	"benchmarktools/utils"
 	"bufio"
 	"errors"
+	"haddockrunner/utils"
 	"os"
 	"path/filepath"
 	"reflect"

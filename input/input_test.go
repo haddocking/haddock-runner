@@ -13,7 +13,7 @@ import (
 func TestLoadInput(t *testing.T) {
 	// Create a OK input file
 	d1 := []byte(`general:
-  executable: /home/rodrigo/repos/benchmark-tools/haddock3.sh
+  executable: /home/rodrigo/repos/haddock-runner/haddock3.sh
   max_concurrent: 999
   haddock_dir: ../haddock3
   receptor_suffix: _r_u
@@ -39,7 +39,7 @@ scenarios:
 `)
 
 	d2 := []byte(`general:
-	executable: /home/rodrigo/repos/benchmark-tools/haddock3.sh
+	executable: /home/rodrigo/repos/haddock-runner/haddock3.sh
   max_concurrent: 999
   haddock_dir: ../haddock3
   receptor_suffix: _r_u
@@ -96,7 +96,7 @@ scenarios:
 			},
 			want: &Input{
 				General: GeneralStruct{
-					HaddockExecutable: "/home/rodrigo/repos/benchmark-tools/haddock3.sh",
+					HaddockExecutable: "/home/rodrigo/repos/haddock-runner/haddock3.sh",
 					MaxConcurrent:     999,
 					HaddockDir:        "../haddock3",
 					ReceptorSuffix:    "_r_u",

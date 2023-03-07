@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"benchmarktools/input"
-	"benchmarktools/utils"
-	"benchmarktools/wrapper/haddock2"
+	"haddockrunner/input"
+	"haddockrunner/utils"
+	"haddockrunner/wrapper/haddock2"
 )
 
 // Job is the HADDOCK job

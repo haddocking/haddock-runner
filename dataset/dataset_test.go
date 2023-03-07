@@ -1,8 +1,8 @@
 package dataset
 
 import (
-	"benchmarktools/input"
-	"benchmarktools/runner"
+	"haddockrunner/input"
+	"haddockrunner/runner"
 	"os"
 	"path/filepath"
 	"reflect"

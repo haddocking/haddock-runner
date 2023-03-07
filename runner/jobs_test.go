@@ -1,7 +1,7 @@
 package runner
 
 import (
-	"benchmarktools/input"
+	"haddockrunner/input"
 	"os"
 	"testing"
 )

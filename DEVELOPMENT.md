@@ -1,3 +1,3 @@
-# Developing benchmark-tools
+# Developing haddock-runner
 
 coming soon

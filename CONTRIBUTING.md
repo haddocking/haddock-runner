@@ -1,12 +1,12 @@
-# Contributing with benchmark-tools
+# Contributing with haddock-runner
 
 ## Reporting issues
 
-If you find a bug or have a feature request, please report it in the [issue tracker](https://github.com/haddocking/benchmark-tools/issues)
+If you find a bug or have a feature request, please report it in the [issue tracker](https://github.com/haddocking/haddock-runner/issues)
 
 ## Contributing code
 
-We welcome contributions to benchmark-tools. If you would like to contribute, please fork the repository and make a pull request.
+We welcome contributions to haddock-runner. If you would like to contribute, please fork the repository and make a pull request.
 
 ## Development conventions
 
