@@ -536,6 +536,21 @@ func TestInput_ValidateExecutable(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to write executable: %s", err)
 	}
+	userExecHaddockF := filepath.Join(haddockDir, "/userExec-haddock.sh")
+	err = os.WriteFile(userExecHaddockF, []byte("#!/bin/bash"), 0744)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
+	groupExecHaddockF := filepath.Join(haddockDir, "/groupExec-haddock.sh")
+	err = os.WriteFile(groupExecHaddockF, []byte("#!/bin/bash"), 0654)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
+	publicExecHaddockF := filepath.Join(haddockDir, "/publicExec-haddock.sh")
+	err = os.WriteFile(publicExecHaddockF, []byte("#!/bin/bash"), 0645)
+	if err != nil {
+		t.Errorf("Failed to write executable: %s", err)
+	}
 	nonExistHaddockF := filepath.Join(haddockDir, "/does-not-exist.sh")
 
 	type fields struct {
@@ -591,6 +606,33 @@ func TestInput_ValidateExecutable(t *testing.T) {
 				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "user-executable",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: userExecHaddockF,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "group-executable",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: groupExecHaddockF,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "public-executable",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockExecutable: publicExecHaddockF,
+				},
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
