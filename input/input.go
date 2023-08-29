@@ -92,28 +92,6 @@ type TopologyParams struct {
 	Param    string
 }
 
-// ModuleParams is the module parameters structure
-type ModuleParams struct {
-	Order         []string               `yaml:"order"`
-	Topoaa        map[string]interface{} `yaml:"topoaa"`
-	Topocg        map[string]interface{} `yaml:"topocg"`
-	Exit          map[string]interface{} `yaml:"exit"`
-	Emref         map[string]interface{} `yaml:"emref"`
-	Flexref       map[string]interface{} `yaml:"flexref"`
-	Mdref         map[string]interface{} `yaml:"mdref"`
-	Gdock         map[string]interface{} `yaml:"gdock"`
-	Lightdock     map[string]interface{} `yaml:"lightdock"`
-	Rigidbody     map[string]interface{} `yaml:"rigidbody"`
-	Emscoring     map[string]interface{} `yaml:"emscoring"`
-	Mdscoring     map[string]interface{} `yaml:"mdscoring"`
-	Caprieval     map[string]interface{} `yaml:"caprieval"`
-	Clustfcc      map[string]interface{} `yaml:"clustfcc"`
-	Clustrmsd     map[string]interface{} `yaml:"clustrmsd"`
-	Rmsdmatrix    map[string]interface{} `yaml:"rmsdmatrix"`
-	Seletop       map[string]interface{} `yaml:"seletop"`
-	Seletopclusts map[string]interface{} `yaml:"seletopclusts"`
-}
-
 // ---------------------------------------------------------------------
 
 // ValidateExecutable checks if the executable script has the correct permissions
