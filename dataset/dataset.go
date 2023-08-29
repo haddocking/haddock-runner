@@ -261,7 +261,25 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 		for i := 0; i < v.NumField(); i++ {
 			field := v.Field(i)
 			name := types.Field(i).Name
+			// ------------------------------------------------------------------
+			// Important!!
+			// Here we match the module string inside the Order field,
+			//  with the module name in the struct
+			// The Struct does not support `.`, and this is the way the module
+			//  will be written in the TOML file.
+			// For simplicity, users input the module name with `.`,
+			//   but here we convert it to `_` so we can match it with the struct.
+			if strings.Contains(m, ".") {
+				m = strings.ReplaceAll(m, ".", "_")
+			}
+			// ------------------------------------------------------------------
 			if m == strings.ToLower(name) {
+				// Now, change back the module name to the TOML format
+				// and add single quotes
+				if strings.Contains(m, "_") {
+					m = strings.ReplaceAll(m, "_", ".")
+					m = "'" + m + "'"
+				}
 				runTomlString += "[" + m + "]\n"
 				for k, v := range field.Interface().(map[string]interface{}) {
 					if strings.Contains(k, "_fname") {
