@@ -30,7 +30,17 @@ scenarios:
 
       modules:
         # these are the modules to be executed in the order they are defined
-        order: [topoaa, rigidbody, seletop, flexref, emref]
+        order:
+          [
+            topoaa,
+            rigidbody,
+            caprieval,
+            seletop,
+            flexref,
+            caprieval.1,
+            emref,
+            caprieval.2,
+          ]
         # these are the parameters for each module
         topoaa:
           autohis: true
@@ -39,13 +49,19 @@ scenarios:
           sampling: 10
           ambig_fname: "_ti.tbl"
 
+        caprieval:
+
         seletop:
           select: 2
 
         # if no custom parameters are being used, it can be empty
         flexref:
 
+        caprieval.1:
+
         emref:
+
+        caprieval.2:
 ```
 
 ## Executable script
