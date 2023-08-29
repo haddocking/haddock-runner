@@ -133,7 +133,7 @@ func (inp *Input) ValidateExecutable() error {
 		return err
 	}
 	mode := info.Mode()
-	if mode&0111 != 0 && mode&0011 != 0 {
+	if mode&0111 != 0 {
 		return nil
 	}
 	return errors.New("executable not executable")
