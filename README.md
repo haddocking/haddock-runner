@@ -108,8 +108,9 @@ please refer to the [YAML website](https://yaml.org/).
 
 Currently `haddock-runner` can be executed for both the production-stable version
 2.4 and the experimental 3.0.0-beta2. The input file is slightly different for
-each version. The input file for version 2.4 is described below, while the input
-file for version 3.0.0-beta2 is described [HERE](HADDOCK3.md).
+each version. The input file for version 2.4 is described below.
+
+The input file for version 3.0.0-beta2 is described [HERE](HADDOCK3.md).
 
 An example file is provided in the `examples` folder (`example_input.yml`) and
 also below. Its composed of two main sections, `general` which defines the
