@@ -718,7 +718,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 					"array-float":  []float64{1.1, 2.2, 3.3},
 				},
 				mod: input.ModuleParams{
-					Order: []string{"topoaa", "rigidbody", "flexref", "mdref"},
+					Order: []string{"topoaa", "rigidbody", "caprieval", "flexref", "caprieval.2", "mdref", "caprieval.3"},
 					Topoaa: map[string]interface{}{
 						"some-param": "some-value",
 					},
@@ -730,6 +730,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 						"someother_fname":    "custom2",
 						"thereference_fname": "ref",
 					},
+					Caprieval: map[string]interface{}{},
 					Flexref: map[string]interface{}{
 						"some-other-param": 3.5,
 						"array-int":        []int{1, 2, 3},
@@ -739,9 +740,11 @@ func TestTarget_WriteRunToml(t *testing.T) {
 						"array-interface":  []interface{}{1, 2.2, "three", true},
 						"expandable_":      []int{1, 2, 3},
 					},
+					Caprieval_2: map[string]interface{}{},
 					Mdref: map[string]interface{}{
 						"some-other-param": false,
 					},
+					Caprieval_3: map[string]interface{}{},
 				},
 			},
 			want:    "_some-workdir/run.toml",

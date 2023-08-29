@@ -39,7 +39,7 @@ scenarios:
 `)
 
 	d2 := []byte(`general:
-	executable: /home/rodrigo/repos/haddock-runner/haddock3.sh
+  executable: /home/rodrigo/repos/haddock-runner/haddock3.sh
   max_concurrent: 999
   haddock_dir: ../haddock3
   receptor_suffix: _r_u
@@ -62,7 +62,37 @@ scenarios:
         order: [rigidbody, rigidbody]
         rigidbody:
           param1: value1
-				rigidbody:
+        rigidbody:
+          param1: value1
+`)
+
+	d3 := []byte(`general:
+  executable: /home/rodrigo/repos/haddock-runner/haddock3.sh
+  max_concurrent: 999
+  haddock_dir: ../haddock3
+  receptor_suffix: _r_u
+  ligand_suffix: _l_u
+  input_list: example/input_list.txt
+  work_dir: bm-goes-here
+
+scenarios:
+  - name: true-interface
+    parameters:
+      run_cns:
+        noecv: false
+      restraints:
+        ambig: ti
+      custom_toppar:
+        topology: _ligand.top
+      general:
+        ncores: 1
+      modules:
+        order: [rigidbody, caprieval.1, caprieval.2]
+        rigidbody:
+          param1: value1
+        caprieval.1:
+          param1: value1
+        caprieval.2:
           param1: value1
 `)
 
@@ -79,6 +109,13 @@ scenarios:
 	}
 
 	defer os.Remove("test-input-wrong.yaml")
+
+	err = os.WriteFile("test-input-repeated.yaml", d3, 0644)
+	if err != nil {
+		t.Errorf("Failed to write input file: %s", err)
+	}
+
+	defer os.Remove("test-input-repeated.yaml")
 
 	type args struct {
 		filename string
@@ -147,6 +184,56 @@ scenarios:
 			},
 			want:    nil,
 			wantErr: true,
+		},
+		{
+			name: "repeated-modules",
+			args: args{
+				filename: "test-input-repeated.yaml",
+			},
+			// [rigidbody, caprieval.1, caprieval.2]
+			want: &Input{
+				General: GeneralStruct{
+					HaddockExecutable: "/home/rodrigo/repos/haddock-runner/haddock3.sh",
+					MaxConcurrent:     999,
+					HaddockDir:        "../haddock3",
+					ReceptorSuffix:    "_r_u",
+					LigandSuffix:      "_l_u",
+					InputList:         "example/input_list.txt",
+					WorkDir:           "bm-goes-here",
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "true-interface",
+						Parameters: ParametersStruct{
+							General: map[string]any{
+								"ncores": 1,
+							},
+							Restraints: Airs{
+								Ambig: "ti",
+							},
+							Toppar: TopologyParams{
+								Topology: "_ligand.top",
+							},
+							Modules: ModuleParams{
+								Order: []string{"rigidbody", "caprieval.1", "caprieval.2"},
+								Rigidbody: map[string]any{
+									"param1": "value1",
+								},
+								Caprieval_1: map[string]any{
+									"param1": "value1",
+								},
+								Caprieval_2: map[string]any{
+									"param1": "value1",
+								},
+							},
+							CnsParams: map[string]interface{}{
+								"noecv": false,
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
