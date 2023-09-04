@@ -437,8 +437,8 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		line := s.Text()
 		for k, v := range m {
 			// Handle the restraints
-			tblRegex := regexp.MustCompile(`(` + k + `)\w+\.tbl`)
-			tblMatch := tblRegex.FindStringSubmatch(line)
+			tblRegex := regexp.MustCompile(`(` + k + `).*tbl`)
+			tblMatch := tblRegex.FindStringSubmatch(filepath.Base(line))
 			if len(tblMatch) != 0 {
 				v.Restraints = append(v.Restraints, s.Text())
 			}
