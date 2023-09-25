@@ -140,6 +140,8 @@ func TestLoadDataset(t *testing.T) {
 		[]byte(
 			"some/path/structure1_r_u.pdb\n"+
 				"some/path/structure1_l_u.pdb\n"+
+				"some/path/structure1_l_u_cg.pdb\n"+
+				"some/path/structure1_r_u_cg.pdb\n"+
 				"some/path/structure1_ref.pdb\n"+
 				"some/path/structure2_l_u.pdb\n"+
 				"some/path/structure2_r_u.pdb\n"+
@@ -153,7 +155,13 @@ func TestLoadDataset(t *testing.T) {
 				"some/path/structure4_ambig.tbl\n"+
 				"some/path/structure4_unambig-rest.tbl\n"+
 				"some/path/structure4_ATP.top\n"+
-				"some/path/structure4_ATP.param\n"), 0644)
+				"some/path/structure4_ATP.param\n"+
+				"some/path/structure5_r_u.pdb\n"+
+				"some/path/structure5_l_u.pdb\n"+
+				"some/path/structure5_target.pdb\n"+
+				"some/path/structure5something_r_u.pdb\n"+
+				"some/path/structure5something_l_u.pdb\n"+
+				"some/path/structure5something_target.pdb\n"), 0644)
 	defer os.Remove("pdb.list")
 
 	// Pass by loading a valid dataset
@@ -163,7 +171,7 @@ func TestLoadDataset(t *testing.T) {
 		t.Errorf("Failed to load dataset: %s", err.Error())
 	}
 
-	if len(tArr) != 4 {
+	if len(tArr) != 6 {
 		t.Errorf("Failed to load dataset: %d", len(tArr))
 	}
 
@@ -182,6 +190,11 @@ func TestLoadDataset(t *testing.T) {
 		if v.ID == "structure3" {
 			if len(v.Receptor) != 3 {
 				t.Errorf("Failed: Not all receptors were loaded")
+			}
+		}
+		if v.ID == "structure5" {
+			if len(v.MiscPDB) != 1 {
+				t.Errorf("Failed: More than one miscpdb was loaded")
 			}
 		}
 	}
@@ -513,7 +526,7 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 						"some-param": "some-value",
 					},
 					Rigidbody: map[string]interface{}{
-						"ambig_fname": "_ti.tbl",
+						"ambig_fname": "_ti",
 					},
 				},
 			},
@@ -561,6 +574,22 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 	scenarioPath := filepath.Join(wd, target.ID, "scenario-"+s.Name)
 	if _, err := os.Stat(scenarioPath); os.IsNotExist(err) {
 		t.Errorf("Scenario was not written to disk")
+	}
+
+	// Fail to setup a scenario in which multiple patterns match
+	target = Target{
+		ID:           "1abc",
+		Receptor:     []string{"dummy.pdb", "dummy.pdb"},
+		ReceptorList: "pdb-files.txt",
+		Ligand:       []string{"dummy.pdb", "dummy.pdb"},
+		LigandList:   "pdb-files.txt",
+		Restraints:   []string{"1abc_ti.tbl", "1abc_ti5.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+	}
+
+	_, err = target.SetupHaddock3Scenario(wd, s)
+	if err == nil {
+		t.Errorf("Failed to detect wrong scenario")
 	}
 
 }
@@ -702,7 +731,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 				ID:         "1abc",
 				Receptor:   []string{"receptor.pdb"},
 				Ligand:     []string{"ligand.pdb"},
-				Restraints: []string{"ambig_ti.tbl", "other_unambig.tbl", "something.tbl"},
+				Restraints: []string{"ambig_ti.tbl", "ambig5_ti.tbl", "other_unambig.tbl", "something.tbl"},
 				Toppar:     []string{"custom1.top", "custom2.param"},
 				MiscPDB:    []string{"ref.pdb"},
 			},
@@ -725,7 +754,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 					},
 					Rigidbody: map[string]interface{}{
 						"some-other-param":   10,
-						"some_fname":         "ambig",
+						"some_fname":         "ambig_ti",
 						"another_fname":      "unambig",
 						"other_fname":        "custom1",
 						"someother_fname":    "custom2",

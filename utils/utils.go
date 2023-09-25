@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -192,4 +193,28 @@ func FloatSliceToStringSlice(slice []float64) []string {
 		s[i] = strconv.FormatFloat(v, 'f', -1, 64)
 	}
 	return s
+}
+
+// Helper function to check if "cg" is present in the string
+func ContainsCG(s string) bool {
+	// Make it lower case
+	s = strings.ToLower(s)
+	return regexp.MustCompile(`cg`).MatchString(s)
+}
+
+// FindFname checks the array of strings for a pattern, returns an error if multiple files match
+func FindFname(arr []string, pattern *regexp.Regexp) (string, error) {
+
+	var fname string
+	for _, f := range arr {
+		if pattern.MatchString(f) {
+			if fname != "" {
+				err := errors.New("multiple files match the pattern: `" + pattern.String() + "` please use a more specific pattern")
+				return "", err
+			}
+			fname = f
+		}
+	}
+
+	return fname, nil
 }

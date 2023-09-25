@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -302,4 +303,32 @@ func TestFloatSliceToStringSlice(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestContainsCG(t *testing.T) {
+	result := ContainsCG("cg")
+	if !result {
+		t.Errorf("Failed to detect cg")
+	}
+	result = ContainsCG("c")
+	if result {
+		t.Errorf("Failed to detect cg")
+	}
+}
+
+func TestFindFname(t *testing.T) {
+
+	testArr := []string{"abc", "bcd", "cde"}
+	pattern := regexp.MustCompile("abc")
+	_, err := FindFname(testArr, pattern)
+	if err != nil {
+		t.Errorf("Failed to find name: %s", err)
+	}
+
+	pattern = regexp.MustCompile("cd")
+	_, err = FindFname(testArr, pattern)
+	if err == nil {
+		t.Errorf("Failed to detect multiple files")
+	}
+
 }
