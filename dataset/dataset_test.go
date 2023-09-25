@@ -715,7 +715,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 				ID:         "1abc",
 				Receptor:   []string{"receptor.pdb"},
 				Ligand:     []string{"ligand.pdb"},
-				Restraints: []string{"ambig_ti.tbl", "other_unambig.tbl", "something.tbl"},
+				Restraints: []string{"ambig_ti.tbl", "ambig5_ti.tbl", "other_unambig.tbl", "something.tbl"},
 				Toppar:     []string{"custom1.top", "custom2.param"},
 				MiscPDB:    []string{"ref.pdb"},
 			},
@@ -738,7 +738,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 					},
 					Rigidbody: map[string]interface{}{
 						"some-other-param":   10,
-						"some_fname":         "ambig",
+						"some_fname":         "ambig_ti",
 						"another_fname":      "unambig",
 						"other_fname":        "custom1",
 						"someother_fname":    "custom2",
