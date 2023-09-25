@@ -140,6 +140,8 @@ func TestLoadDataset(t *testing.T) {
 		[]byte(
 			"some/path/structure1_r_u.pdb\n"+
 				"some/path/structure1_l_u.pdb\n"+
+				"some/path/structure1_l_u_cg.pdb\n"+
+				"some/path/structure1_r_u_cg.pdb\n"+
 				"some/path/structure1_ref.pdb\n"+
 				"some/path/structure2_l_u.pdb\n"+
 				"some/path/structure2_r_u.pdb\n"+

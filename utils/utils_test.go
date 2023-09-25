@@ -303,3 +303,14 @@ func TestFloatSliceToStringSlice(t *testing.T) {
 		})
 	}
 }
+
+func TestContainsCG(t *testing.T) {
+	result := ContainsCG("cg")
+	if !result {
+		t.Errorf("Failed to detect cg")
+	}
+	result = ContainsCG("c")
+	if result {
+		t.Errorf("Failed to detect cg")
+	}
+}

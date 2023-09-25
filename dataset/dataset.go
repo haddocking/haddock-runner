@@ -381,13 +381,15 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		}
 		root = match[1]
 
-		RecMatch := recRegex.FindStringSubmatch(basePath)
-		if len(RecMatch) != 0 {
+		basePathCG := utils.ContainsCG(basePath)
+
+		RecMatch := recRegex.MatchString(basePath)
+		if RecMatch && !basePathCG {
 			receptor = fullPath
 		}
 
-		LigMatch := ligRegex.FindStringSubmatch(basePath)
-		if len(LigMatch) != 0 {
+		LigMatch := ligRegex.MatchString(basePath)
+		if LigMatch && !basePathCG {
 			ligand = fullPath
 		}
 
