@@ -283,21 +283,25 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 				runTomlString += "[" + m + "]\n"
 				for k, v := range field.Interface().(map[string]interface{}) {
 					if strings.Contains(k, "_fname") {
-						// Find the restraint that matches the pattern
+						// Identify the fname parameters based on the pattern, considering
+						//  word boundaries
+						pattern := regexp.MustCompile(`\b` + v.(string) + `\b`)
+
+						// Find the restraints that match the pattern
 						for _, r := range t.Restraints {
-							if strings.Contains(r, v.(string)) {
+							if pattern.MatchString(r) {
 								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
 							}
 						}
-						// Find the toppar that matches the pattern
+						// Find the Toppar that matches the pattern
 						for _, r := range t.Toppar {
-							if strings.Contains(r, v.(string)) {
+							if pattern.MatchString(r) {
 								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
 							}
 						}
-						// Find a PDB that matches the pattern
+						// Find if a MiscPDB that matches the pattern
 						for _, r := range t.MiscPDB {
-							if strings.Contains(r, v.(string)) {
+							if pattern.MatchString(r) {
 								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
 							}
 						}
