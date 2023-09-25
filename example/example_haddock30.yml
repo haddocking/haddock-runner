@@ -1,11 +1,11 @@
 general:
-  executable: /trinity/login/rodrigo/repos/haddock-runner/example/haddock3.sh
+  executable: /your/absolute/path/haddock-runner/example/haddock3.sh
   max_concurrent: 4
-  haddock_dir: /trinity/login/rodrigo/repos/haddock3
+  haddock_dir: /your/absolute/path/haddock3
   receptor_suffix: _r_u
   ligand_suffix: _l_u
-  input_list: /trinity/login/rodrigo/repos/haddock-runner/example/input_list.txt
-  work_dir: /trinity/login/rodrigo/repos/haddock-runner/bm-goes-here
+  input_list: /your/absolute/path/haddock-runner/example/input_list.txt
+  work_dir: /your/absolute/path/haddock-runner/bm-goes-here
 
 scenarios:
   - name: true-interface
@@ -20,20 +20,20 @@ scenarios:
           autohis: true
         rigidbody:
           sampling: 10
-          ambig_fname: _ti
-          unambig_fname: _unambig
-          ligand_top_fname: _custom_top
-          ligand_param_fname: _custom_param
+          ambig_fname: _ti.tbl
+          unambig_fname: _unambig.tbl
+          ligand_top_fname: _ligand.top
+          ligand_param_fname: _ligand.param
         seletop:
           select: 2
         flexref:
-          ambig_fname: _ti
-          unambig_fname: _unambig
-          ligand_top_fname: _custom_top
-          ligand_param_fname: _custom_param
+          ambig_fname: _ti.tbl
+          unambig_fname: _unambig.tbl
+          ligand_top_fname: _ligand.top
+          ligand_param_fname: _ligand.param
         emref:
         caprieval:
-          reference_fname: _ref
+          reference_fname: _ref.pdb
 
   - name: center-of-mass
     parameters:
