@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -192,4 +193,11 @@ func FloatSliceToStringSlice(slice []float64) []string {
 		s[i] = strconv.FormatFloat(v, 'f', -1, 64)
 	}
 	return s
+}
+
+// Helper function to check if "cg" is present in the string
+func ContainsCG(s string) bool {
+	// Make it lower case
+	s = strings.ToLower(s)
+	return regexp.MustCompile(`cg`).MatchString(s)
 }
