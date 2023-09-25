@@ -153,7 +153,13 @@ func TestLoadDataset(t *testing.T) {
 				"some/path/structure4_ambig.tbl\n"+
 				"some/path/structure4_unambig-rest.tbl\n"+
 				"some/path/structure4_ATP.top\n"+
-				"some/path/structure4_ATP.param\n"), 0644)
+				"some/path/structure4_ATP.param\n"+
+				"some/path/structure5_r_u.pdb\n"+
+				"some/path/structure5_l_u.pdb\n"+
+				"some/path/structure5_target.pdb\n"+
+				"some/path/structure5something_r_u.pdb\n"+
+				"some/path/structure5something_l_u.pdb\n"+
+				"some/path/structure5something_target.pdb\n"), 0644)
 	defer os.Remove("pdb.list")
 
 	// Pass by loading a valid dataset
@@ -163,7 +169,7 @@ func TestLoadDataset(t *testing.T) {
 		t.Errorf("Failed to load dataset: %s", err.Error())
 	}
 
-	if len(tArr) != 4 {
+	if len(tArr) != 6 {
 		t.Errorf("Failed to load dataset: %d", len(tArr))
 	}
 
@@ -182,6 +188,11 @@ func TestLoadDataset(t *testing.T) {
 		if v.ID == "structure3" {
 			if len(v.Receptor) != 3 {
 				t.Errorf("Failed: Not all receptors were loaded")
+			}
+		}
+		if v.ID == "structure5" {
+			if len(v.MiscPDB) != 1 {
+				t.Errorf("Failed: More than one miscpdb was loaded")
 			}
 		}
 	}
