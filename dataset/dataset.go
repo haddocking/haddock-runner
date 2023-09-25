@@ -457,7 +457,8 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 	// Add the misc PDBs
 	for _, pdb := range pdbArr {
 		for k, v := range m {
-			if strings.Contains(pdb, k) {
+			rootRegex := regexp.MustCompile(k + `_`)
+			if rootRegex.MatchString(pdb) {
 				v.MiscPDB = append(v.MiscPDB, pdb)
 			}
 			m[k] = v
