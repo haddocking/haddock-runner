@@ -201,3 +201,20 @@ func ContainsCG(s string) bool {
 	s = strings.ToLower(s)
 	return regexp.MustCompile(`cg`).MatchString(s)
 }
+
+// FindFname checks the array of strings for a pattern, returns an error if multiple files match
+func FindFname(arr []string, pattern *regexp.Regexp) (string, error) {
+
+	var fname string
+	for _, f := range arr {
+		if pattern.MatchString(f) {
+			if fname != "" {
+				err := errors.New("multiple files match the pattern: `" + pattern.String() + "` please use a more specific pattern")
+				return "", err
+			}
+			fname = f
+		}
+	}
+
+	return fname, nil
+}

@@ -207,7 +207,10 @@ func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job,
 	}
 
 	// Generate the run.toml file - it will handle the restraints
-	_, _ = t.WriteRunToml(sPath, s.Parameters.General, s.Parameters.Modules)
+	_, err := t.WriteRunToml(sPath, s.Parameters.General, s.Parameters.Modules)
+	if err != nil {
+		return runner.Job{}, err
+	}
 
 	j := runner.Job{
 		ID:   t.ID + "_" + s.Name,
@@ -252,6 +255,12 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 	}
 	runTomlString += "]\n\n"
 
+	fnameArray := [][]string{
+		t.Restraints,
+		t.Toppar,
+		t.MiscPDB,
+	}
+
 	// NOTE: THE ORDER OF THE MODULES IS IMPORTANT!!
 	// Range over the modules in the order they are defined
 	v := reflect.ValueOf(mod)
@@ -282,27 +291,19 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 				}
 				runTomlString += "[" + m + "]\n"
 				for k, v := range field.Interface().(map[string]interface{}) {
-					if strings.Contains(k, "_fname") {
-						// Identify the fname parameters based on the pattern, considering
-						//  word boundaries
-						pattern := regexp.MustCompile(`\b` + v.(string) + `\b`)
 
-						// Find the restraints that match the pattern
-						for _, r := range t.Restraints {
-							if pattern.MatchString(r) {
-								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
+					// Find the file to be used as fname
+					if strings.Contains(k, "_fname") {
+						pattern := regexp.MustCompile(v.(string))
+
+						for _, fArr := range fnameArray {
+							fname, err := utils.FindFname(fArr, pattern)
+							if err != nil {
+								return "", err
 							}
-						}
-						// Find the Toppar that matches the pattern
-						for _, r := range t.Toppar {
-							if pattern.MatchString(r) {
-								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
-							}
-						}
-						// Find if a MiscPDB that matches the pattern
-						for _, r := range t.MiscPDB {
-							if pattern.MatchString(r) {
-								runTomlString += k + " = \"../data/" + filepath.Base(r) + "\"\n"
+							// If fname is not empty, add it to the TOML file
+							if fname != "" {
+								runTomlString += k + " = \"../data/" + filepath.Base(fname) + "\"\n"
 							}
 						}
 

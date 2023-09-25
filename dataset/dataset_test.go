@@ -526,7 +526,7 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 						"some-param": "some-value",
 					},
 					Rigidbody: map[string]interface{}{
-						"ambig_fname": "_ti.tbl",
+						"ambig_fname": "_ti",
 					},
 				},
 			},
@@ -574,6 +574,22 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 	scenarioPath := filepath.Join(wd, target.ID, "scenario-"+s.Name)
 	if _, err := os.Stat(scenarioPath); os.IsNotExist(err) {
 		t.Errorf("Scenario was not written to disk")
+	}
+
+	// Fail to setup a scenario in which multiple patterns match
+	target = Target{
+		ID:           "1abc",
+		Receptor:     []string{"dummy.pdb", "dummy.pdb"},
+		ReceptorList: "pdb-files.txt",
+		Ligand:       []string{"dummy.pdb", "dummy.pdb"},
+		LigandList:   "pdb-files.txt",
+		Restraints:   []string{"1abc_ti.tbl", "1abc_ti5.tbl"},
+		Toppar:       []string{"custom.top", "custom.param"},
+	}
+
+	_, err = target.SetupHaddock3Scenario(wd, s)
+	if err == nil {
+		t.Errorf("Failed to detect wrong scenario")
 	}
 
 }
