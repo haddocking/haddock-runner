@@ -327,8 +327,16 @@ func LoadHaddock3Params(p string) (ModuleParams, error) {
 
 			// Add the data to the correct module
 			v := reflect.ValueOf(&m).Elem()
-			if v.FieldByName(name).IsValid() {
-				v.FieldByName(name).Set(reflect.ValueOf(data))
+			for i := 0; i < v.NumField(); i++ {
+				field := v.Field(i)
+				fieldName := v.Type().Field(i).Name
+				if strings.Contains(strings.ToLower(fieldName), strings.ToLower(name)) {
+					if field.IsValid() {
+						if field.CanSet() {
+							field.Set(reflect.ValueOf(data))
+						}
+					}
+				}
 			}
 
 		}
