@@ -444,7 +444,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		line := s.Text()
 		for k, v := range m {
 			// Handle the restraints
-			tblRegex := regexp.MustCompile(`(` + k + `).*tbl`)
+			tblRegex := regexp.MustCompile(`(` + k + `)_.*tbl`)
 			tblMatch := tblRegex.FindStringSubmatch(filepath.Base(line))
 			if len(tblMatch) != 0 {
 				v.Restraints = append(v.Restraints, s.Text())
@@ -458,6 +458,13 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 			}
 
 			m[k] = v
+		}
+	}
+
+	// Check if there is a target without a restraint and display a warning
+	for _, v := range m {
+		if len(v.Restraints) == 0 {
+			glog.Warning("Target " + v.ID + " does not have restraints!")
 		}
 	}
 
