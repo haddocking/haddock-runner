@@ -10,6 +10,8 @@ import (
 	"haddockrunner/runner/status"
 	"haddockrunner/utils"
 	"haddockrunner/wrapper/haddock2"
+
+	"github.com/golang/glog"
 )
 
 // Job is the HADDOCK job
@@ -19,11 +21,11 @@ type Job struct {
 	Params     map[string]interface{}
 	Restraints input.Airs
 	Toppar     input.TopologyParams
-	Status     status.Status
+	Status     string
 }
 
 // SetupHaddock24 sets up the HADDOCK job
-// - Setup the `run1“ directory by running the haddock executable
+// - Setup the `run1` directory by running the haddock executable
 // - Edit the `run.cns` file
 // - Copy the restraints
 // - Copy the custom toppar
@@ -142,33 +144,87 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 
 }
 
-// StatusHaddock24 sets the status of the HADDOCK job
-func (j *Job) StatusHaddock24() {
+func (j Job) Run(version int, cmd string) (string, error) {
 
-	haddockOut := filepath.Join(j.Path, "run1", "haddock.out")
+	var logF string
+	var err error
 
-	found, err := utils.SearchInLog(haddockOut, "Finishing HADDOCK on:")
-	if err != nil || !found {
-		// There was either some error reading the log file, or
-		//  the key terminator was not found so we assume the job is incomplete
-		j.Status.Incomplete = true
-	} else {
-		j.Status.Finished = true
+	switch version {
+	case 2:
+		errSetup2 := j.SetupHaddock24(cmd)
+		if errSetup2 != nil {
+			err := errors.New("Failed to setup HADDOCK: " + errSetup2.Error())
+			return logF, err
+		}
+		logF, err = j.RunHaddock24(cmd)
+		if err != nil {
+			err := errors.New("Failed to run HADDOCK: " + err.Error())
+			return logF, err
+		}
+	case 3:
+		logF, err = j.RunHaddock3(cmd)
+		if err != nil {
+			err := errors.New("Failed to run HADDOCK: " + err.Error())
+			return logF, err
+		}
 	}
+
+	return logF, nil
 
 }
 
-// StatusHaddock3 sets the status of the HADDOCK job
-func (j *Job) StatusHaddock3() {
-	haddockOut := filepath.Join(j.Path, "run1", "log")
+func (j *Job) GetStatus(version int) {
 
-	found, err := utils.SearchInLog(haddockOut, "An error has occurred")
-	if err != nil || !found {
-		// There was either some error reading the log file, or
-		//  the key terminator was not found so we assume the job is incomplete
-		j.Status.Incomplete = true
+	var logF string
+	var positiveKeys []string
+	var negativeKeys []string
+
+	if version == 2 {
+		logF = filepath.Join(j.Path, "run1", "haddock.out")
+		positiveKeys = []string{"Finishing HADDOCK on:"}
+		negativeKeys = []string{"An error has occurred"}
+
+	} else if version == 3 {
+		logF = filepath.Join(j.Path, "run1", "log")
+		negativeKeys = []string{"ERROR"}
+		positiveKeys = []string{"Finished at"}
+
 	} else {
-		j.Status.Finished = true
+		err := errors.New("invalid HADDOCK version")
+		glog.Exit(err.Error())
 	}
+
+	// Check if the log file exists
+	_, err := os.Stat(logF)
+	if os.IsNotExist(err) {
+		j.Status = status.QUEUED
+		return
+	}
+
+	// Check if the log file contains any of the negative keys
+	for _, k := range negativeKeys {
+		found, err := utils.SearchInLog(logF, k)
+		if err != nil {
+			glog.Exit(err.Error())
+		}
+		if found {
+			j.Status = status.FAILED
+			return
+		}
+	}
+
+	// Check if the log file contains any of the positive keys
+	for _, k := range positiveKeys {
+		found, err := utils.SearchInLog(logF, k)
+		if err != nil {
+			glog.Exit(err.Error())
+		}
+		if found {
+			j.Status = status.DONE
+			return
+		}
+	}
+
+	j.Status = status.INCOMPLETE
 
 }

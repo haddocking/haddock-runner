@@ -3,7 +3,6 @@ package runner
 import (
 	"haddockrunner/input"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -168,129 +167,6 @@ func TestJob_SetupHaddock24(t *testing.T) {
 			}
 			if err := j.SetupHaddock24(tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("Job.SetupHaddock24() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestStatusHaddock24(t *testing.T) {
-
-	// Create a temporary path
-	tempDir, err := os.MkdirTemp("", "test_status24")
-	if err != nil {
-		t.Errorf("Error creating temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	// Write the key string to the log file
-	key := "Finishing HADDOCK on:"
-	logF := filepath.Join(tempDir, "run1", "haddock.out")
-	_ = os.MkdirAll(filepath.Dir(logF), 0755)
-	err = os.WriteFile(logF, []byte(key), 0644)
-	if err != nil {
-		t.Errorf("Failed to write file: %s", err)
-	}
-	defer os.Remove(logF)
-
-	type fields struct {
-		Path string
-	}
-	tests := []struct {
-		name           string
-		fields         fields
-		wantIncomplete bool
-		wantFinished   bool
-	}{
-		{
-			name: "pass",
-			fields: fields{
-				Path: tempDir,
-			},
-			wantIncomplete: false,
-			wantFinished:   true,
-		},
-		{
-			name: "fail",
-			fields: fields{
-				Path: "does-not-exist",
-			},
-			wantIncomplete: true,
-			wantFinished:   false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			j := Job{
-				Path: tt.fields.Path,
-			}
-			j.StatusHaddock24()
-			if j.Status.Incomplete != tt.wantIncomplete {
-				t.Errorf("Job.StatusHaddock24() gotFailed = %v, want %v", j.Status.Incomplete, tt.wantIncomplete)
-			}
-			if j.Status.Finished != tt.wantFinished {
-				t.Errorf("Job.StatusHaddock24() gotFinished = %v, want %v", j.Status.Finished, tt.wantFinished)
-			}
-		})
-	}
-
-}
-
-func TestStatusHaddock3(t *testing.T) {
-
-	// Create a temporary path
-	tempDir, err := os.MkdirTemp("", "test_status3")
-	if err != nil {
-		t.Errorf("Error creating temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	// Write the key string to the log file
-	key := "An error has occurred"
-	logF := filepath.Join(tempDir, "run1", "log")
-	_ = os.MkdirAll(filepath.Dir(logF), 0755)
-	err = os.WriteFile(logF, []byte(key), 0644)
-	if err != nil {
-		t.Errorf("Failed to write file: %s", err)
-	}
-	defer os.Remove(logF)
-
-	type fields struct {
-		Path string
-	}
-	tests := []struct {
-		name           string
-		fields         fields
-		wantIncomplete bool
-		wantFinished   bool
-	}{
-		{
-			name: "pass",
-			fields: fields{
-				Path: tempDir,
-			},
-			wantIncomplete: false,
-			wantFinished:   true,
-		},
-		{
-			name: "fail",
-			fields: fields{
-				Path: "does-not-exist",
-			},
-			wantIncomplete: true,
-			wantFinished:   false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			j := Job{
-				Path: tt.fields.Path,
-			}
-			j.StatusHaddock3()
-			if j.Status.Incomplete != tt.wantIncomplete {
-				t.Errorf("Job.StatusHaddock3() gotIncomplete = %v, want %v", j.Status.Incomplete, tt.wantIncomplete)
-			}
-			if j.Status.Finished != tt.wantFinished {
-				t.Errorf("Job.StatusHaddock3() gotFinished = %v, want %v", j.Status.Finished, tt.wantFinished)
 			}
 		})
 	}

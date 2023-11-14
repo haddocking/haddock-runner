@@ -1,7 +1,9 @@
 package status
 
-type Status struct {
-	Finished   bool
-	Incomplete bool
-	Failed     bool
-}
+const (
+	DONE       = "DONE"
+	FAILED     = "FAILED"
+	QUEUED     = "QUEUED"
+	INCOMPLETE = "INCOMPLETE"
+	UNKNOWN    = "UNKNOWN"
+)
