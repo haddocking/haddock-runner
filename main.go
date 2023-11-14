@@ -8,6 +8,7 @@ import (
 	"haddockrunner/input"
 	"haddockrunner/runner"
 	"haddockrunner/utils"
+	"haddockrunner/utils/checksum"
 	"os"
 	"sort"
 
@@ -125,6 +126,12 @@ func main() {
 	data, errDataset := dataset.LoadDataset(inp.General.WorkDir, inp.General.InputList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
 	if errDataset != nil {
 		glog.Exit("Failed to load dataset: " + errDataset.Error())
+	}
+
+	// Validate the checksum
+	_, errValidateChecksum := checksum.ValidateChecksum(inputF, inp.General.InputList, inp.General.WorkDir)
+	if errValidateChecksum != nil {
+		glog.Exit("Failed to validate checksum: " + errValidateChecksum.Error())
 	}
 
 	// Organize the dataset
