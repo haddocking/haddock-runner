@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"haddockrunner/input"
+	"haddockrunner/runner/status"
 	"haddockrunner/utils"
 	"haddockrunner/wrapper/haddock2"
 )
@@ -18,6 +19,7 @@ type Job struct {
 	Params     map[string]interface{}
 	Restraints input.Airs
 	Toppar     input.TopologyParams
+	Status     status.Status
 }
 
 // SetupHaddock24 sets up the HADDOCK job
@@ -137,5 +139,36 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 	}
 
 	return logF, nil
+
+}
+
+// StatusHaddock24 sets the status of the HADDOCK job
+func (j *Job) StatusHaddock24() {
+
+	haddockOut := filepath.Join(j.Path, "run1", "haddock.out")
+
+	found, err := utils.SearchInLog(haddockOut, "Finishing HADDOCK on:")
+	if err != nil || !found {
+		// There was either some error reading the log file, or
+		//  the key terminator was not found so we assume the job is incomplete
+		j.Status.Incomplete = true
+	} else {
+		j.Status.Finished = true
+	}
+
+}
+
+// StatusHaddock3 sets the status of the HADDOCK job
+func (j *Job) StatusHaddock3() {
+	haddockOut := filepath.Join(j.Path, "run1", "log")
+
+	found, err := utils.SearchInLog(haddockOut, "An error has occurred")
+	if err != nil || !found {
+		// There was either some error reading the log file, or
+		//  the key terminator was not found so we assume the job is incomplete
+		j.Status.Incomplete = true
+	} else {
+		j.Status.Finished = true
+	}
 
 }

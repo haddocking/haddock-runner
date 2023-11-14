@@ -191,21 +191,39 @@ func main() {
 		glog.Info(" Starting goroutine " + fmt.Sprint(i+1) + " of " + fmt.Sprint(len(jobArr)) + " " + job.ID)
 		go func(job runner.Job, counter int) {
 
-			if haddockVersion == 2 {
+			switch haddockVersion {
+			case 2:
 
-				errSetup2 := job.SetupHaddock24(inp.General.HaddockExecutable)
-				if errSetup2 != nil {
-					glog.Exit("Failed to setup HADDOCK: " + errSetup2.Error())
+				job.StatusHaddock24()
+
+				switch {
+				case job.Status.Finished:
+					glog.Info("Job " + job.ID + " already finished, skipping")
+
+				case job.Status.Failed:
+					glog.Exit("Job " + job.ID + " failed")
+
+				case job.Status.Incomplete:
+					glog.Info("Job " + job.ID + " is incomplete. Cleaning up")
+					glog.Exit("TODO: Cleanup the incomplete job")
+					fallthrough
+
+				default:
+					errSetup2 := job.SetupHaddock24(inp.General.HaddockExecutable)
+					if errSetup2 != nil {
+						glog.Exit("Failed to setup HADDOCK: " + errSetup2.Error())
+					}
+					_, errRun2 := job.RunHaddock24(inp.General.HaddockExecutable)
+					if errRun2 != nil {
+						glog.Exit("Failed to run HADDOCK: " + errRun2.Error())
+					}
 				}
-				_, errRun2 := job.RunHaddock24(inp.General.HaddockExecutable)
-				if errRun2 != nil {
-					glog.Exit("Failed to run HADDOCK: " + errRun2.Error())
-				}
-			} else if haddockVersion == 3 {
+			case 3:
 				_, errRun3 := job.RunHaddock3(inp.General.HaddockExecutable)
 				if errRun3 != nil {
 					glog.Exit("Failed to run HADDOCK: " + errRun3.Error())
 				}
+
 			}
 
 			done <- true
