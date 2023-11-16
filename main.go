@@ -195,7 +195,10 @@ func main() {
 		// glog.Info("> Running " + job.ID + " (" + fmt.Sprint(i+1) + "/" + fmt.Sprint(total) + ")")
 		go func(job runner.Job, counter int) {
 
-			job.GetStatus(haddockVersion)
+			err := job.GetStatus(haddockVersion)
+			if err != nil {
+				glog.Exit("Failed to get job status: " + err.Error())
+			}
 
 			switch {
 			case job.Status == status.DONE:
@@ -217,7 +220,10 @@ func main() {
 					glog.Exit("Failed to run HADDOCK: " + runErr.Error())
 				}
 
-				job.GetStatus(haddockVersion)
+				err := job.GetStatus(haddockVersion)
+				if err != nil {
+					glog.Exit("Failed to get job status: " + err.Error())
+				}
 				elapsed := time.Since(now)
 				glog.Info(job.ID + " - " + job.Status + " in " + fmt.Sprintf("%.2f", elapsed.Seconds()) + " seconds")
 			}

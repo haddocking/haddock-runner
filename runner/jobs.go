@@ -10,8 +10,6 @@ import (
 	"haddockrunner/runner/status"
 	"haddockrunner/utils"
 	"haddockrunner/wrapper/haddock2"
-
-	"github.com/golang/glog"
 )
 
 // Job is the HADDOCK job
@@ -156,11 +154,11 @@ func (j Job) Run(version int, cmd string) (string, error) {
 			err := errors.New("Failed to setup HADDOCK: " + errSetup2.Error())
 			return logF, err
 		}
-		logF, err = j.RunHaddock24(cmd)
-		if err != nil {
-			err := errors.New("Failed to run HADDOCK: " + err.Error())
-			return logF, err
-		}
+		logF, _ = j.RunHaddock24(cmd)
+		// if err != nil {
+		// 	err := errors.New("Failed to run HADDOCK: " + err.Error())
+		// 	return logF, err
+		// }
 	case 3:
 		logF, err = j.RunHaddock3(cmd)
 		if err != nil {
@@ -173,7 +171,7 @@ func (j Job) Run(version int, cmd string) (string, error) {
 
 }
 
-func (j *Job) GetStatus(version int) {
+func (j *Job) GetStatus(version int) error {
 
 	var logF string
 	var positiveKeys []string
@@ -187,44 +185,45 @@ func (j *Job) GetStatus(version int) {
 	} else if version == 3 {
 		logF = filepath.Join(j.Path, "run1", "log")
 		negativeKeys = []string{"ERROR"}
-		positiveKeys = []string{"Finished at"}
+		positiveKeys = []string{"This HADDOCK3 run took"}
 
 	} else {
 		err := errors.New("invalid HADDOCK version")
-		glog.Exit(err.Error())
+		return err
 	}
 
 	// Check if the log file exists
 	_, err := os.Stat(logF)
 	if os.IsNotExist(err) {
 		j.Status = status.QUEUED
-		return
+		return nil
 	}
 
 	// Check if the log file contains any of the negative keys
 	for _, k := range negativeKeys {
-		found, err := utils.SearchInLog(logF, k)
-		if err != nil {
-			glog.Exit(err.Error())
-		}
+		found, _ := utils.SearchInLog(logF, k)
+		// if err != nil {
+		// 	return err
+		// }
 		if found {
 			j.Status = status.FAILED
-			return
+			return nil
 		}
 	}
 
 	// Check if the log file contains any of the positive keys
 	for _, k := range positiveKeys {
-		found, err := utils.SearchInLog(logF, k)
-		if err != nil {
-			glog.Exit(err.Error())
-		}
+		found, _ := utils.SearchInLog(logF, k)
+		// if err != nil {
+		// 	return err
+		// }
 		if found {
 			j.Status = status.DONE
-			return
+			return nil
 		}
 	}
 
 	j.Status = status.INCOMPLETE
+	return nil
 
 }
