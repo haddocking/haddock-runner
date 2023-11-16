@@ -18,7 +18,7 @@ import (
 	"github.com/golang/glog"
 )
 
-const version = "v1.6.5"
+const version = "v1.7.0"
 
 func init() {
 	var versionPrint bool
@@ -175,7 +175,7 @@ func main() {
 	// Taken form:
 	// `https://gist.github.com/AntoineAugusti/80e99edfe205baf7a094`
 	maxConcurrent := inp.General.MaxConcurrent
-	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs with " + fmt.Sprint(maxConcurrent) + " concurrent jobs")
+	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs, " + fmt.Sprint(maxConcurrent) + " concurrent")
 	concurrentGoroutines := make(chan struct{}, maxConcurrent)
 	for i := 0; i < maxConcurrent; i++ {
 		concurrentGoroutines <- struct{}{}
@@ -192,7 +192,6 @@ func main() {
 	glog.Info("############################################")
 	for i, job := range jobArr {
 		<-concurrentGoroutines
-		// glog.Info("> Running " + job.ID + " (" + fmt.Sprint(i+1) + "/" + fmt.Sprint(total) + ")")
 		go func(job runner.Job, counter int) {
 
 			err := job.GetStatus(haddockVersion)
@@ -207,13 +206,12 @@ func main() {
 			case job.Status == status.FAILED || job.Status == status.INCOMPLETE:
 				glog.Warning("+++ " + job.ID + " is " + job.Status + " - restarting +++")
 				// --------------------------------------------
-				// TODO: Add the cleaning logic here
+				// NOTE: This is the cleaning logic, change it if needed
 				os.RemoveAll(filepath.Join(job.Path, "run1"))
 				// --------------------------------------------
 				fallthrough
 
 			default:
-				// glog.Info("Job " + job.ID + " - " + job.Status)
 				now := time.Now()
 				_, runErr := job.Run(haddockVersion, inp.General.HaddockExecutable)
 				if runErr != nil {
