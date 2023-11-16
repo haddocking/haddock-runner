@@ -77,10 +77,17 @@ func TestJob_SetupHaddock24(t *testing.T) {
 
 	// Create a test directory
 	testD := "cmd-test"
-	_ = os.MkdirAll(testD, 0755)
+	err := os.MkdirAll(testD, 0755)
+	if err != nil {
+		t.Errorf("Error creating test directory: %v", err)
+	}
+
 	defer os.RemoveAll(testD)
 
-	setupHaddock24ForTest(testD)
+	err = setupHaddock24ForTest(testD)
+	if err != nil {
+		t.Errorf("Error setting up test directory: %v", err)
+	}
 
 	type fields struct {
 		ID         string
@@ -173,8 +180,12 @@ func TestJob_SetupHaddock24(t *testing.T) {
 func TestJobRun(t *testing.T) {
 
 	temptestP, _ := os.MkdirTemp("", "test-job-run")
-	setupHaddock24ForTest(temptestP)
 	defer os.RemoveAll(temptestP)
+
+	err := setupHaddock24ForTest(temptestP)
+	if err != nil {
+		t.Errorf("Error setting up test directory: %v", err)
+	}
 
 	type fields struct {
 		j Job
@@ -271,28 +282,40 @@ func TestJobGetStatus(t *testing.T) {
 	// Setup the positive test for v2
 	v2PositiveTempD, _ := os.MkdirTemp("", "v2-positive")
 	defer os.RemoveAll(v2PositiveTempD)
-	os.MkdirAll(filepath.Join(v2PositiveTempD, "run1"), 0755)
+	err := os.MkdirAll(filepath.Join(v2PositiveTempD, "run1"), 0755)
+	if err != nil {
+		t.Errorf("Error creating test directory: %v", err)
+	}
 	logF := filepath.Join(v2PositiveTempD, "run1", "haddock.out")
 	_ = os.WriteFile(logF, []byte("Finishing HADDOCK on:"), 0644)
 
 	// Setup the negative test for v2
 	v2NegativeTempD, _ := os.MkdirTemp("", "v2-negative")
 	defer os.RemoveAll(v2NegativeTempD)
-	os.MkdirAll(filepath.Join(v2NegativeTempD, "run1"), 0755)
+	err = os.MkdirAll(filepath.Join(v2NegativeTempD, "run1"), 0755)
+	if err != nil {
+		t.Errorf("Error creating test directory: %v", err)
+	}
 	logF = filepath.Join(v2NegativeTempD, "run1", "haddock.out")
 	_ = os.WriteFile(logF, []byte("An error has occurred"), 0644)
 
 	// Setup the positive test for v3
 	v3PositiveTempD, _ := os.MkdirTemp("", "v3-positive")
 	defer os.RemoveAll(v3PositiveTempD)
-	os.MkdirAll(filepath.Join(v3PositiveTempD, "run1"), 0755)
+	err = os.MkdirAll(filepath.Join(v3PositiveTempD, "run1"), 0755)
+	if err != nil {
+		t.Errorf("Error creating test directory: %v", err)
+	}
 	logF = filepath.Join(v3PositiveTempD, "run1", "log")
 	_ = os.WriteFile(logF, []byte("This HADDOCK3 run took"), 0644)
 
 	// Setup the incomplete scenario
 	incompleteTempD, _ := os.MkdirTemp("", "incomplete")
 	defer os.RemoveAll(incompleteTempD)
-	os.MkdirAll(filepath.Join(incompleteTempD, "run1"), 0755)
+	err = os.MkdirAll(filepath.Join(incompleteTempD, "run1"), 0755)
+	if err != nil {
+		t.Errorf("Error creating test directory: %v", err)
+	}
 	logF = filepath.Join(incompleteTempD, "run1", "log")
 	_ = os.WriteFile(logF, []byte(""), 0644)
 
