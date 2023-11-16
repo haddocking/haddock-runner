@@ -192,7 +192,6 @@ func main() {
 	glog.Info("############################################")
 	for i, job := range jobArr {
 		<-concurrentGoroutines
-		// glog.Info("> Running " + job.ID + " (" + fmt.Sprint(i+1) + "/" + fmt.Sprint(total) + ")")
 		go func(job runner.Job, counter int) {
 
 			err := job.GetStatus(haddockVersion)
@@ -207,13 +206,12 @@ func main() {
 			case job.Status == status.FAILED || job.Status == status.INCOMPLETE:
 				glog.Warning("+++ " + job.ID + " is " + job.Status + " - restarting +++")
 				// --------------------------------------------
-				// TODO: Add the cleaning logic here
+				// NOTE: This is the cleaning logic, change it if needed
 				os.RemoveAll(filepath.Join(job.Path, "run1"))
 				// --------------------------------------------
 				fallthrough
 
 			default:
-				// glog.Info("Job " + job.ID + " - " + job.Status)
 				now := time.Now()
 				_, runErr := job.Run(haddockVersion, inp.General.HaddockExecutable)
 				if runErr != nil {
