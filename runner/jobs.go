@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"haddockrunner/input"
+	"haddockrunner/runner/status"
 	"haddockrunner/utils"
 	"haddockrunner/wrapper/haddock2"
 )
@@ -18,10 +19,11 @@ type Job struct {
 	Params     map[string]interface{}
 	Restraints input.Airs
 	Toppar     input.TopologyParams
+	Status     string
 }
 
 // SetupHaddock24 sets up the HADDOCK job
-// - Setup the `run1“ directory by running the haddock executable
+// - Setup the `run1` directory by running the haddock executable
 // - Edit the `run.cns` file
 // - Copy the restraints
 // - Copy the custom toppar
@@ -137,5 +139,91 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 	}
 
 	return logF, nil
+
+}
+
+func (j Job) Run(version int, cmd string) (string, error) {
+
+	var logF string
+	var err error
+
+	switch version {
+	case 2:
+		errSetup2 := j.SetupHaddock24(cmd)
+		if errSetup2 != nil {
+			err := errors.New("Failed to setup HADDOCK: " + errSetup2.Error())
+			return logF, err
+		}
+		logF, _ = j.RunHaddock24(cmd)
+		// if err != nil {
+		// 	err := errors.New("Failed to run HADDOCK: " + err.Error())
+		// 	return logF, err
+		// }
+	case 3:
+		logF, err = j.RunHaddock3(cmd)
+		if err != nil {
+			err := errors.New("Failed to run HADDOCK: " + err.Error())
+			return logF, err
+		}
+	}
+
+	return logF, nil
+
+}
+
+func (j *Job) GetStatus(version int) error {
+
+	var logF string
+	var positiveKeys []string
+	var negativeKeys []string
+
+	if version == 2 {
+		logF = filepath.Join(j.Path, "run1", "haddock.out")
+		positiveKeys = []string{"Finishing HADDOCK on:"}
+		negativeKeys = []string{"An error has occurred"}
+
+	} else if version == 3 {
+		logF = filepath.Join(j.Path, "run1", "log")
+		negativeKeys = []string{"ERROR"}
+		positiveKeys = []string{"This HADDOCK3 run took"}
+
+	} else {
+		err := errors.New("invalid HADDOCK version")
+		return err
+	}
+
+	// Check if the log file exists
+	_, err := os.Stat(logF)
+	if os.IsNotExist(err) {
+		j.Status = status.QUEUED
+		return nil
+	}
+
+	// Check if the log file contains any of the negative keys
+	for _, k := range negativeKeys {
+		found, _ := utils.SearchInLog(logF, k)
+		// if err != nil {
+		// 	return err
+		// }
+		if found {
+			j.Status = status.FAILED
+			return nil
+		}
+	}
+
+	// Check if the log file contains any of the positive keys
+	for _, k := range positiveKeys {
+		found, _ := utils.SearchInLog(logF, k)
+		// if err != nil {
+		// 	return err
+		// }
+		if found {
+			j.Status = status.DONE
+			return nil
+		}
+	}
+
+	j.Status = status.INCOMPLETE
+	return nil
 
 }

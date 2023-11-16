@@ -332,3 +332,72 @@ func TestFindFname(t *testing.T) {
 	}
 
 }
+
+func TestSearchInLog(t *testing.T) {
+	// Create a dummy log file
+	tempF, err := os.CreateTemp("", "temp_log")
+	if err != nil {
+		t.Errorf("Failed to create temp file: %s", err)
+	}
+	defer os.Remove(tempF.Name())
+
+	// Write the key string to the log file
+	key := "Finishing HADDOCK on:"
+	err = os.WriteFile(tempF.Name(), []byte(key), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+
+	type args struct {
+		filePath     string
+		searchString string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "pass by finding the string",
+			args: args{
+				filePath:     tempF.Name(),
+				searchString: key,
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "fail by not finding the string",
+			args: args{
+				filePath:     tempF.Name(),
+				searchString: "not found",
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "fail by passing a file that does not exist",
+			args: args{
+				filePath:     "does-not-exist",
+				searchString: "not found",
+			},
+			want:    false,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := SearchInLog(tt.args.filePath, tt.args.searchString)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SearchInLog() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("SearchInLog() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+
+}

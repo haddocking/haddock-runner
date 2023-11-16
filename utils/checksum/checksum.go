@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"io"
 	"os"
 )
@@ -134,7 +135,7 @@ func ValidateChecksum(inputF, inputL, checksumF string) (bool, error) {
 	// }
 
 	if !AreEqual(c, oldChecksum) {
-		return false, nil
+		return false, errors.New("the input files have changed since the last run. Remove " + checksumF + " to force a fresh run.")
 	} else {
 		return true, nil
 	}

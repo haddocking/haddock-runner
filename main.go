@@ -7,10 +7,13 @@ import (
 	"haddockrunner/dataset"
 	"haddockrunner/input"
 	"haddockrunner/runner"
+	"haddockrunner/runner/status"
 	"haddockrunner/utils"
 	"haddockrunner/utils/checksum"
 	"os"
+	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/golang/glog"
 )
@@ -129,7 +132,8 @@ func main() {
 	}
 
 	// Validate the checksum
-	_, errValidateChecksum := checksum.ValidateChecksum(inputF, inp.General.InputList, inp.General.WorkDir)
+	checksumF := filepath.Join(inp.General.WorkDir, "checksum.txt")
+	_, errValidateChecksum := checksum.ValidateChecksum(inputF, inp.General.InputList, checksumF)
 	if errValidateChecksum != nil {
 		glog.Exit("Failed to validate checksum: " + errValidateChecksum.Error())
 	}
@@ -185,27 +189,43 @@ func main() {
 		}
 		waitForAllJobs <- true
 	}()
-
+	glog.Info("############################################")
 	for i, job := range jobArr {
 		<-concurrentGoroutines
-		glog.Info(" Starting goroutine " + fmt.Sprint(i+1) + " of " + fmt.Sprint(len(jobArr)) + " " + job.ID)
+		// glog.Info("> Running " + job.ID + " (" + fmt.Sprint(i+1) + "/" + fmt.Sprint(total) + ")")
 		go func(job runner.Job, counter int) {
 
-			if haddockVersion == 2 {
+			err := job.GetStatus(haddockVersion)
+			if err != nil {
+				glog.Exit("Failed to get job status: " + err.Error())
+			}
 
-				errSetup2 := job.SetupHaddock24(inp.General.HaddockExecutable)
-				if errSetup2 != nil {
-					glog.Exit("Failed to setup HADDOCK: " + errSetup2.Error())
+			switch {
+			case job.Status == status.DONE:
+				glog.Info(job.ID + " - " + job.Status + " - skipping")
+
+			case job.Status == status.FAILED || job.Status == status.INCOMPLETE:
+				glog.Warning("+++ " + job.ID + " is " + job.Status + " - restarting +++")
+				// --------------------------------------------
+				// TODO: Add the cleaning logic here
+				os.RemoveAll(filepath.Join(job.Path, "run1"))
+				// --------------------------------------------
+				fallthrough
+
+			default:
+				// glog.Info("Job " + job.ID + " - " + job.Status)
+				now := time.Now()
+				_, runErr := job.Run(haddockVersion, inp.General.HaddockExecutable)
+				if runErr != nil {
+					glog.Exit("Failed to run HADDOCK: " + runErr.Error())
 				}
-				_, errRun2 := job.RunHaddock24(inp.General.HaddockExecutable)
-				if errRun2 != nil {
-					glog.Exit("Failed to run HADDOCK: " + errRun2.Error())
+
+				err := job.GetStatus(haddockVersion)
+				if err != nil {
+					glog.Exit("Failed to get job status: " + err.Error())
 				}
-			} else if haddockVersion == 3 {
-				_, errRun3 := job.RunHaddock3(inp.General.HaddockExecutable)
-				if errRun3 != nil {
-					glog.Exit("Failed to run HADDOCK: " + errRun3.Error())
-				}
+				elapsed := time.Since(now)
+				glog.Info(job.ID + " - " + job.Status + " in " + fmt.Sprintf("%.2f", elapsed.Seconds()) + " seconds")
 			}
 
 			done <- true
@@ -214,7 +234,8 @@ func main() {
 
 	// Wait until all the jobs are done.
 	<-waitForAllJobs
+	glog.Info("############################################")
 
-	glog.Info("All jobs completed successfully")
+	glog.Info("haddock-runner finished successfully")
 
 }

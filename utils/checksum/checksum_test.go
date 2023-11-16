@@ -373,6 +373,8 @@ func TestValidateChecksum(t *testing.T) {
 				inputL:    tempF.Name(),
 				checksumF: differentChecksumF,
 			},
+			want:    false,
+			wantErr: true,
 		},
 	}
 

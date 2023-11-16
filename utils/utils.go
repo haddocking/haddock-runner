@@ -218,3 +218,22 @@ func FindFname(arr []string, pattern *regexp.Regexp) (string, error) {
 
 	return fname, nil
 }
+
+func SearchInLog(filePath, searchString string) (bool, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, searchString) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
