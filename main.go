@@ -175,7 +175,7 @@ func main() {
 	// Taken form:
 	// `https://gist.github.com/AntoineAugusti/80e99edfe205baf7a094`
 	maxConcurrent := inp.General.MaxConcurrent
-	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs with " + fmt.Sprint(maxConcurrent) + " concurrent jobs")
+	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs, " + fmt.Sprint(maxConcurrent) + " concurrent")
 	concurrentGoroutines := make(chan struct{}, maxConcurrent)
 	for i := 0; i < maxConcurrent; i++ {
 		concurrentGoroutines <- struct{}{}
