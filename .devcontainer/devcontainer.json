@@ -3,12 +3,14 @@
     "dockerfile": "Dockerfile"
   },
   "features": {
-    "ghcr.io/devcontainers/features/go:1": {}
+    "ghcr.io/devcontainers/features/go:1": {},
+    "ghcr.io/devcontainers/features/git:1": {}
   },
-  "postCreateCommand": "/app/start.sh",
+  "postCreateCommand": "sudo /app/start.sh",
   "customizations": {
     "vscode": {
       "extensions": ["golang.go", "GitHub.copilot"]
     }
-  }
+  },
+  "containerUser": "dev"
 }
