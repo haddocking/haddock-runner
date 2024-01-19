@@ -1,9 +1,24 @@
 #========================================================================================================#
+FROM golang:1.21 AS golang
+
+#========================================================================================================#
 FROM xenonmiddleware/slurm:20
+
+ARG USERNAME=dev
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+  && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+  && apt-get update \
+  && apt-get install -y sudo \
+  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+  && chmod 0440 /etc/sudoers.d/$USERNAME
 
 WORKDIR /app
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-COPY --from=golang:1.21 /usr/local/go/ /usr/local/go/
+COPY --from=golang /usr/local/go/ /usr/local/go/
+
 #========================================================================================================#
