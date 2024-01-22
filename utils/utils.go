@@ -237,3 +237,57 @@ func SearchInLog(filePath, searchString string) (bool, error) {
 
 	return false, nil
 }
+
+func CreateJobHeader() string {
+
+	header := "#!/bin/bash\n"
+	header += "#SBATCH --job-name=haddock\n"
+	header += "#SBATCH --output=haddock-%j.out\n"
+	header += "#SBATCH --error=haddock-%j.err\n"
+	header += "#SBATCH --time=7-00:00:00\n"
+	header += "#SBATCH --nodes=1\n"
+	header += "#SBATCH --ntasks-per-node=1\n"
+	header += "#SBATCH --cpus-per-task=1\n"
+	header += "\n"
+
+	return header
+}
+
+func CreateJobBody(cmd, path string) string {
+
+	body := "cd " + path + "\n"
+	body += cmd + " run.toml\n"
+
+	return body
+}
+
+// PrepareJobFile prepares the job file, returns the path to the job file
+func PrepareJobFile(executable, path string) (string, error) {
+	var header string
+	var body string
+
+	// Create the JobFile
+	header = CreateJobHeader()
+
+	// Create the JobBody
+	body = CreateJobBody(executable, path)
+
+	// Create the JobFile
+	jobFile := filepath.Join(path, "job.sh")
+	f, err := os.Create(jobFile)
+	if err != nil {
+		err := errors.New("Error creating job file: " + err.Error())
+		return "", err
+	}
+
+	// Write the JobFile
+	f.WriteString(header + body)
+
+	_ = f.Close()
+
+	return jobFile, nil
+}
+
+func Sbatch(jobF string) (string, error) {
+	return "log", nil
+}
