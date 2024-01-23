@@ -1,16 +1,24 @@
 {
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
   },
   "features": {
     "ghcr.io/devcontainers/features/go:1": {},
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
   },
-  "postCreateCommand": "sudo /app/start.sh",
+  "postCreateCommand": "sudo bash /app/start.sh",
   "customizations": {
     "vscode": {
-      "extensions": ["golang.go", "GitHub.copilot"]
-    }
+      "extensions": ["golang.go", "GitHub.copilot"],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/bash",
+          },
+        },
+      },
+    },
   },
-  "containerUser": "dev"
+  "containerUser": "dev",
 }
