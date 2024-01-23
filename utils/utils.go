@@ -260,34 +260,3 @@ func CreateJobBody(cmd, path string) string {
 
 	return body
 }
-
-// PrepareJobFile prepares the job file, returns the path to the job file
-func PrepareJobFile(executable, path string) (string, error) {
-	var header string
-	var body string
-
-	// Create the JobFile
-	header = CreateJobHeader()
-
-	// Create the JobBody
-	body = CreateJobBody(executable, path)
-
-	// Create the JobFile
-	jobFile := filepath.Join(path, "job.sh")
-	f, err := os.Create(jobFile)
-	if err != nil {
-		err := errors.New("Error creating job file: " + err.Error())
-		return "", err
-	}
-
-	// Write the JobFile
-	f.WriteString(header + body)
-
-	_ = f.Close()
-
-	return jobFile, nil
-}
-
-func Sbatch(jobF string) (string, error) {
-	return "log", nil
-}
