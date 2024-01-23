@@ -20,6 +20,7 @@ type Job struct {
 	Restraints input.Airs
 	Toppar     input.TopologyParams
 	Status     string
+	Slurm      bool
 }
 
 // SetupHaddock24 sets up the HADDOCK job
@@ -131,7 +132,15 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 
 	// Run HADDOCK3
 	runWD := filepath.Join(j.Path)
-	cmd = cmd + " run.toml"
+
+	// Check if there is a `job.sh` file in the run directory
+	jobF := filepath.Join(runWD, "job.sh")
+	_, err := os.Stat(jobF)
+	if err == nil {
+		cmd = "sbatch " + jobF
+	} else {
+		cmd = cmd + " run.toml"
+	}
 	logF, err := Run(cmd, runWD)
 	if err != nil {
 		err := errors.New("Error running HADDOCK: " + err.Error())
@@ -168,6 +177,35 @@ func (j Job) Run(version int, cmd string) (string, error) {
 	}
 
 	return logF, nil
+
+}
+
+// PrepareJobFile prepares the job file, returns the path to the job file
+func (j *Job) PrepareJobFile(executable string) error {
+
+	var header string
+	var body string
+
+	// Create the JobFile
+	header = utils.CreateJobHeader()
+
+	// Create the JobBody
+	body = utils.CreateJobBody(executable, j.Path)
+
+	// Create the JobFile
+	jobFile := filepath.Join(j.Path, "job.sh")
+	f, err := os.Create(jobFile)
+	if err != nil {
+		err := errors.New("Error creating job file: " + err.Error())
+		return err
+	}
+
+	// Write the JobFile
+	f.WriteString(header + body)
+
+	_ = f.Close()
+
+	return nil
 
 }
 

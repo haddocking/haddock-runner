@@ -43,6 +43,12 @@ func TestRunHaddock3(t *testing.T) {
 	_ = os.MkdirAll("_run-test", 0755)
 	defer os.RemoveAll("_run-test")
 
+	// Create a directory that contains a job.sh file
+	_ = os.MkdirAll("_run-test-with-job-file", 0755)
+	jobF := filepath.Join("_run-test-with-job-file", "job.sh")
+	_ = os.WriteFile(jobF, []byte(""), 0644)
+	defer os.RemoveAll("_run-test-with-job-file")
+
 	// Create a Job
 	j := Job{
 		ID:   "test",
@@ -67,6 +73,13 @@ func TestRunHaddock3(t *testing.T) {
 	// Fail by running a non existing command
 	cmdNon := "non_existing_command"
 	_, err = j.RunHaddock3(cmdNon)
+	if err == nil {
+		t.Errorf("Error running haddock: %v", err)
+	}
+
+	// Fail by running a command in a directory that contains a job.sh file
+	j.Path = "_run-test-with-job-file"
+	_, err = j.RunHaddock3(cmd)
 	if err == nil {
 		t.Errorf("Error running haddock: %v", err)
 	}
@@ -216,7 +229,9 @@ func TestJobRun(t *testing.T) {
 		{
 			name: "pass v3",
 			fields: fields{
-				j: Job{},
+				j: Job{
+					Path: temptestP,
+				},
 			},
 			args: args{
 				version: 3,
@@ -413,6 +428,64 @@ func TestJobGetStatus(t *testing.T) {
 				t.Errorf("Job.GetStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
+		})
+	}
+}
+
+func TestJobPrepareJobFile(t *testing.T) {
+
+	// Create a valid Path
+	err := os.MkdirAll("_test_prepare_job_file", 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+	defer os.RemoveAll("_test_prepare_job_file")
+
+	type fields struct {
+		j Job
+	}
+	type args struct {
+		executable string
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "pass by creating a job file",
+			args: args{
+				executable: "echo test",
+			},
+			fields: fields{
+				j: Job{
+					Path: "_test_prepare_job_file",
+				},
+			},
+		},
+		{
+			name: "fail by passing a non-existing path",
+			args: args{
+				executable: "echo test",
+			},
+			fields: fields{
+				j: Job{
+					Path: "does-not-exist",
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.j.PrepareJobFile(tt.args.executable)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PrepareJobFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 		})
 	}
 }
