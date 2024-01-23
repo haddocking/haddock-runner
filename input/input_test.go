@@ -587,7 +587,7 @@ func TestValidateExecutionModes(t *testing.T) {
 						Name: "true-interface",
 						Parameters: ParametersStruct{
 							General: map[string]any{
-								"execution_mode": "local",
+								"mode": "local",
 							},
 						},
 					},
@@ -618,7 +618,7 @@ func TestValidateExecutionModes(t *testing.T) {
 						Name: "true-interface",
 						Parameters: ParametersStruct{
 							General: map[string]any{
-								"execution_mode": "anything",
+								"mode": "anything",
 							},
 						},
 					},

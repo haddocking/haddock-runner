@@ -224,8 +224,8 @@ func (inp *Input) ValidateExecutionModes() error {
 		} else if utils.IsHaddock3(inp.General.HaddockDir) {
 			// We need to check if the Scenarios are using the correct execution modes
 			for _, scenario := range inp.Scenarios {
-				if scenario.Parameters.General["execution_mode"] != "local" {
-					err := errors.New("cannot use `use_slurm` with `execution_mode: " + scenario.Parameters.General["execution_mode"].(string) + "`")
+				if scenario.Parameters.General["mode"] != "local" {
+					err := errors.New("cannot use `use_slurm` with `mode: " + scenario.Parameters.General["mode"].(string) + "`")
 					return err
 				}
 			}
