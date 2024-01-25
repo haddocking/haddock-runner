@@ -216,6 +216,9 @@ func main() {
 				// --------------------------------------------
 				fallthrough
 
+			case job.Status == status.SUBMITTED:
+				glog.Info(job.ID + " - " + job.Status + " - waiting")
+
 			default:
 				now := time.Now()
 				if inp.General.UseSlurm {
@@ -235,7 +238,11 @@ func main() {
 					glog.Exit("Failed to get job status: " + err.Error())
 				}
 				elapsed := time.Since(now)
-				glog.Info(job.ID + " - " + job.Status + " in " + fmt.Sprintf("%.2f", elapsed.Seconds()) + " seconds")
+				if job.Status != status.QUEUED {
+					glog.Info(job.ID + " - " + job.Status + " in " + fmt.Sprintf("%.2f", elapsed.Seconds()) + " seconds")
+				} else {
+					glog.Info(job.ID + " - " + job.Status)
+				}
 			}
 
 			done <- true
@@ -245,9 +252,10 @@ func main() {
 	// Wait until all the jobs are submitted.
 	<-waitForAllJobs
 	glog.Info("############################################")
-	glog.Info("All jobs submitted, waiting for completion")
-	glog.Info("############################################")
-
-	glog.Info("haddock-runner finished successfully")
+	if inp.General.UseSlurm {
+		glog.Info("haddock-runner finished successfully (things might still be running on the cluster)")
+	} else {
+		glog.Info("haddock-runner finished successfully")
+	}
 
 }
