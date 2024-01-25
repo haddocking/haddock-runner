@@ -20,7 +20,6 @@ type Job struct {
 	Restraints input.Airs
 	Toppar     input.TopologyParams
 	Status     string
-	Slurm      bool
 }
 
 // SetupHaddock24 sets up the HADDOCK job
@@ -259,6 +258,19 @@ func (j *Job) GetStatus(version int) error {
 			j.Status = status.DONE
 			return nil
 		}
+	}
+
+	// Before saying that the job is incomplete, check if its running on slurm
+	newestFile := utils.FindNewestLogFile(j.Path)
+
+	found, _ := utils.SearchInLog(newestFile, "Submitted batch job")
+	// if err != nil {
+	// 	return err
+	// }
+
+	if found {
+		j.Status = status.SUBMITTED
+		return nil
 	}
 
 	j.Status = status.INCOMPLETE

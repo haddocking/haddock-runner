@@ -324,6 +324,18 @@ func TestJobGetStatus(t *testing.T) {
 	logF = filepath.Join(v3PositiveTempD, "run1", "log")
 	_ = os.WriteFile(logF, []byte("This HADDOCK3 run took"), 0644)
 
+	// Setup a submitted test for v3
+	v3SubmittedTempD, _ := os.MkdirTemp("", "v3-submitted")
+	defer os.RemoveAll(v3SubmittedTempD)
+	err = os.MkdirAll(filepath.Join(v3SubmittedTempD, "run1"), 0755)
+	if err != nil {
+		t.Errorf("Error creating test directory: %v", err)
+	}
+	logF = filepath.Join(v3SubmittedTempD, "run1", "log")
+	_ = os.WriteFile(logF, []byte(""), 0644)
+	subLogF := filepath.Join(v3SubmittedTempD, "something.txt")
+	_ = os.WriteFile(subLogF, []byte("Submitted batch job"), 0644)
+
 	// Setup the incomplete scenario
 	incompleteTempD, _ := os.MkdirTemp("", "incomplete")
 	defer os.RemoveAll(incompleteTempD)
@@ -411,6 +423,18 @@ func TestJobGetStatus(t *testing.T) {
 			fields: fields{
 				j: Job{
 					Path: "non-existing-path",
+				},
+			},
+			args: args{
+				version: 3,
+			},
+			wantErr: false,
+		},
+		{
+			name: "pass with submitted v3",
+			fields: fields{
+				j: Job{
+					Path: v3SubmittedTempD,
 				},
 			},
 			args: args{
