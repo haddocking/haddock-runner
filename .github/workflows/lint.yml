@@ -2,6 +2,8 @@ name: linting
 
 on: push
 
+permissions: read-all
+
 jobs:
   linting:
     runs-on: ubuntu-latest
