@@ -82,6 +82,11 @@ func main() {
 		glog.Exit("ERROR: " + errPatt.Error())
 	}
 
+	errExecutionModes := inp.ValidateExecutionModes()
+	if errExecutionModes != nil {
+		glog.Exit("ERROR: " + errExecutionModes.Error())
+	}
+
 	// haddockVersion := inp.General.HaddockVersion
 	var haddockVersion int
 	if utils.IsHaddock24(inp.General.HaddockDir) {
@@ -213,6 +218,13 @@ func main() {
 
 			default:
 				now := time.Now()
+				if inp.General.UseSlurm {
+					err := job.PrepareJobFile(inp.General.HaddockExecutable)
+					if err != nil {
+						glog.Exit("Failed to prepare job file: " + err.Error())
+					}
+				}
+
 				_, runErr := job.Run(haddockVersion, inp.General.HaddockExecutable)
 				if runErr != nil {
 					glog.Exit("Failed to run HADDOCK: " + runErr.Error())
@@ -230,8 +242,10 @@ func main() {
 		}(job, i)
 	}
 
-	// Wait until all the jobs are done.
+	// Wait until all the jobs are submitted.
 	<-waitForAllJobs
+	glog.Info("############################################")
+	glog.Info("All jobs submitted, waiting for completion")
 	glog.Info("############################################")
 
 	glog.Info("haddock-runner finished successfully")
