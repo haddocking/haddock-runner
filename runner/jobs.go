@@ -200,7 +200,7 @@ func (j *Job) PrepareJobFile(executable string) error {
 	}
 
 	// Write the JobFile
-	f.WriteString(header + body)
+	_, _ = f.WriteString(header + body)
 
 	_ = f.Close()
 
