@@ -237,3 +237,50 @@ func SearchInLog(filePath, searchString string) (bool, error) {
 
 	return false, nil
 }
+
+func CreateJobHeader() string {
+
+	header := "#!/bin/bash\n"
+	header += "#SBATCH --job-name=haddock\n"
+	header += "#SBATCH --output=haddock-%j.out\n"
+	header += "#SBATCH --error=haddock-%j.err\n"
+	header += "#SBATCH --time=7-00:00:00\n"
+	header += "#SBATCH --nodes=1\n"
+	header += "#SBATCH --ntasks-per-node=1\n"
+	header += "#SBATCH --cpus-per-task=1\n"
+	header += "\n"
+
+	return header
+}
+
+func CreateJobBody(cmd, path string) string {
+
+	body := "cd " + path + "\n"
+	body += cmd + " run.toml\n"
+
+	return body
+}
+
+func FindNewestLogFile(path string) string {
+
+	files, _ := filepath.Glob(filepath.Join(path, "*.txt"))
+	// if err != nil {
+	// 	return ""
+	// }
+
+	// Find what is the newest file
+	var newestFile string
+	var newestTime int64
+
+	for _, f := range files {
+		fi, _ := os.Stat(f)
+		// if err != nil {
+		// 	return ""
+		// }
+		if fi.ModTime().Unix() > newestTime {
+			newestTime = fi.ModTime().Unix()
+			newestFile = f
+		}
+	}
+	return newestFile
+}

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 )
 
 func TestCopyFile(t *testing.T) {
@@ -398,6 +399,62 @@ func TestSearchInLog(t *testing.T) {
 				t.Errorf("SearchInLog() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+
+}
+
+func TestCreateJobHeader(t *testing.T) {
+	// TODO: Improve this test, now its just checking if the function runs without errors
+	//  it should check if the output is correct
+	output := CreateJobHeader()
+
+	if output == "" {
+		t.Errorf("Failed to create job header")
+	}
+
+}
+
+func TestCreateJobBody(t *testing.T) {
+	// TODO: Improve this test, now its just checking if the function runs without errors
+	//  it should check if the output is correct
+	output := CreateJobBody("", "")
+
+	if output == "" {
+		t.Errorf("Failed to create job body")
+	}
+}
+
+func TestFindNewestLogFile(t *testing.T) {
+
+	// Write two files, return the newest one
+	err := os.WriteFile("file1.txt", []byte("file1"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.Remove("file1.txt")
+
+	err = os.WriteFile("file2.txt", []byte("file2"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.Remove("file2.txt")
+
+	// Set the modification time of file1.txt to be older than file2.txt
+	err = os.Chtimes("file1.txt", time.Now().Add(-1*time.Hour), time.Now().Add(-1*time.Hour))
+	if err != nil {
+		t.Errorf("Failed to change file modification time: %s", err)
+	}
+
+	// Check if the newest file is returned
+	newestFile := FindNewestLogFile(".")
+	if newestFile != "file2.txt" {
+		t.Errorf("Failed to find newest file")
+	}
+
+	// Fail with a folder that does not exist
+	newestFile = FindNewestLogFile("does-not-exist")
+	if newestFile != "" {
+		t.Errorf("Failed to detect wrong folder")
 	}
 
 }

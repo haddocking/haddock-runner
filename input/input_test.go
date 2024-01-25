@@ -532,6 +532,113 @@ func TestValidateRunCNSParams(t *testing.T) {
 
 }
 
+func TestValidateExecutionModes(t *testing.T) {
+
+	// Setup a haddock3 folder structure, it must have this subdirectories:
+	wd, _ := os.Getwd()
+	haddock3Dir := filepath.Join(wd, "TestValidateExecutionModes")
+	_ = os.MkdirAll(haddock3Dir, 0755)
+	defer os.RemoveAll("TestValidateExecutionModes")
+
+	// Add the subdirectories
+	_ = os.MkdirAll(filepath.Join(haddock3Dir, "src/haddock/modules"), 0755)
+
+	// Add an empty defaults.yaml file
+	defaultsF := filepath.Join(haddock3Dir, "src/haddock/modules/defaults.yaml")
+	err := os.WriteFile(defaultsF, []byte(""), 0755)
+	if err != nil {
+		t.Errorf("Failed to write defaults.yaml: %s", err)
+	}
+
+	// Setup a haddock2 folder structure, it must have this subdirectories
+	// protocols/run.cns-conf
+	haddock2Dir := filepath.Join(wd, "TestValidateExecutionModes2")
+	_ = os.MkdirAll(haddock2Dir, 0755)
+	defer os.RemoveAll("TestValidateExecutionModes2")
+
+	// Add the subdirectories
+	_ = os.MkdirAll(filepath.Join(haddock2Dir, "protocols"), 0755)
+
+	// Add an empty run.cns-conf file
+	runCnsF := filepath.Join(haddock2Dir, "protocols/run.cns-conf")
+	err = os.WriteFile(runCnsF, []byte(""), 0755)
+	if err != nil {
+		t.Errorf("Failed to write run.cns-conf: %s", err)
+	}
+
+	type fields struct {
+		General   GeneralStruct
+		Scenarios []Scenario
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "valid",
+			fields: fields{
+				General: GeneralStruct{
+					UseSlurm:   true,
+					HaddockDir: haddock3Dir,
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "true-interface",
+						Parameters: ParametersStruct{
+							General: map[string]any{
+								"mode": "local",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid-haddock2",
+			fields: fields{
+				General: GeneralStruct{
+					UseSlurm:   true,
+					HaddockDir: haddock2Dir,
+				},
+				Scenarios: []Scenario{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid-haddock3",
+			fields: fields{
+				General: GeneralStruct{
+					UseSlurm:   true,
+					HaddockDir: haddock3Dir,
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "true-interface",
+						Parameters: ParametersStruct{
+							General: map[string]any{
+								"mode": "anything",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		inp := &Input{
+			General:   tt.fields.General,
+			Scenarios: tt.fields.Scenarios,
+		}
+		if err := inp.ValidateExecutionModes(); (err != nil) != tt.wantErr {
+			t.Errorf("Input.ValidateExecutionModes() error = %v, wantErr %v", err, tt.wantErr)
+		}
+	}
+
+}
+
 func TestLoadHaddock3DefaultParams(t *testing.T) {
 
 	// Create a folder structure and fill it with dummy files

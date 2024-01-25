@@ -34,6 +34,7 @@ type GeneralStruct struct {
 	InputList         string `yaml:"input_list"`
 	WorkDir           string `yaml:"work_dir"`
 	MaxConcurrent     int    `yaml:"max_concurrent"`
+	UseSlurm          bool   `yaml:"use_slurm"`
 }
 
 // Scenario is the scenario structure
@@ -208,6 +209,27 @@ func ValidateRunCNSParams(known map[string]interface{}, params map[string]interf
 			return err
 		}
 
+	}
+	return nil
+}
+
+// ValidateExecutionModes checks if the execution modes are valid
+func (inp *Input) ValidateExecutionModes() error {
+
+	if inp.General.UseSlurm {
+		// Check if the executable is HADDOCK3
+		if utils.IsHaddock24(inp.General.HaddockDir) {
+			err := errors.New("cannot use `use_slurm` with HADDOCK2")
+			return err
+		} else if utils.IsHaddock3(inp.General.HaddockDir) {
+			// We need to check if the Scenarios are using the correct execution modes
+			for _, scenario := range inp.Scenarios {
+				if scenario.Parameters.General["mode"] != "local" {
+					err := errors.New("cannot use `use_slurm` with `mode: " + scenario.Parameters.General["mode"].(string) + "`")
+					return err
+				}
+			}
+		}
 	}
 	return nil
 }

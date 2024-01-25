@@ -82,6 +82,11 @@ func main() {
 		glog.Exit("ERROR: " + errPatt.Error())
 	}
 
+	errExecutionModes := inp.ValidateExecutionModes()
+	if errExecutionModes != nil {
+		glog.Exit("ERROR: " + errExecutionModes.Error())
+	}
+
 	// haddockVersion := inp.General.HaddockVersion
 	var haddockVersion int
 	if utils.IsHaddock24(inp.General.HaddockDir) {
@@ -211,8 +216,18 @@ func main() {
 				// --------------------------------------------
 				fallthrough
 
+			case job.Status == status.SUBMITTED:
+				glog.Info(job.ID + " - " + job.Status + " - waiting")
+
 			default:
 				now := time.Now()
+				if inp.General.UseSlurm {
+					err := job.PrepareJobFile(inp.General.HaddockExecutable)
+					if err != nil {
+						glog.Exit("Failed to prepare job file: " + err.Error())
+					}
+				}
+
 				_, runErr := job.Run(haddockVersion, inp.General.HaddockExecutable)
 				if runErr != nil {
 					glog.Exit("Failed to run HADDOCK: " + runErr.Error())
@@ -223,17 +238,24 @@ func main() {
 					glog.Exit("Failed to get job status: " + err.Error())
 				}
 				elapsed := time.Since(now)
-				glog.Info(job.ID + " - " + job.Status + " in " + fmt.Sprintf("%.2f", elapsed.Seconds()) + " seconds")
+				if job.Status != status.QUEUED {
+					glog.Info(job.ID + " - " + job.Status + " in " + fmt.Sprintf("%.2f", elapsed.Seconds()) + " seconds")
+				} else {
+					glog.Info(job.ID + " - " + job.Status)
+				}
 			}
 
 			done <- true
 		}(job, i)
 	}
 
-	// Wait until all the jobs are done.
+	// Wait until all the jobs are submitted.
 	<-waitForAllJobs
 	glog.Info("############################################")
-
-	glog.Info("haddock-runner finished successfully")
+	if inp.General.UseSlurm {
+		glog.Info("haddock-runner finished successfully (things might still be running on the cluster)")
+	} else {
+		glog.Info("haddock-runner finished successfully")
+	}
 
 }
