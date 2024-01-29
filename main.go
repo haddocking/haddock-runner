@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"time"
+	"sync"
 
 	"github.com/golang/glog"
 )
@@ -177,80 +177,50 @@ func main() {
 		return jobArr[i].ID < jobArr[j].ID
 	})
 
-	// Taken form:
-	// `https://gist.github.com/AntoineAugusti/80e99edfe205baf7a094`
-	maxConcurrent := inp.General.MaxConcurrent
-	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs, " + fmt.Sprint(maxConcurrent) + " concurrent")
-	concurrentGoroutines := make(chan struct{}, maxConcurrent)
-	for i := 0; i < maxConcurrent; i++ {
-		concurrentGoroutines <- struct{}{}
-	}
-	done := make(chan bool)
-	waitForAllJobs := make(chan bool)
-	go func() {
-		for i := 0; i < len(jobArr); i++ {
-			<-done
-			concurrentGoroutines <- struct{}{}
-		}
-		waitForAllJobs <- true
-	}()
 	glog.Info("############################################")
-	for i, job := range jobArr {
-		<-concurrentGoroutines
-		go func(job runner.Job, counter int) {
+	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs, " + fmt.Sprint(inp.General.MaxConcurrent) + " concurrent")
+	glog.Info("############################################")
 
-			err := job.GetStatus(haddockVersion)
-			if err != nil {
-				glog.Exit("Failed to get job status: " + err.Error())
-			}
+	// maxConcurrent := 5
+	semaphore := make(chan struct{}, inp.General.MaxConcurrent)
 
-			switch {
-			case job.Status == status.DONE:
-				glog.Info(job.ID + " - " + job.Status + " - skipping")
+	var wg sync.WaitGroup
 
-			case job.Status == status.FAILED || job.Status == status.INCOMPLETE:
-				glog.Warning("+++ " + job.ID + " is " + job.Status + " - restarting +++")
-				// --------------------------------------------
-				// NOTE: This is the cleaning logic, change it if needed
-				os.RemoveAll(filepath.Join(job.Path, "run1"))
-				// --------------------------------------------
-				fallthrough
+	for _, job := range jobArr {
+		wg.Add(1)
+		semaphore <- struct{}{}
 
-			case job.Status == status.SUBMITTED:
-				glog.Info(job.ID + " - " + job.Status + " - waiting")
+		go func(j runner.Job) {
+			defer wg.Done()
+			defer func() { <-semaphore }()
+
+			_ = j.UpdateStatus(utils.GetJobID, utils.CheckSlurmStatus, haddockVersion)
+
+			switch j.Status {
+
+			case status.DONE:
+				glog.Info(j.ID + " - " + j.Status + " - skipping")
+
+			case status.FAILED, status.INCOMPLETE:
+				glog.Warning("+++ " + j.ID + " is " + j.Status + " - restarting +++")
+				j.Clean()
+				j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				j.WaitFor([]string{status.DONE, status.FAILED, status.INCOMPLETE})
+
+			case status.SUBMITTED:
+				glog.Info(j.ID + " - " + j.Status + " - waiting")
+				j.WaitFor([]string{status.DONE, status.FAILED, status.INCOMPLETE})
 
 			default:
-				now := time.Now()
-				if inp.General.UseSlurm {
-					err := job.PrepareJobFile(inp.General.HaddockExecutable)
-					if err != nil {
-						glog.Exit("Failed to prepare job file: " + err.Error())
-					}
-				}
-
-				_, runErr := job.Run(haddockVersion, inp.General.HaddockExecutable)
-				if runErr != nil {
-					glog.Exit("Failed to run HADDOCK: " + runErr.Error())
-				}
-
-				err := job.GetStatus(haddockVersion)
-				if err != nil {
-					glog.Exit("Failed to get job status: " + err.Error())
-				}
-				elapsed := time.Since(now)
-				if job.Status != status.QUEUED {
-					glog.Info(job.ID + " - " + job.Status + " in " + fmt.Sprintf("%.2f", elapsed.Seconds()) + " seconds")
-				} else {
-					glog.Info(job.ID + " - " + job.Status)
-				}
+				j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				j.WaitFor([]string{status.DONE, status.FAILED, status.INCOMPLETE})
 			}
 
-			done <- true
-		}(job, i)
+		}(job)
 	}
 
-	// Wait until all the jobs are submitted.
-	<-waitForAllJobs
+	wg.Wait()
+
 	glog.Info("############################################")
 	if inp.General.UseSlurm {
 		glog.Info("haddock-runner finished successfully (things might still be running on the cluster)")
