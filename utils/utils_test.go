@@ -458,3 +458,150 @@ func TestFindNewestLogFile(t *testing.T) {
 	}
 
 }
+
+func TestGetJobID(t *testing.T) {
+
+	// Create a log file with the job ID
+	logF := "log.txt"
+	err := os.WriteFile(logF, []byte("Submitted batch job 12345678"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.Remove(logF)
+
+	// Create a log file without a jobID
+	logF_no_id := "log2.txt"
+	err = os.WriteFile(logF_no_id, []byte("Submitted batch job"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.Remove(logF_no_id)
+
+	// Create a log file without the expected string
+	logF_no_string := "log3.txt"
+	err = os.WriteFile(logF_no_string, []byte("12345678"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.Remove(logF_no_string)
+
+	type args struct {
+		logF string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// Fail by passing a file that does not exist
+		{
+			name: "fail by passing a file that does not exist",
+			args: args{
+				logF: "does-not-exist",
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "pass by finding the job ID",
+			args: args{
+				logF: logF,
+			},
+			want:    "12345678",
+			wantErr: false,
+		},
+		{
+			name: "fail by not finding the job ID",
+			args: args{
+				logF: logF_no_id,
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "fail by not finding the job ID string",
+			args: args{
+				logF: logF_no_string,
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := GetJobID(tt.args.logF)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetJobID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+
+}
+
+func TestCheckSlurmStatus(t *testing.T) {
+
+	// Note: This test is full of assumptions, it assumes that the slurm command
+	//  is available and that the job ID is valid
+
+	type args struct {
+		jobID      string
+		Sacct_cmd  string
+		Sacct_args []string
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "fail by passing a file that does not exist",
+			args: args{
+				jobID:      "does-not-exist",
+				Sacct_cmd:  "echo",
+				Sacct_args: []string{},
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "pass by finding the job ID",
+			args: args{
+				jobID:      "12345678",
+				Sacct_cmd:  "echo",
+				Sacct_args: []string{"something"},
+			},
+			want:    "12345678",
+			wantErr: false,
+		},
+		{
+			name: "fail with an invalid command",
+			args: args{
+				jobID:      "12345678",
+				Sacct_cmd:  "invalid-command",
+				Sacct_args: []string{"something"},
+			},
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Sacct_cmd = tt.args.Sacct_cmd
+			if tt.args.Sacct_cmd != "" {
+				Sacct_args = tt.args.Sacct_args
+			}
+			_, err := CheckSlurmStatus(tt.args.jobID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CheckSlurmStatus() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+
+}

@@ -8,10 +8,21 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+)
+
+var (
+	Sbatch_cmd = "sbatch"
+	Sacct_cmd  = "sacct"
+	Sacct_args = []string{
+		"--format=JobID,State",
+		"-n",
+		"-j",
+	}
 )
 
 // CopyFile copies a file from src to dst
@@ -283,4 +294,55 @@ func FindNewestLogFile(path string) string {
 		}
 	}
 	return newestFile
+}
+
+// GetJobID recieves a log file and returns the job ID
+//
+// The log file should contain: "Submitted batch job XXXXXXX"
+func GetJobID(logF string) (string, error) {
+
+	file, err := os.Open(logF)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "Submitted batch job") {
+			fields := strings.Fields(line)
+			if len(fields) < 4 {
+				return "", errors.New("job ID not found in " + logF)
+			}
+			jobID := fields[3]
+			return jobID, nil
+		}
+	}
+
+	return "", errors.New("job ID not found in " + logF)
+}
+
+func CheckSlurmStatus(jobID string) (string, error) {
+
+	// Add the job ID to the arguments
+	Sacct_args = append(Sacct_args, jobID)
+
+	cmd := exec.Command(Sacct_cmd, Sacct_args...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	fields := strings.Fields(string(out))
+	jobStatus := ""
+	if len(fields) >= 2 {
+		jobStatus = fields[1]
+	} else {
+		return "", errors.New("error: Could not find enough fields in the string")
+	}
+
+	return jobStatus, nil
+
 }

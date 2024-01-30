@@ -5,12 +5,20 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
+	"strconv"
+	"time"
 
+	"haddockrunner/constants"
 	"haddockrunner/input"
 	"haddockrunner/runner/status"
 	"haddockrunner/utils"
 	"haddockrunner/wrapper/haddock2"
+
+	"github.com/golang/glog"
 )
+
+var sleepFunc = time.Sleep
 
 // Job is the HADDOCK job
 type Job struct {
@@ -136,7 +144,7 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 	jobF := filepath.Join(runWD, "job.sh")
 	_, err := os.Stat(jobF)
 	if err == nil {
-		cmd = "sbatch " + jobF
+		cmd = utils.Sbatch_cmd + " " + jobF
 	} else {
 		cmd = cmd + " run.toml"
 	}
@@ -147,6 +155,37 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 	}
 
 	return logF, nil
+
+}
+
+// WaitUntil waits for the job to be in a given status
+func (j *Job) WaitUntil(s []string, timeoutcounter int) error {
+	while := true
+	c := 0
+	for while {
+		_ = j.UpdateStatus(utils.GetJobID, utils.CheckSlurmStatus, 3)
+		// if err != nil {
+		// 	err := errors.New("Error getting job status: " + err.Error())
+		// 	return err
+		// }
+		if slices.Contains(s, j.Status) {
+			glog.Info("Job " + j.ID + " is " + j.Status)
+			while = false
+		} else {
+			sleepFunc(time.Duration(constants.WAIT_FOR_SLURM) * time.Second)
+		}
+
+		// Check if the job is running for too long
+		c++
+		if c > timeoutcounter {
+			totalWait := strconv.Itoa(constants.WAIT_FOR_SLURM * timeoutcounter)
+			glog.Warning("Job " + j.ID + " is took too long (" + totalWait + "s), cancelling it")
+			while = false
+			j.Status = status.FAILED
+		}
+	}
+
+	return nil
 
 }
 
@@ -208,7 +247,11 @@ func (j *Job) PrepareJobFile(executable string) error {
 
 }
 
-func (j *Job) GetStatus(version int) error {
+type GetJobIDFunc func(file string) (string, error)
+type GetSlurmStatusFunc func(jobID string) (string, error)
+
+// func (j *Job) UpdateStatus(getJobID GetJobIDFunc, getSlurmStatus GetSlurmStatusFunc, version int) error {
+func (j *Job) UpdateStatus(getJobID GetJobIDFunc, getSlurmStatus GetSlurmStatusFunc, version int) error {
 
 	var logF string
 	var positiveKeys []string
@@ -269,11 +312,79 @@ func (j *Job) GetStatus(version int) error {
 	// }
 
 	if found {
-		j.Status = status.SUBMITTED
-		return nil
+
+		// Get what is the SLURM status of the job
+		slurmJobID, err := getJobID(newestFile)
+		if err != nil {
+			err := errors.New("Error getting job ID: " + err.Error())
+			return err
+		}
+
+		jobStatus, err := getSlurmStatus(slurmJobID)
+		if err != nil {
+			return err
+		}
+
+		// VERY IMPORTANT: The status from SLURM are different than the
+		//  internal states of the `haddock-runner`!!
+		switch jobStatus {
+		case "COMPLETED":
+			j.Status = status.DONE
+			return nil
+		case "RUNNING":
+			j.Status = status.QUEUED
+			return nil
+		case "PENDING":
+			j.Status = status.SUBMITTED
+			return nil
+		case "CANCELLED", "FAILED", "TIMEOUT":
+			j.Status = status.FAILED
+			return nil
+
+		}
+
 	}
 
 	j.Status = status.INCOMPLETE
+	return nil
+
+}
+
+func (j Job) Clean() error {
+	_ = os.RemoveAll(filepath.Join(j.Path, "run1"))
+	// if err != nil {
+	// 	err := errors.New("Error cleaning job: " + err.Error())
+	// 	return err
+	// }
+
+	extensions := []string{"*.out", "*.err", "*.txt"}
+	for _, e := range extensions {
+		files, _ := filepath.Glob(filepath.Join(j.Path, e))
+		for _, f := range files {
+			_ = os.Remove(f)
+		}
+	}
+
+	return nil
+
+}
+
+func (j Job) Post(haddockVersion int, executable string, slurm bool) error {
+
+	if slurm {
+		err := j.PrepareJobFile(executable)
+		if err != nil {
+			glog.Error("Failed to prepare job file: " + err.Error())
+			return err
+		}
+	}
+
+	_, runErr := j.Run(haddockVersion, executable)
+	if runErr != nil {
+		glog.Error("Failed to run HADDOCK: " + runErr.Error())
+		return runErr
+	}
+
 	return nil
 
 }

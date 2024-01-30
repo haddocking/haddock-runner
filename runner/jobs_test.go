@@ -1,10 +1,13 @@
 package runner
 
 import (
+	"errors"
 	"haddockrunner/input"
+	"haddockrunner/runner/status"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestRunHaddock24(t *testing.T) {
@@ -334,7 +337,19 @@ func TestJobGetStatus(t *testing.T) {
 	logF = filepath.Join(v3SubmittedTempD, "run1", "log")
 	_ = os.WriteFile(logF, []byte(""), 0644)
 	subLogF := filepath.Join(v3SubmittedTempD, "something.txt")
-	_ = os.WriteFile(subLogF, []byte("Submitted batch job"), 0644)
+	_ = os.WriteFile(subLogF, []byte("Submitted batch job 42"), 0644)
+
+	// Setup a path which is using slurm but has the incorrect log file
+	slurmTempD, _ := os.MkdirTemp("", "slurm")
+	defer os.RemoveAll(slurmTempD)
+	err = os.MkdirAll(filepath.Join(slurmTempD, "run1"), 0755)
+	if err != nil {
+		t.Errorf("Error creating test directory: %v", err)
+	}
+	logF = filepath.Join(slurmTempD, "run1", "log")
+	_ = os.WriteFile(logF, []byte(""), 0644)
+	subLogWrongF := filepath.Join(slurmTempD, "something.txt")
+	_ = os.WriteFile(subLogWrongF, []byte("Submitted batch job 42"), 0644)
 
 	// Setup the incomplete scenario
 	incompleteTempD, _ := os.MkdirTemp("", "incomplete")
@@ -346,11 +361,45 @@ func TestJobGetStatus(t *testing.T) {
 	logF = filepath.Join(incompleteTempD, "run1", "log")
 	_ = os.WriteFile(logF, []byte(""), 0644)
 
+	mockGetJobID := func(logF string) (string, error) {
+		return "42", nil
+	}
+
+	mockGetJobIDFail := func(logF string) (string, error) {
+		return "", errors.New("")
+	}
+
+	mockCheckSlurmStatus := func(jobID string) (string, error) {
+		return "RUNNING", nil
+	}
+
+	mockCheckSlurmStatusFail := func(jobID string) (string, error) {
+		return "", errors.New("")
+	}
+
+	mockCheckSlurmStatusDone := func(jobID string) (string, error) {
+		return "COMPLETED", nil
+	}
+
+	mockCheckSlurmStatusQueue := func(jobID string) (string, error) {
+		return "RUNNING", nil
+	}
+
+	mockCheckSlurmStatusSubmitted := func(jobID string) (string, error) {
+		return "PENDING", nil
+	}
+
+	mockCheckSlurmStatusFailed := func(jobID string) (string, error) {
+		return "FAILED", nil
+	}
+
 	type fields struct {
 		j Job
 	}
 	type args struct {
-		version int
+		getJobID       GetJobIDFunc
+		getSlurmStatus GetSlurmStatusFunc
+		version        int
 	}
 	tests := []struct {
 		name    string
@@ -366,7 +415,9 @@ func TestJobGetStatus(t *testing.T) {
 				},
 			},
 			args: args{
-				version: 2,
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        2,
 			},
 			wantErr: false,
 		},
@@ -378,7 +429,9 @@ func TestJobGetStatus(t *testing.T) {
 				},
 			},
 			args: args{
-				version: 2,
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        2,
 			},
 			wantErr: false,
 		},
@@ -390,7 +443,9 @@ func TestJobGetStatus(t *testing.T) {
 				},
 			},
 			args: args{
-				version: 3,
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        3,
 			},
 			wantErr: false,
 		},
@@ -402,7 +457,9 @@ func TestJobGetStatus(t *testing.T) {
 				},
 			},
 			args: args{
-				version: 0,
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        0,
 			},
 			wantErr: true,
 		},
@@ -414,7 +471,9 @@ func TestJobGetStatus(t *testing.T) {
 				},
 			},
 			args: args{
-				version: 3,
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        3,
 			},
 			wantErr: false,
 		},
@@ -426,7 +485,9 @@ func TestJobGetStatus(t *testing.T) {
 				},
 			},
 			args: args{
-				version: 3,
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        3,
 			},
 			wantErr: false,
 		},
@@ -438,7 +499,93 @@ func TestJobGetStatus(t *testing.T) {
 				},
 			},
 			args: args{
-				version: 3,
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        3,
+			},
+			wantErr: false,
+		},
+		{
+			name: "fail with mockGetJobIDFail",
+			fields: fields{
+				j: Job{
+					Path: v3SubmittedTempD,
+				},
+			},
+			args: args{
+				getJobID:       mockGetJobIDFail,
+				getSlurmStatus: mockCheckSlurmStatus,
+				version:        3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "fail with mockCheckSlurmStatusFail",
+			fields: fields{
+				j: Job{
+					Path: v3SubmittedTempD,
+				},
+			},
+			args: args{
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatusFail,
+				version:        3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "pass with mockCheckSlurmStatusDone",
+			fields: fields{
+				j: Job{
+					Path: v3SubmittedTempD,
+				},
+			},
+			args: args{
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatusDone,
+				version:        3,
+			},
+			wantErr: false,
+		},
+		{
+			name: "pass with mockCheckSlurmStatusQueue",
+			fields: fields{
+				j: Job{
+					Path: v3SubmittedTempD,
+				},
+			},
+			args: args{
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatusQueue,
+				version:        3,
+			},
+			wantErr: false,
+		},
+		{
+			name: "pass with mockCheckSlurmStatusSubmitted",
+			fields: fields{
+				j: Job{
+					Path: v3SubmittedTempD,
+				},
+			},
+			args: args{
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatusSubmitted,
+				version:        3,
+			},
+			wantErr: false,
+		},
+		{
+			name: "pass with mockCheckSlurmStatusFailed",
+			fields: fields{
+				j: Job{
+					Path: v3SubmittedTempD,
+				},
+			},
+			args: args{
+				getJobID:       mockGetJobID,
+				getSlurmStatus: mockCheckSlurmStatusFailed,
+				version:        3,
 			},
 			wantErr: false,
 		},
@@ -446,7 +593,7 @@ func TestJobGetStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.j.GetStatus(tt.args.version)
+			err := tt.fields.j.UpdateStatus(tt.args.getJobID, tt.args.getSlurmStatus, tt.args.version)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Job.GetStatus() error = %v, wantErr %v", err, tt.wantErr)
@@ -510,6 +657,211 @@ func TestJobPrepareJobFile(t *testing.T) {
 				t.Errorf("PrepareJobFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+		})
+	}
+}
+
+func TestJobClean(t *testing.T) {
+
+	// Create a valid Path
+	cleanPath := "_test_clean"
+	err := os.MkdirAll(cleanPath, 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+	defer os.RemoveAll(cleanPath)
+
+	runPath := filepath.Join(cleanPath, "run1")
+	err = os.MkdirAll(runPath, 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+
+	// Fill it with some files
+	txtF := filepath.Join(cleanPath, "test.txt")
+	_ = os.WriteFile(txtF, []byte(""), 0644)
+	errF := filepath.Join(cleanPath, "test.err")
+	_ = os.WriteFile(errF, []byte(""), 0644)
+	outF := filepath.Join(cleanPath, "test.out")
+	_ = os.WriteFile(outF, []byte(""), 0644)
+
+	type fields struct {
+		j Job
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "pass by cleaning",
+			fields: fields{
+				j: Job{
+					Path: cleanPath,
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			err := tt.fields.j.Clean()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Clean() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+		})
+	}
+}
+
+func TestWaitUntil(t *testing.T) {
+
+	sleepCallCount := 0
+	originalSleepFunc := sleepFunc
+	sleepFunc = func(d time.Duration) {
+		sleepCallCount++
+	}
+	defer func() { sleepFunc = originalSleepFunc }()
+
+	type fields struct {
+		j Job
+	}
+
+	type args struct {
+		s              []string
+		timeoutcounter int
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "pass by waiting",
+			fields: fields{
+				j: Job{
+					Status: status.QUEUED,
+				},
+			},
+			args: args{
+				s:              []string{status.QUEUED},
+				timeoutcounter: 1,
+			},
+			wantErr: false,
+		},
+		{
+			name: "test with expected sleep call",
+			fields: fields{
+				j: Job{
+					Status: status.QUEUED,
+				},
+			},
+			args: args{
+				s:              []string{status.UNKNOWN},
+				timeoutcounter: 1,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			err := tt.fields.j.WaitUntil(tt.args.s, tt.args.timeoutcounter)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WaitUntil() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+		})
+	}
+
+}
+
+func TestJobPost(t *testing.T) {
+
+	// Create a valid Path
+	err := os.MkdirAll("_test_post", 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+	defer os.RemoveAll("_test_post")
+
+	_ = setupHaddock24ForTest("_test_post")
+
+	type field struct {
+		j Job
+	}
+
+	type args struct {
+		haddockVersion int
+		executable     string
+		slurm          bool
+	}
+
+	tests := []struct {
+		name    string
+		fields  field
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "pass by posting",
+			fields: field{
+				j: Job{
+					Path: "_test_post",
+				},
+			},
+			args: args{
+				haddockVersion: 2,
+				executable:     "echo test",
+				slurm:          true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "fail trying to run in a folder that does not exist",
+			fields: field{
+				j: Job{
+					Path: "does-not-exist",
+				},
+			},
+			args: args{
+				haddockVersion: 3,
+				executable:     "echo test",
+				slurm:          false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "fail trying to setup a slurm job in a folder that does not exist",
+			fields: field{
+				j: Job{
+					Path: "does-not-exist",
+				},
+			},
+			args: args{
+				haddockVersion: 3,
+				executable:     "echo test",
+				slurm:          true,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			err := tt.fields.j.Post(tt.args.haddockVersion, tt.args.executable, tt.args.slurm)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Post() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
 		})
 	}
 }
