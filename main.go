@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"haddockrunner/constants"
 	"haddockrunner/dataset"
 	"haddockrunner/input"
 	"haddockrunner/runner"
@@ -183,6 +184,7 @@ func main() {
 
 	// maxConcurrent := 5
 	semaphore := make(chan struct{}, inp.General.MaxConcurrent)
+	finishedStatues := []string{status.DONE, status.FAILED, status.INCOMPLETE}
 
 	var wg sync.WaitGroup
 
@@ -203,17 +205,35 @@ func main() {
 
 			case status.FAILED, status.INCOMPLETE:
 				glog.Warning("+++ " + j.ID + " is " + j.Status + " - restarting +++")
-				j.Clean()
-				j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
-				j.WaitFor([]string{status.DONE, status.FAILED, status.INCOMPLETE})
+				err := j.Clean()
+				if err != nil {
+					glog.Exit("Failed to clean job: " + err.Error())
+				}
+				err = j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				if err != nil {
+					glog.Exit("Failed to post job: " + err.Error())
+				}
+				err = j.WaitUntil(finishedStatues, constants.WAIT_TIMEOUT_COUNTER)
+				if err != nil {
+					glog.Exit("Failed to wait for job: " + err.Error())
+				}
 
 			case status.SUBMITTED:
 				glog.Info(j.ID + " - " + j.Status + " - waiting")
-				j.WaitFor([]string{status.DONE, status.FAILED, status.INCOMPLETE})
+				err := j.WaitUntil(finishedStatues, constants.WAIT_TIMEOUT_COUNTER)
+				if err != nil {
+					glog.Exit("Failed to wait for job: " + err.Error())
+				}
 
 			default:
-				j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
-				j.WaitFor([]string{status.DONE, status.FAILED, status.INCOMPLETE})
+				err := j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				if err != nil {
+					glog.Exit("Failed to post job: " + err.Error())
+				}
+				err = j.WaitUntil(finishedStatues, constants.WAIT_TIMEOUT_COUNTER)
+				if err != nil {
+					glog.Exit("Failed to wait for job: " + err.Error())
+				}
 			}
 
 		}(job)
