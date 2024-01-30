@@ -15,9 +15,14 @@ import (
 	"strings"
 )
 
-const (
+var (
 	Sbatch_cmd = "sbatch"
 	Sacct_cmd  = "sacct"
+	Sacct_args = []string{
+		"--format=JobID,State",
+		"-n",
+		"-j",
+	}
 )
 
 // CopyFile copies a file from src to dst
@@ -321,14 +326,10 @@ func GetJobID(logF string) (string, error) {
 
 func CheckSlurmStatus(jobID string) (string, error) {
 
-	args := []string{
-		"-j",
-		jobID,
-		"--format=JobID,State",
-		"-n",
-	}
+	// Add the job ID to the arguments
+	Sacct_args = append(Sacct_args, jobID)
 
-	cmd := exec.Command(Sacct_cmd, args...)
+	cmd := exec.Command(Sacct_cmd, Sacct_args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
