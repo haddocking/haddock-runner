@@ -208,7 +208,7 @@ func main() {
 				if err != nil {
 					glog.Exit("Failed to clean job: " + err.Error())
 				}
-				err = j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				err = j.Post(haddockVersion, inp.General.HaddockExecutable, inp.Slurm)
 				if err != nil {
 					glog.Exit("Failed to post job: " + err.Error())
 				}
@@ -225,7 +225,7 @@ func main() {
 				}
 
 			default:
-				err := j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				err := j.Post(haddockVersion, inp.General.HaddockExecutable, inp.Slurm)
 				if err != nil {
 					glog.Exit("Failed to post job: " + err.Error())
 				}
