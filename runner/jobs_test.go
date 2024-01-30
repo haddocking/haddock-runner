@@ -3,9 +3,11 @@ package runner
 import (
 	"errors"
 	"haddockrunner/input"
+	"haddockrunner/runner/status"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestRunHaddock24(t *testing.T) {
@@ -710,6 +712,154 @@ func TestJobClean(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Clean() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+
+		})
+	}
+}
+
+func TestWaitUntil(t *testing.T) {
+
+	sleepCallCount := 0
+	originalSleepFunc := sleepFunc
+	sleepFunc = func(d time.Duration) {
+		sleepCallCount++
+	}
+	defer func() { sleepFunc = originalSleepFunc }()
+
+	type fields struct {
+		j Job
+	}
+
+	type args struct {
+		s              []string
+		timeoutcounter int
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "pass by waiting",
+			fields: fields{
+				j: Job{
+					Status: status.QUEUED,
+				},
+			},
+			args: args{
+				s:              []string{status.QUEUED},
+				timeoutcounter: 1,
+			},
+			wantErr: false,
+		},
+		{
+			name: "test with expected sleep call",
+			fields: fields{
+				j: Job{
+					Status: status.QUEUED,
+				},
+			},
+			args: args{
+				s:              []string{status.UNKNOWN},
+				timeoutcounter: 1,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			err := tt.fields.j.WaitUntil(tt.args.s, tt.args.timeoutcounter)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WaitUntil() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+		})
+	}
+
+}
+
+func TestJobPost(t *testing.T) {
+
+	// Create a valid Path
+	err := os.MkdirAll("_test_post", 0755)
+	if err != nil {
+		t.Errorf("Failed to create folder: %s", err)
+	}
+	defer os.RemoveAll("_test_post")
+
+	_ = setupHaddock24ForTest("_test_post")
+
+	type field struct {
+		j Job
+	}
+
+	type args struct {
+		haddockVersion int
+		executable     string
+		slurm          bool
+	}
+
+	tests := []struct {
+		name    string
+		fields  field
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "pass by posting",
+			fields: field{
+				j: Job{
+					Path: "_test_post",
+				},
+			},
+			args: args{
+				haddockVersion: 2,
+				executable:     "echo test",
+				slurm:          true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "fail trying to run in a folder that does not exist",
+			fields: field{
+				j: Job{
+					Path: "does-not-exist",
+				},
+			},
+			args: args{
+				haddockVersion: 3,
+				executable:     "echo test",
+				slurm:          false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "fail trying to setup a slurm job in a folder that does not exist",
+			fields: field{
+				j: Job{
+					Path: "does-not-exist",
+				},
+			},
+			args: args{
+				haddockVersion: 3,
+				executable:     "echo test",
+				slurm:          true,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			err := tt.fields.j.Post(tt.args.haddockVersion, tt.args.executable, tt.args.slurm)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Post() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 		})

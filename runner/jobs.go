@@ -17,6 +17,8 @@ import (
 	"github.com/golang/glog"
 )
 
+var sleepFunc = time.Sleep
+
 // Job is the HADDOCK job
 type Job struct {
 	ID         string
@@ -155,12 +157,10 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 
 }
 
-var sleepFunc = time.Sleep
-
-// WaitFor waits for the job to be in a given status
-// func (j Job) WaitFor(s []string) error {
-func (j *Job) WaitFor(s []string) error {
+// WaitUntil waits for the job to be in a given status
+func (j Job) WaitUntil(s []string, timeoutcounter int) error {
 	while := true
+	c := 0
 	for while {
 		_ = j.UpdateStatus(utils.GetJobID, utils.CheckSlurmStatus, 3)
 		// if err != nil {
@@ -171,8 +171,15 @@ func (j *Job) WaitFor(s []string) error {
 			glog.Info("Job " + j.ID + " is " + j.Status)
 			while = false
 		} else {
-			// time.Sleep(time.Duration(constants.WAIT_FOR_SLURM) * time.Second)
 			sleepFunc(time.Duration(constants.WAIT_FOR_SLURM) * time.Second)
+		}
+
+		// Check if the job is running for too long
+		c++
+		if c > timeoutcounter {
+			glog.Warning("Job " + j.ID + " is taking too long, cancelling it")
+			while = false
+			j.Status = status.FAILED
 		}
 	}
 
@@ -365,13 +372,14 @@ func (j Job) Post(haddockVersion int, executable string, slurm bool) error {
 	if slurm {
 		err := j.PrepareJobFile(executable)
 		if err != nil {
-			glog.Exit("Failed to prepare job file: " + err.Error())
+			glog.Error("Failed to prepare job file: " + err.Error())
+			return err
 		}
 	}
 
 	_, runErr := j.Run(haddockVersion, executable)
 	if runErr != nil {
-		glog.Exit("Failed to run HADDOCK: " + runErr.Error())
+		glog.Error("Failed to run HADDOCK: " + runErr.Error())
 		return runErr
 	}
 
