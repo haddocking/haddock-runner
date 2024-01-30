@@ -208,7 +208,7 @@ func main() {
 				if err != nil {
 					glog.Exit("Failed to clean job: " + err.Error())
 				}
-				err = j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				err = j.Post(haddockVersion, inp.General.HaddockExecutable, inp.Slurm)
 				if err != nil {
 					glog.Exit("Failed to post job: " + err.Error())
 				}
@@ -225,7 +225,7 @@ func main() {
 				}
 
 			default:
-				err := j.Post(haddockVersion, inp.General.HaddockExecutable, inp.General.UseSlurm)
+				err := j.Post(haddockVersion, inp.General.HaddockExecutable, inp.Slurm)
 				if err != nil {
 					glog.Exit("Failed to post job: " + err.Error())
 				}
@@ -241,10 +241,6 @@ func main() {
 	wg.Wait()
 
 	glog.Info("############################################")
-	if inp.General.UseSlurm {
-		glog.Info("haddock-runner finished successfully (things might still be running on the cluster)")
-	} else {
-		glog.Info("haddock-runner finished successfully")
-	}
+	glog.Info("haddock-runner finished successfully")
 
 }

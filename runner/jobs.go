@@ -219,13 +219,21 @@ func (j Job) Run(version int, cmd string) (string, error) {
 }
 
 // PrepareJobFile prepares the job file, returns the path to the job file
-func (j *Job) PrepareJobFile(executable string) error {
+func (j *Job) PrepareJobFile(executable string, slurm input.SlurmParams) error {
 
 	var header string
 	var body string
 
 	// Create the JobFile
-	header = utils.CreateJobHeader()
+	header = utils.CreateJobHeader(
+		slurm.Partition,
+		slurm.Account,
+		slurm.Mail_user,
+		slurm.Time,
+		slurm.Cpus_per_task,
+		slurm.Nodes,
+		slurm.Ntasks_per_node,
+	)
 
 	// Create the JobBody
 	body = utils.CreateJobBody(executable, j.Path)
@@ -369,10 +377,10 @@ func (j Job) Clean() error {
 
 }
 
-func (j Job) Post(haddockVersion int, executable string, slurm bool) error {
+func (j Job) Post(haddockVersion int, executable string, slurm input.SlurmParams) error {
 
-	if slurm {
-		err := j.PrepareJobFile(executable)
+	if slurm != (input.SlurmParams{}) {
+		err := j.PrepareJobFile(executable, slurm)
 		if err != nil {
 			glog.Error("Failed to prepare job file: " + err.Error())
 			return err

@@ -22,6 +22,7 @@ import (
 // Input is the input structure
 type Input struct {
 	General   GeneralStruct
+	Slurm     SlurmParams
 	Scenarios []Scenario
 }
 
@@ -34,7 +35,16 @@ type GeneralStruct struct {
 	InputList         string `yaml:"input_list"`
 	WorkDir           string `yaml:"work_dir"`
 	MaxConcurrent     int    `yaml:"max_concurrent"`
-	UseSlurm          bool   `yaml:"use_slurm"`
+}
+
+type SlurmParams struct {
+	Partition       string `yaml:"partition"`
+	Cpus_per_task   int    `yaml:"cpus_per_task"`
+	Ntasks_per_node int    `yaml:"ntasks_per_node"`
+	Nodes           int    `yaml:"nodes"`
+	Time            string `yaml:"time"`
+	Account         string `yaml:"account"`
+	Mail_user       string `yaml:"mail_user"`
 }
 
 // Scenario is the scenario structure
@@ -216,7 +226,7 @@ func ValidateRunCNSParams(known map[string]interface{}, params map[string]interf
 // ValidateExecutionModes checks if the execution modes are valid
 func (inp *Input) ValidateExecutionModes() error {
 
-	if inp.General.UseSlurm {
+	if inp.Slurm == (SlurmParams{}) {
 		// Check if the executable is HADDOCK3
 		if utils.IsHaddock24(inp.General.HaddockDir) {
 			err := errors.New("cannot use `use_slurm` with HADDOCK2")

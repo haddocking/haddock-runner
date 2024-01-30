@@ -579,7 +579,6 @@ func TestValidateExecutionModes(t *testing.T) {
 			name: "valid",
 			fields: fields{
 				General: GeneralStruct{
-					UseSlurm:   true,
 					HaddockDir: haddock3Dir,
 				},
 				Scenarios: []Scenario{
@@ -599,7 +598,6 @@ func TestValidateExecutionModes(t *testing.T) {
 			name: "invalid-haddock2",
 			fields: fields{
 				General: GeneralStruct{
-					UseSlurm:   true,
 					HaddockDir: haddock2Dir,
 				},
 				Scenarios: []Scenario{},
@@ -610,7 +608,6 @@ func TestValidateExecutionModes(t *testing.T) {
 			name: "invalid-haddock3",
 			fields: fields{
 				General: GeneralStruct{
-					UseSlurm:   true,
 					HaddockDir: haddock3Dir,
 				},
 				Scenarios: []Scenario{

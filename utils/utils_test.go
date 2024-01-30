@@ -406,7 +406,15 @@ func TestSearchInLog(t *testing.T) {
 func TestCreateJobHeader(t *testing.T) {
 	// TODO: Improve this test, now its just checking if the function runs without errors
 	//  it should check if the output is correct
-	output := CreateJobHeader()
+	output := CreateJobHeader(
+		"partition",
+		"account",
+		"mail_user",
+		"runtime",
+		1,
+		1,
+		1,
+	)
 
 	if output == "" {
 		t.Errorf("Failed to create job header")

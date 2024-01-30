@@ -617,6 +617,7 @@ func TestJobPrepareJobFile(t *testing.T) {
 	}
 	type args struct {
 		executable string
+		slurm      input.SlurmParams
 	}
 
 	tests := []struct {
@@ -629,6 +630,7 @@ func TestJobPrepareJobFile(t *testing.T) {
 			name: "pass by creating a job file",
 			args: args{
 				executable: "echo test",
+				slurm:      input.SlurmParams{},
 			},
 			fields: fields{
 				j: Job{
@@ -640,6 +642,7 @@ func TestJobPrepareJobFile(t *testing.T) {
 			name: "fail by passing a non-existing path",
 			args: args{
 				executable: "echo test",
+				slurm:      input.SlurmParams{},
 			},
 			fields: fields{
 				j: Job{
@@ -652,7 +655,7 @@ func TestJobPrepareJobFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.j.PrepareJobFile(tt.args.executable)
+			err := tt.fields.j.PrepareJobFile(tt.args.executable, tt.args.slurm)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PrepareJobFile() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -801,7 +804,7 @@ func TestJobPost(t *testing.T) {
 	type args struct {
 		haddockVersion int
 		executable     string
-		slurm          bool
+		slurm          input.SlurmParams
 	}
 
 	tests := []struct {
@@ -820,7 +823,9 @@ func TestJobPost(t *testing.T) {
 			args: args{
 				haddockVersion: 2,
 				executable:     "echo test",
-				slurm:          true,
+				slurm: input.SlurmParams{
+					Partition: "test",
+				},
 			},
 			wantErr: false,
 		},
@@ -834,7 +839,9 @@ func TestJobPost(t *testing.T) {
 			args: args{
 				haddockVersion: 3,
 				executable:     "echo test",
-				slurm:          false,
+				slurm: input.SlurmParams{
+					Partition: "test",
+				},
 			},
 			wantErr: true,
 		},
@@ -848,7 +855,7 @@ func TestJobPost(t *testing.T) {
 			args: args{
 				haddockVersion: 3,
 				executable:     "echo test",
-				slurm:          true,
+				slurm:          input.SlurmParams{},
 			},
 			wantErr: true,
 		},

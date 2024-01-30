@@ -249,16 +249,34 @@ func SearchInLog(filePath, searchString string) (bool, error) {
 	return false, nil
 }
 
-func CreateJobHeader() string {
+func CreateJobHeader(partition, account, mail_user, runtime string, cpus_per_task, nodes, ntasks_per_node int) string {
 
 	header := "#!/bin/bash\n"
 	header += "#SBATCH --job-name=haddock\n"
 	header += "#SBATCH --output=haddock-%j.out\n"
 	header += "#SBATCH --error=haddock-%j.err\n"
-	header += "#SBATCH --time=7-00:00:00\n"
-	header += "#SBATCH --nodes=1\n"
-	header += "#SBATCH --ntasks-per-node=1\n"
-	header += "#SBATCH --cpus-per-task=1\n"
+	if partition != "" {
+		header += "#SBATCH --partition=" + partition + "\n"
+	}
+	if account != "" {
+		header += "#SBATCH --account=" + account + "\n"
+	}
+	if mail_user != "" {
+		header += "#SBATCH --mail-user=" + mail_user + "\n"
+		header += "#SBATCH --mail-type=ALL\n"
+	}
+	if cpus_per_task != 0 {
+		header += "#SBATCH --cpus-per-task=" + strconv.Itoa(cpus_per_task) + "\n"
+	}
+	if nodes != 0 {
+		header += "#SBATCH --nodes=" + strconv.Itoa(nodes) + "\n"
+	}
+	if ntasks_per_node != 0 {
+		header += "#SBATCH --ntasks-per-node=" + strconv.Itoa(ntasks_per_node) + "\n"
+	}
+	if runtime != "" {
+		header += "#SBATCH --time=" + runtime + "\n"
+	}
 	header += "\n"
 
 	return header
