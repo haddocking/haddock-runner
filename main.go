@@ -182,7 +182,6 @@ func main() {
 	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs, " + fmt.Sprint(inp.General.MaxConcurrent) + " concurrent")
 	glog.Info("############################################")
 
-	// maxConcurrent := 5
 	semaphore := make(chan struct{}, inp.General.MaxConcurrent)
 	finishedStatues := []string{status.DONE, status.FAILED, status.INCOMPLETE}
 
