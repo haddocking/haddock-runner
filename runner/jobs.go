@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"time"
 
 	"haddockrunner/constants"
@@ -158,7 +159,7 @@ func (j Job) RunHaddock3(cmd string) (string, error) {
 }
 
 // WaitUntil waits for the job to be in a given status
-func (j Job) WaitUntil(s []string, timeoutcounter int) error {
+func (j *Job) WaitUntil(s []string, timeoutcounter int) error {
 	while := true
 	c := 0
 	for while {
@@ -177,7 +178,8 @@ func (j Job) WaitUntil(s []string, timeoutcounter int) error {
 		// Check if the job is running for too long
 		c++
 		if c > timeoutcounter {
-			glog.Warning("Job " + j.ID + " is taking too long, cancelling it")
+			totalWait := strconv.Itoa(constants.WAIT_FOR_SLURM * timeoutcounter)
+			glog.Warning("Job " + j.ID + " is took too long (" + totalWait + "s), cancelling it")
 			while = false
 			j.Status = status.FAILED
 		}
