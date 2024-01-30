@@ -35,7 +35,6 @@ type GeneralStruct struct {
 	InputList         string `yaml:"input_list"`
 	WorkDir           string `yaml:"work_dir"`
 	MaxConcurrent     int    `yaml:"max_concurrent"`
-	UseSlurm          bool
 }
 
 type SlurmParams struct {
@@ -227,7 +226,7 @@ func ValidateRunCNSParams(known map[string]interface{}, params map[string]interf
 // ValidateExecutionModes checks if the execution modes are valid
 func (inp *Input) ValidateExecutionModes() error {
 
-	if inp.General.UseSlurm {
+	if inp.Slurm == (SlurmParams{}) {
 		// Check if the executable is HADDOCK3
 		if utils.IsHaddock24(inp.General.HaddockDir) {
 			err := errors.New("cannot use `use_slurm` with HADDOCK2")

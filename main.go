@@ -241,10 +241,6 @@ func main() {
 	wg.Wait()
 
 	glog.Info("############################################")
-	if inp.General.UseSlurm {
-		glog.Info("haddock-runner finished successfully (things might still be running on the cluster)")
-	} else {
-		glog.Info("haddock-runner finished successfully")
-	}
+	glog.Info("haddock-runner finished successfully")
 
 }
