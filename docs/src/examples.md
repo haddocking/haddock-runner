@@ -1,18 +1,18 @@
 # Examples
 
-Here is a full example of the `benchmark.yaml` file:
+Here is a full example of the `benchmark.yaml` file for both [HADDOCK2.4](#haddock24) and [HADDOCK3.0](#haddock30).
 
-> `HADDOCK2.4`
+## `HADDOCK2.4`
 
 ```yaml
 general:
-  executable: /Users/rodrigo/repos/haddock-runner/haddock24.sh
+  executable: /workspaces/haddock-runner/haddock24.sh
   max_concurrent: 2
   haddock_dir: /Users/rodrigo/repos/haddock
   receptor_suffix: _r_u
   ligand_suffix: _l_u
-  input_list: /Users/rodrigo/repos/haddock-runner/example/input_list.txt
-  work_dir: /Users/rodrigo/repos/haddock-runner/bm-goes-here
+  input_list: /workspaces/haddock-runner/example/input_list.txt
+  work_dir: /workspaces/haddock-runner/bm-goes-here
 
 scenarios:
   - name: true-interface
@@ -57,26 +57,24 @@ scenarios:
   #-----------------------------------------------
 ```
 
-`HADDOCK3.0`
+## `HADDOCK3.0`
 
 ```yaml
 general:
-  executable: /Users/rvhonorato/repos/haddock-runner/haddock3.sh
+  executable: /workspaces/haddock-runner/example/haddock3.sh
   max_concurrent: 4
-  haddock_dir: /Users/rvhonorato/repos/haddock3
+  haddock_dir: /opt/haddock3
   receptor_suffix: _r_u
   ligand_suffix: _l_u
-  input_list: /Users/rvhonorato/repos/haddock-runner/example/input_list.txt
-  work_dir: /Users/rvhonorato/repos/haddock-runner/bm-goes-here
+  input_list: /workspaces/haddock-runner/example/input_list.txt
+  work_dir: /workspaces/haddock-runner/bm-goes-here
 
 scenarios:
   - name: true-interface
     parameters:
       general:
-        mode: hpc
-        queue: short
-        queue_limit: 100
-        concat: 5
+        mode: local
+        ncores: 8
 
       modules:
         order:
@@ -103,10 +101,8 @@ scenarios:
   - name: center-of-mass
     parameters:
       general:
-        mode: hpc
-        queue: short
-        queue_limit: 100
-        concat: 5
+        mode: local
+        ncores: 8
 
       modules:
         order:
@@ -130,10 +126,8 @@ scenarios:
   - name: random-restraints
     parameters:
       general:
-        mode: hpc
-        queue: short
-        queue_limit: 100
-        concat: 5
+        mode: local
+        ncores: 8
 
       modules:
         order:

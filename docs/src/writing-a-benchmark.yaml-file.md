@@ -1,37 +1,59 @@
 # Writing a benchmark.yaml file
 
-The `benchmark.yaml` file is a configuration file in [`YAML`](https://yaml.org/) format that will be used by `haddock-runner` to run the benchmark. This file is divided in 2 main sections; `general` and `scenarios`
+The `benchmark.yaml` file is a configuration file in [`YAML`](https://yaml.org/) format that will be used by `haddock-runner` to run the benchmark. The whole idea is that one configuration file can define multiple scenarios, each scenario being a set of parameters that will be used to run HADDOCK.
+
+This file should be the replicable part of the benchmark, i.e. the part that you want to share with others. It should contain all the information needed to run the benchmark, alongside the input list.
+
+This file is divided in 3 main sections; [`general`](#general-section), [`slurm`](#slurm-section) and [`scenarios`](#scenario-section).
 
 ## General section
 
-Here you must define the following:
+Here you must define the following parameters:
 
-- `executable`: the path to the `run-haddock.sh` script (see above for more details)
-- `max_concurrent`: the maximum number of runs that can be executed at a given time (a run is a target in a given scenario)
-- `haddock_dir`: the path to the HADDOCK installation
-- `receptor_suffix`: the suffix used to identify the receptor files
-- `ligand_suffix`: the suffix used to identify the ligand files
-- `input_list`: the path to the input list (see above for more details)
-- `work_dir`: the path to the benchmark output
+- `executable`: Path to the `run-haddock.sh` script (see [here](./writing-a-run-haddock.sh-script.md) for more details).
+- `max_concurrent`: Maximum number of jobs that can be executed at a given time
+- `haddock_dir`: Path to the HADDOCK installation, this is used to validate the parameters of the [`scenarios`](#scenario-section) section
+- `receptor_suffix`: This pattern will identify what is the receptor file in the the suffix used to identify the receptor files
+- `ligand_suffix`: This will be used to identify the ligand files
+- `input_list`: The path to the input list (see [here](./writing-a-input.list-file.md) for more details)
+- `work_dir`: The path where the results will be stored
+
+See below an example:
 
 ```yaml
 general:
-  executable: /trinity/login/rodrigo/projects/benchmarking/haddock24.sh
-  max_concurrent: 2
-  haddock_dir: /trinity/login/abonvin/haddock_git/haddock2.4
+  executable: /workspaces/haddock-runner/example/haddock3.sh
+  max_concurrent: 4
+  haddock_dir: /opt/haddock3
   receptor_suffix: _r_u
   ligand_suffix: _l_u
-  input_list: /trinity/login/rodrigo/projects/benchmarking/input.txt
-  work_dir: /trinity/login/rodrigo/projects/benchmarking
+  input_list: /workspaces/haddock-runner/example/input_list.txt
+  work_dir: /workspaces/haddock-runner/bm-goes-here
 ```
 
 ## Slurm section
 
-Soon to come...
+This section is option but highly recomended! For these to take effect you must be running the benchmark in a HPC environment. These will be used internally by the runner to compose the `.job` file. Here you can define the following parameters, if left blank, SLURM will pick up the default values:
+
+- `partition`: The name of the partition to be used
+- `cpus_per_task`: Number of CPUs per task
+- `ntasks_per_node`: Number of tasks per node
+- `nodes`: Number of nodes
+- `time`: Maximum time for the job
+- `account`: Account to be used
+- `mail_user`: Email to be notified when the job starts and ends
+
+See below an example:
+
+```yaml
+slurm:
+  partition: short # use the short partition
+  cpus_per_task: 8 # use 8 cores per task
+```
 
 ## Scenario section
 
-Here you must define the scenarios that you want to run, it is slightly different for HADDOCK2.4 and HADDOCK3.0.
+Here you must define the scenarios that you want to run, these are slightly different for [HADDOCK2.4](#haddock24) and [HADDOCK3.0](#haddock30)
 
 ### HADDOCK2.4
 
@@ -82,21 +104,15 @@ scenarios:
   - name: true-interface
     parameters:
       general:
-        # execution mode using a batch system
-        mode: hpc
-        # batch queue name to use
-        queue: short
-        # number of jobs to submit to the batch system
-        queue_limit: 100
-        # number of models to concatenate within one job
-        concat: 5
+        mode: local
+        ncores: 4
 
       modules:
         order: [topoaa, rigidbody, seletop, flexref, emref]
         topoaa:
           autohis: true
         rigidbody:
-          ambig_fname: "_ti.tbl"
+          ambig_fname: _ti.tbl
         seletop:
           select: 200
         flexref:
