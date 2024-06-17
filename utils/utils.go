@@ -127,7 +127,7 @@ func CreateEnsemble(p string, out string) error {
 			return err
 		}
 
-		header := fmt.Sprintf("MODEL    %-5d\n", nbModels)
+		header := formatModelHeader(nbModels) + "\n"
 		footer := "ENDMDL\n"
 		ens += header + modelStr + footer
 
@@ -139,6 +139,11 @@ func CreateEnsemble(p string, out string) error {
 
 	return nil
 
+}
+
+// formatModelHeader formats the header of a model, see https://www.wwpdb.org/documentation/file-format-content/format33/sect9.html#MODEL
+func formatModelHeader(model_id int) string {
+	return fmt.Sprintf("MODEL     %-4d", model_id)
 }
 
 // IsUnique returns true if the slice contains unique elements
