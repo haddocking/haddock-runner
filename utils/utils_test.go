@@ -613,3 +613,52 @@ func TestCheckSlurmStatus(t *testing.T) {
 	}
 
 }
+
+func TestFormatModelHeader(t *testing.T) {
+	type args struct {
+		model_id int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "TestFormatModelHeader_one_digit",
+			args: args{
+				model_id: 1,
+			},
+			want: "MODEL     1   ",
+		},
+		{
+			name: "TestFormatModelHeader_two_digits",
+			args: args{
+				model_id: 10,
+			},
+			want: "MODEL     10  ",
+		},
+		{
+			name: "TestFormatModelHeader_three_digits",
+			args: args{
+				model_id: 100,
+			},
+			want: "MODEL     100 ",
+		},
+		{
+			name: "TestFormatModelHeader_four_digits",
+			args: args{
+				model_id: 1000,
+			},
+			want: "MODEL     1000",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatModelHeader(tt.args.model_id)
+
+			if got != tt.want {
+				t.Errorf("FormatModelHeader() got [%v], want [%v]", got, tt.want)
+			}
+		})
+	}
+}
