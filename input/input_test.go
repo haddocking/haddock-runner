@@ -96,6 +96,75 @@ scenarios:
           param1: value1
 `)
 
+	// Write a file with unknown modules
+	// Fake a haddock3 directory structure with a defaults.yaml file
+	temp_dir := "_testloadinput_haddock3"
+	_ = os.MkdirAll(filepath.Join(temp_dir, "src/haddock/modules"), 0755)
+	_ = os.WriteFile(filepath.Join(temp_dir, "src/haddock/modules/defaults.yaml"), []byte(""), 0755)
+	// Create a known module
+	// _ = os.MkdirAll(filepath.Join(temp_dir, "src/haddock/modules/rigidbody"), 0755)
+	defer os.RemoveAll(temp_dir)
+
+	d4 := []byte(`general:
+  executable: /home/rodrigo/repos/haddock-runner/haddock3.sh
+  max_concurrent: 999
+  haddock_dir: _testloadinput_haddock3
+  receptor_suffix: _r_u
+  ligand_suffix: _l_u
+  input_list: example/input_list.txt
+  work_dir: bm-goes-here
+
+scenarios:
+  - name: true-interface
+    parameters:
+      run_cns:
+        noecv: false
+      restraints:
+        ambig: ti
+      custom_toppar:
+        topology: _ligand.top
+      general:
+        ncores: 1
+      modules:
+        order: [unknown, caprieval.1, caprieval.2]
+        unknown:
+          param1: value1
+        caprieval.1:
+          param1: value1
+        caprieval.2:
+          param1: value1
+`)
+
+	d5 := []byte(`general:
+  executable: /home/rodrigo/repos/haddock-runner/haddock3.sh
+  max_concurrent: 999
+  haddock_dir: _testloadinput_haddock3
+  receptor_suffix: _r_u
+  ligand_suffix: _l_u
+  input_list: example/input_list.txt
+  work_dir: bm-goes-here
+
+scenarios:
+  - name: true-interface
+    parameters:
+      run_cns:
+        noecv: false
+      restraints:
+        ambig: ti
+      custom_toppar:
+        topology: _ligand.top
+      general:
+        ncores: 1
+      modules:
+        order: [rigidbody, unknown, unknownalso]
+        rigidbody:
+          param1: value1
+        unknown:
+          param1: value1
+        unknownalso:
+          param1: value1
+`)
+
 	err := os.WriteFile("test-input.yaml", d1, 0644)
 	if err != nil {
 		t.Errorf("Failed to write input file: %s", err)
@@ -116,6 +185,20 @@ scenarios:
 	}
 
 	defer os.Remove("test-input-repeated.yaml")
+
+	err = os.WriteFile("test-input-unknown.yaml", d4, 0644)
+	if err != nil {
+		t.Errorf("Failed to write input file: %s", err)
+	}
+
+	defer os.Remove("test-input-unknown.yaml")
+
+	err = os.WriteFile("test-input-unknown-twice.yaml", d5, 0644)
+	if err != nil {
+		t.Errorf("Failed to write input file: %s", err)
+	}
+
+	defer os.Remove("test-input-unknown-twice.yaml")
 
 	type args struct {
 		filename string
@@ -234,6 +317,30 @@ scenarios:
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "unknown module",
+			args: args{
+				filename: "test-input-unknown.yaml",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "unknown modules",
+			args: args{
+				filename: "test-input-unknown-twice.yaml",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "wrong type",
+			args: args{
+				filename: "test-input-wrong-type.yaml",
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
