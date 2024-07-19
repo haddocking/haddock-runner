@@ -408,6 +408,33 @@ type ModuleParams struct {
 	Rmsdmatrix_23    map[string]interface{} `yaml:"rmsdmatrix.23"`
 	Rmsdmatrix_24    map[string]interface{} `yaml:"rmsdmatrix.24"`
 	Rmsdmatrix_25    map[string]interface{} `yaml:"rmsdmatrix.25"`
+	Ilrmsdmatrix     map[string]interface{} `yaml:"ilrmsdmatrix"`
+	Ilrmsdmatrix_0   map[string]interface{} `yaml:"ilrmsdmatrix.0"`
+	Ilrmsdmatrix_1   map[string]interface{} `yaml:"ilrmsdmatrix.1"`
+	Ilrmsdmatrix_2   map[string]interface{} `yaml:"ilrmsdmatrix.2"`
+	Ilrmsdmatrix_3   map[string]interface{} `yaml:"ilrmsdmatrix.3"`
+	Ilrmsdmatrix_4   map[string]interface{} `yaml:"ilrmsdmatrix.4"`
+	Ilrmsdmatrix_5   map[string]interface{} `yaml:"ilrmsdmatrix.5"`
+	Ilrmsdmatrix_6   map[string]interface{} `yaml:"ilrmsdmatrix.6"`
+	Ilrmsdmatrix_7   map[string]interface{} `yaml:"ilrmsdmatrix.7"`
+	Ilrmsdmatrix_8   map[string]interface{} `yaml:"ilrmsdmatrix.8"`
+	Ilrmsdmatrix_9   map[string]interface{} `yaml:"ilrmsdmatrix.9"`
+	Ilrmsdmatrix_10  map[string]interface{} `yaml:"ilrmsdmatrix.10"`
+	Ilrmsdmatrix_11  map[string]interface{} `yaml:"ilrmsdmatrix.11"`
+	Ilrmsdmatrix_12  map[string]interface{} `yaml:"ilrmsdmatrix.12"`
+	Ilrmsdmatrix_13  map[string]interface{} `yaml:"ilrmsdmatrix.13"`
+	Ilrmsdmatrix_14  map[string]interface{} `yaml:"ilrmsdmatrix.14"`
+	Ilrmsdmatrix_15  map[string]interface{} `yaml:"ilrmsdmatrix.15"`
+	Ilrmsdmatrix_16  map[string]interface{} `yaml:"ilrmsdmatrix.16"`
+	Ilrmsdmatrix_17  map[string]interface{} `yaml:"ilrmsdmatrix.17"`
+	Ilrmsdmatrix_18  map[string]interface{} `yaml:"ilrmsdmatrix.18"`
+	Ilrmsdmatrix_19  map[string]interface{} `yaml:"ilrmsdmatrix.19"`
+	Ilrmsdmatrix_20  map[string]interface{} `yaml:"ilrmsdmatrix.20"`
+	Ilrmsdmatrix_21  map[string]interface{} `yaml:"ilrmsdmatrix.21"`
+	Ilrmsdmatrix_22  map[string]interface{} `yaml:"ilrmsdmatrix.22"`
+	Ilrmsdmatrix_23  map[string]interface{} `yaml:"ilrmsdmatrix.23"`
+	Ilrmsdmatrix_24  map[string]interface{} `yaml:"ilrmsdmatrix.24"`
+	Ilrmsdmatrix_25  map[string]interface{} `yaml:"ilrmsdmatrix.25"`
 	Seletop          map[string]interface{} `yaml:"seletop"`
 	Seletop_0        map[string]interface{} `yaml:"seletop.0"`
 	Seletop_1        map[string]interface{} `yaml:"seletop.1"`
