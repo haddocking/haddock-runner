@@ -244,18 +244,95 @@ func (inp *Input) ValidateExecutionModes() error {
 	return nil
 }
 
-// LoadInput loads the input file
-func LoadInput(filename string) (*Input, error) {
+// checkUnmappedModules compares the YAML map to the ModuleParams fields
+func checkUnmappedModules(inp *Input, yamlMap map[string]interface{}) []string {
+	var unmappedModules []string
 
+	scenarios, _ := yamlMap["scenarios"].([]interface{})
+	// if !ok {
+	// 	return unmappedModules
+	// }
+
+	for _, scenario := range scenarios {
+		scenarioMap, _ := scenario.(map[string]interface{})
+		// if !ok {
+		// 	continue
+		// }
+
+		parameters, _ := scenarioMap["parameters"].(map[string]interface{})
+		// if !ok {
+		// 	continue
+		// }
+
+		modules, _ := parameters["modules"].(map[string]interface{})
+		// if !ok {
+		// 	continue
+		// }
+
+		v := reflect.ValueOf(inp.Scenarios[0].Parameters.Modules)
+		t := v.Type()
+
+		for key := range modules {
+			if key == "order" {
+				continue // Skip the "order" field as it's handled differently
+			}
+
+			found := false
+			for i := 0; i < t.NumField(); i++ {
+				field := t.Field(i)
+				yamlTag := field.Tag.Get("yaml")
+				if yamlTag == key || (yamlTag == "" && strings.ToLower(field.Name) == key) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				unmappedModules = append(unmappedModules, key)
+			}
+		}
+	}
+
+	return unmappedModules
+}
+
+// LoadInput loads the input file and checks for unmapped modules
+func LoadInput(filename string) (*Input, error) {
 	yamlFile, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	inp := &Input{}
-	err = yaml.Unmarshal(yamlFile, inp)
+	// Unmarshal into a map to get all fields from YAML
+	var yamlMap map[string]interface{}
+	err = yaml.Unmarshal(yamlFile, &yamlMap)
 	if err != nil {
 		return nil, err
+	}
+
+	// Unmarshal into the Input struct
+	inp := &Input{}
+	_ = yaml.Unmarshal(yamlFile, inp)
+	// No checking the errors here since the unmarshalling above will catch it
+	// if _ != nil {
+	// 	return nil, err
+	// }
+
+	if utils.IsHaddock3(inp.General.HaddockDir) {
+
+		// Check for unmapped modules
+		unmappedModules := checkUnmappedModules(inp, yamlMap)
+		if len(unmappedModules) > 0 {
+
+			_s := "Module"
+			_a := "was"
+			if len(unmappedModules) > 1 {
+				_s = "Modules"
+				_a = "were"
+			}
+			unknownModules := strings.Join(unmappedModules, ", ")
+			return nil, errors.New(_s + " `" + unknownModules + "` " + _a + " not found in the HADDOCK installation or supported in this version.")
+
+		}
 	}
 
 	return inp, nil
