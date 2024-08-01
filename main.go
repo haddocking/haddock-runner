@@ -13,7 +13,6 @@ import (
 	"haddockrunner/utils/checksum"
 	"os"
 	"path/filepath"
-	"sort"
 	"sync"
 
 	"github.com/golang/glog"
@@ -174,9 +173,7 @@ func main() {
 	}
 
 	// Sort the job array
-	sort.Slice(jobArr, func(i, j int) bool {
-		return jobArr[i].ID < jobArr[j].ID
-	})
+	jobArr = runner.SortJobs(jobArr)
 
 	glog.Info("############################################")
 	glog.Info("Running " + fmt.Sprint(len(jobArr)) + " jobs, " + fmt.Sprint(inp.General.MaxConcurrent) + " concurrent")
