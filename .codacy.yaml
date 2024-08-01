@@ -1,8 +1,0 @@
-engines:
-  coverage:
-    languages:
-      go:
-        include:
-          - "**/*.go"
-        exclude:
-          - "main.go"
