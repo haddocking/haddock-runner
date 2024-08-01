@@ -895,3 +895,66 @@ func setupHaddock24ForTest(p string) error {
 	}
 	return nil
 }
+
+func TestSortJobs(t *testing.T) {
+	type args struct {
+		jobArray []Job
+	}
+	tests := []struct {
+		name string
+		args args
+		want []Job
+	}{
+		{
+			name: "proper sorting",
+			args: args{
+				jobArray: []Job{
+					{ID: "root2_scenario1"},
+					{ID: "root1_scenario2"},
+					{ID: "root3_scenario1"},
+					{ID: "root1_scenario1"},
+				},
+			},
+			want: []Job{
+				{ID: "root1_scenario1"},
+				{ID: "root2_scenario1"},
+				{ID: "root3_scenario1"},
+				{ID: "root1_scenario2"},
+			},
+		},
+		{
+			name: "sorting without underscore",
+			args: args{
+				jobArray: []Job{
+					{ID: "root2scenario1"},
+					{ID: "root1scenario2"},
+					{ID: "root3scenario1"},
+				},
+			},
+			want: []Job{
+				{ID: "root1scenario2"},
+				{ID: "root2scenario1"},
+				{ID: "root3scenario1"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SortJobs(tt.args.jobArray)
+
+			if len(got) != len(tt.want) {
+				t.Errorf("SortJobs() returned %d jobs, want %d jobs", len(got), len(tt.want))
+				return
+			}
+
+			for i := range got {
+				if got[i].ID != tt.want[i].ID {
+					t.Errorf("SortJobs() mismatch at index %d:\ngot  = %s\nwant = %s", i, got[i].ID, tt.want[i].ID)
+					return
+				}
+			}
+		})
+	}
+
+}
