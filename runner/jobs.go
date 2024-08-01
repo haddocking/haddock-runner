@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"haddockrunner/constants"
@@ -395,4 +397,36 @@ func (j Job) Post(haddockVersion int, executable string, slurm input.SlurmParams
 
 	return nil
 
+}
+
+// SortJobs sorts an array of Job structs based on their ID field.
+// It first sorts by the part after the underscore in the ID, then by the part before.
+// If an ID doesn't contain an underscore, it's treated as a single part for comparison.
+func SortJobs(arr []Job) []Job {
+	sort.Slice(arr, func(i, j int) bool {
+		return compareJobs(arr[i].ID, arr[j].ID)
+	})
+	return arr
+}
+
+// compareJobs compares two job IDs for sorting.
+// It splits each ID at the underscore and compares the parts.
+// The comparison prioritizes the part after the underscore, then the part before.
+// If either ID lacks an underscore, the whole strings are compared.
+func compareJobs(a, b string) bool {
+	partsA := strings.SplitN(a, "_", 2)
+	partsB := strings.SplitN(b, "_", 2)
+
+	// If either string doesn't have a second part, compare the whole strings
+	if len(partsA) != 2 || len(partsB) != 2 {
+		return a < b
+	}
+
+	// First, compare the parts after the underscore
+	if partsA[1] != partsB[1] {
+		return partsA[1] < partsB[1]
+	}
+
+	// If parts after underscore are equal, compare the parts before the underscore
+	return partsA[0] < partsB[0]
 }
