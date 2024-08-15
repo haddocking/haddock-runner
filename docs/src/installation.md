@@ -15,10 +15,10 @@ This tool is not meant to be used by end-users who want to run a single target, 
 To us it simply download the latest binary from the [releases page](https://github.com/haddocking/haddock-runner/releases):
 
 ```bash
-$ wget https://github.com/haddocking/haddock-runner/releases/download/v1.8.1/haddock-runner_1.8.1_linux_386.tar.gz
-$ tar -zxvf haddock-runner_1.8.1_linux_386.tar.gz
+$ wget https://github.com/haddocking/haddock-runner/releases/download/v1.10.0/haddock-runner_1.10.0_linux_386.tar.gz
+$ tar -zxvf haddock-runner_1.10.0_linux_386.tar.gz
 $ ./haddock-runner -version
-haddock-runner version v1.8.1
+haddock-runner version v1.10.0
 ```
 
 Alternatively, you can build the latest version from source (you probably don't need to do that), make sure [go](https://go.dev/doc/install) is installed and run the following commands:
@@ -28,5 +28,5 @@ $ git clone https://github.com/haddocking/haddock-runner.git
 $ cd haddock-runner
 $ go build -o haddock-runner
 $ ./haddock-runner -version
-haddock-runner version v1.8.1
+haddock-runner version v1.10.0
 ```
