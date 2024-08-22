@@ -1,14 +1,14 @@
 # `haddock-runner` for [HADDOCK](https://www.bonvinlab.org/software)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13150820.svg)](https://doi.org/10.5281/zenodo.13150820)
+[![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8B%20%20%E2%97%8F-orange)](https://fair-software.eu)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 [![linting](https://github.com/haddocking/haddock-runner/actions/workflows/lint.yml/badge.svg)](https://github.com/haddocking/haddock-runner/actions/workflows/lint.yml)
 [![unittests](https://github.com/haddocking/haddock-runner/actions/workflows/unittests.yml/badge.svg)](https://github.com/haddocking/haddock-runner/actions/workflows/unittests.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/haddock-runner/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/haddock-runner&utm_campaign=Badge_Coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/haddock-runner/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/haddock-runner&utm_campaign=Badge_Grade)
-[![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8B%20%20%E2%97%8F-orange)](https://fair-software.eu)
-[![SQAaaS badge shields.io](https://img.shields.io/badge/sqaaas%20software-bronze-e6ae77)](https://api.eu.badgr.io/public/assertions/cf1FQ2HAR9ywr3SCycW-QQ "SQAaaS bronze badge achieved")
 
-## [![SQAaaS badge](https://github.com/EOSC-synergy/SQAaaS/raw/master/badges/badges_150x116/badge_software_bronze.png)](https://api.eu.badgr.io/public/assertions/cf1FQ2HAR9ywr3SCycW-QQ "SQAaaS bronze badge achieved")
 
 ## Table of contents
 
