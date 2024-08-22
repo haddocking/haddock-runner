@@ -9,7 +9,6 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/haddock-runner/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/haddock-runner&utm_campaign=Badge_Coverage)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/haddock-runner/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/haddock-runner&utm_campaign=Badge_Grade)
 
-
 ## Table of contents
 
 1. [Introduction](#introduction)
