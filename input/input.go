@@ -226,16 +226,16 @@ func ValidateRunCNSParams(known map[string]interface{}, params map[string]interf
 // ValidateExecutionModes checks if the execution modes are valid
 func (inp *Input) ValidateExecutionModes() error {
 
-	if inp.Slurm == (SlurmParams{}) {
+	if inp.Slurm != (SlurmParams{}) {
 		// Check if the executable is HADDOCK3
 		if utils.IsHaddock24(inp.General.HaddockDir) {
-			err := errors.New("cannot use `use_slurm` with HADDOCK2")
+			err := errors.New("cannot use SLURM with HADDOCK2")
 			return err
 		} else if utils.IsHaddock3(inp.General.HaddockDir) {
 			// We need to check if the Scenarios are using the correct execution modes
 			for _, scenario := range inp.Scenarios {
 				if scenario.Parameters.General["mode"] != "local" {
-					err := errors.New("cannot use `use_slurm` with `mode: " + scenario.Parameters.General["mode"].(string) + "`")
+					err := errors.New("SLURM can only be used with `mode: local`")
 					return err
 				}
 			}
