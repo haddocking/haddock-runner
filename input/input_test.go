@@ -675,6 +675,7 @@ func TestValidateExecutionModes(t *testing.T) {
 
 	type fields struct {
 		General   GeneralStruct
+		Slurm     SlurmParams
 		Scenarios []Scenario
 	}
 	tests := []struct {
@@ -687,6 +688,9 @@ func TestValidateExecutionModes(t *testing.T) {
 			fields: fields{
 				General: GeneralStruct{
 					HaddockDir: haddock3Dir,
+				},
+				Slurm: SlurmParams{
+					Cpus_per_task: 42,
 				},
 				Scenarios: []Scenario{
 					{
@@ -707,6 +711,9 @@ func TestValidateExecutionModes(t *testing.T) {
 				General: GeneralStruct{
 					HaddockDir: haddock2Dir,
 				},
+				Slurm: SlurmParams{
+					Cpus_per_task: 42,
+				},
 				Scenarios: []Scenario{},
 			},
 			wantErr: true,
@@ -717,12 +724,15 @@ func TestValidateExecutionModes(t *testing.T) {
 				General: GeneralStruct{
 					HaddockDir: haddock3Dir,
 				},
+				Slurm: SlurmParams{
+					Cpus_per_task: 42,
+				},
 				Scenarios: []Scenario{
 					{
 						Name: "true-interface",
 						Parameters: ParametersStruct{
 							General: map[string]any{
-								"mode": "anything",
+								"mode": "batch",
 							},
 						},
 					},
@@ -730,11 +740,34 @@ func TestValidateExecutionModes(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "valid-haddock3",
+			fields: fields{
+				General: GeneralStruct{
+					HaddockDir: haddock3Dir,
+				},
+				Slurm: SlurmParams{
+					Cpus_per_task: 42,
+				},
+				Scenarios: []Scenario{
+					{
+						Name: "true-interface",
+						Parameters: ParametersStruct{
+							General: map[string]any{
+								"mode": "local",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		inp := &Input{
 			General:   tt.fields.General,
 			Scenarios: tt.fields.Scenarios,
+			Slurm:     tt.fields.Slurm,
 		}
 		if err := inp.ValidateExecutionModes(); (err != nil) != tt.wantErr {
 			t.Errorf("Input.ValidateExecutionModes() error = %v, wantErr %v", err, tt.wantErr)

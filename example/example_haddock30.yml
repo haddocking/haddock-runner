@@ -50,7 +50,7 @@ scenarios:
         topoaa:
           autohis: true
         rigidbody:
-          sampling: 2
+          sampling: 5
           cmrest: true
 
   - name: random-restraints
@@ -64,7 +64,7 @@ scenarios:
         topoaa:
           autohis: true
         rigidbody:
-          sampling: 2
+          sampling: 5
           ranair: true
 
   #-----------------------------------------------

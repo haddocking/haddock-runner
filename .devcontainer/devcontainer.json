@@ -3,7 +3,6 @@
     "dockerfile": "Dockerfile",
   },
   "features": {
-    "ghcr.io/devcontainers/features/go:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
   },
   "postCreateCommand": "sudo bash /app/start.sh",
