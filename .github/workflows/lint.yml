@@ -15,5 +15,5 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
-      - name: Trunk Check
-        uses: trunk-io/trunk-action@v1
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v6.1.1
