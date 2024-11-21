@@ -28,7 +28,6 @@ var (
 // CopyFile copies a file from src to dst
 // If the file does not exist or cannot be created, an error is returned
 func CopyFile(src, dst string) error {
-
 	if _, err := os.Stat(src); os.IsNotExist(err) {
 		err := errors.New("file does not exist: " + src)
 		return err
@@ -61,7 +60,6 @@ func IsFlagPassed(name string) bool {
 
 // IsHaddock3 returns true if the path is a Haddock 3 project
 func IsHaddock3(p string) bool {
-
 	rootPath, _ := filepath.Abs(p)
 	DefaultsLoc := filepath.Clean(filepath.Join(rootPath, "src/haddock/modules/defaults.yaml"))
 
@@ -70,12 +68,10 @@ func IsHaddock3(p string) bool {
 	}
 
 	return true
-
 }
 
 // IsHaddock24 returns true if the path is a Haddock 2.4 project
 func IsHaddock24(p string) bool {
-
 	rootPath, _ := filepath.Abs(p)
 	runCnsLoc := filepath.Clean(filepath.Join(rootPath, "protocols/run.cns-conf"))
 
@@ -84,12 +80,10 @@ func IsHaddock24(p string) bool {
 	}
 
 	return true
-
 }
 
 // CreateEnsemble creates an ensemble file from a list of PDB files
 func CreateEnsemble(p string, out string) error {
-
 	// Read the list file and check how many models there should be
 	file, err := os.Open(p)
 	if err != nil {
@@ -138,7 +132,6 @@ func CreateEnsemble(p string, out string) error {
 	_ = os.WriteFile(out, []byte(ens), 0644)
 
 	return nil
-
 }
 
 // formatModelHeader formats the header of a model, see https://www.wwpdb.org/documentation/file-format-content/format33/sect9.html#MODEL
@@ -160,7 +153,6 @@ func IsUnique(s []string) bool {
 
 // CopyFileArrTo copy files from an array to a location
 func CopyFileArrTo(files []string, dst string) error {
-
 	for _, f := range files {
 		_, file := filepath.Split(f)
 		err := CopyFile(f, filepath.Join(dst, file))
@@ -220,7 +212,6 @@ func ContainsCG(s string) bool {
 
 // FindFname checks the array of strings for a pattern, returns an error if multiple files match
 func FindFname(arr []string, pattern *regexp.Regexp) (string, error) {
-
 	var fname string
 	for _, f := range arr {
 		if pattern.MatchString(f) {
@@ -255,7 +246,6 @@ func SearchInLog(filePath, searchString string) (bool, error) {
 }
 
 func CreateJobHeader(partition, account, mail_user, runtime string, cpus_per_task, nodes, ntasks_per_node int) string {
-
 	header := "#!/bin/bash\n"
 	header += "#SBATCH --job-name=haddock\n"
 	header += "#SBATCH --output=haddock-%j.out\n"
@@ -288,7 +278,6 @@ func CreateJobHeader(partition, account, mail_user, runtime string, cpus_per_tas
 }
 
 func CreateJobBody(cmd, path string) string {
-
 	body := "cd " + path + "\n"
 	body += cmd + " run.toml\n"
 
@@ -296,7 +285,6 @@ func CreateJobBody(cmd, path string) string {
 }
 
 func FindNewestLogFile(path string) string {
-
 	files, _ := filepath.Glob(filepath.Join(path, "*.txt"))
 	// if err != nil {
 	// 	return ""
@@ -323,7 +311,6 @@ func FindNewestLogFile(path string) string {
 //
 // The log file should contain: "Submitted batch job XXXXXXX"
 func GetJobID(logF string) (string, error) {
-
 	file, err := os.Open(logF)
 	if err != nil {
 		return "", err
@@ -348,7 +335,6 @@ func GetJobID(logF string) (string, error) {
 }
 
 func CheckSlurmStatus(jobID string) (string, error) {
-
 	// Add the job ID to the arguments
 	Sacct_args = append(Sacct_args, jobID)
 
@@ -367,5 +353,25 @@ func CheckSlurmStatus(jobID string) (string, error) {
 	}
 
 	return jobStatus, nil
+}
 
+func CreateRootRegex(rsuf, lsuf, ssuf string) *regexp.Regexp {
+	suffixes := []string{}
+
+	if rsuf != "" {
+		suffixes = append(suffixes, rsuf)
+	}
+	if lsuf != "" {
+		suffixes = append(suffixes, lsuf)
+	}
+	if ssuf != "" {
+		suffixes = append(suffixes, ssuf)
+	}
+
+	if len(suffixes) == 0 {
+		return nil // or handle this case as needed
+	}
+
+	pattern := `(.*)(?:` + strings.Join(suffixes, "|") + `)`
+	return regexp.MustCompile(pattern)
 }

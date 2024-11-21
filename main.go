@@ -42,11 +42,9 @@ Options:
 		}
 		fmt.Println("")
 	}
-
 }
 
 func main() {
-
 	flag.Parse()
 
 	if utils.IsFlagPassed("version") {
@@ -131,7 +129,7 @@ func main() {
 	}
 
 	// Load the dataset
-	data, errDataset := dataset.LoadDataset(inp.General.WorkDir, inp.General.InputList, inp.General.ReceptorSuffix, inp.General.LigandSuffix)
+	data, errDataset := dataset.LoadDataset(inp.General.WorkDir, inp.General.InputList, inp.General.ReceptorSuffix, inp.General.LigandSuffix, inp.General.ShapeSuffix)
 	if errDataset != nil {
 		glog.Exit("Failed to load dataset: " + errDataset.Error())
 	}
@@ -231,7 +229,6 @@ func main() {
 					glog.Exit("Failed to wait for job: " + err.Error())
 				}
 			}
-
 		}(job)
 	}
 
@@ -239,5 +236,4 @@ func main() {
 
 	glog.Info("############################################")
 	glog.Info("haddock-runner finished successfully")
-
 }
