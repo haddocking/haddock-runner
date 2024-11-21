@@ -10,7 +10,6 @@ import (
 )
 
 func TestCopyFile(t *testing.T) {
-
 	var err error
 
 	err = os.WriteFile("some-file", []byte(""), 0644)
@@ -37,11 +36,9 @@ func TestCopyFile(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong file")
 	}
-
 }
 
 func TestIsFlagPassed(t *testing.T) {
-
 	// Pass by passing a flag
 	os.Args = []string{"haddockrunner", "-option1"}
 	var option1 bool
@@ -56,11 +53,9 @@ func TestIsFlagPassed(t *testing.T) {
 	if IsFlagPassed("option2") {
 		t.Errorf("Failed to detect flag")
 	}
-
 }
 
 func TestIsHaddock3(t *testing.T) {
-
 	// Create a folder structure that is the same as haddock3's
 	err := os.MkdirAll("_test_haddock3/src/haddock/modules", 0755)
 	if err != nil {
@@ -81,11 +76,9 @@ func TestIsHaddock3(t *testing.T) {
 	if IsHaddock3("_test_haddock3/src") {
 		t.Errorf("Failed to detect haddock3")
 	}
-
 }
 
 func TestIsHaddock24(t *testing.T) {
-
 	// Create a folder structure that is the same as haddock2.4's
 	err := os.MkdirAll("_test_haddock24/protocols", 0755)
 	if err != nil {
@@ -106,11 +99,9 @@ func TestIsHaddock24(t *testing.T) {
 	if IsHaddock24("_test_haddock24/protocols") {
 		t.Errorf("Failed to detect haddock2.4")
 	}
-
 }
 
 func TestCreateEnsemble(t *testing.T) {
-
 	// Write a dummy PDB file
 	err := os.WriteFile("dummy.pdb", []byte("ATOM      1  N   ALA A   1      10.000  10.000  10.000  1.00  0.00           N\n"), 0644)
 	if err != nil {
@@ -170,7 +161,6 @@ func TestCreateEnsemble(t *testing.T) {
 }
 
 func TestIsUnique(t *testing.T) {
-
 	// Pass by passing a list of unique elements
 	if !IsUnique([]string{"a", "b", "c"}) {
 		t.Errorf("Failed to detect unique elements")
@@ -180,11 +170,9 @@ func TestIsUnique(t *testing.T) {
 	if IsUnique([]string{"a", "b", "a"}) {
 		t.Errorf("Failed to detect non-unique elements")
 	}
-
 }
 
 func TestCopyFileArrTo(t *testing.T) {
-
 	var err error
 
 	arr := []string{"dummy.pdb", "dummy.pdb", "dummy.pdb"}
@@ -211,7 +199,6 @@ func TestCopyFileArrTo(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong folder")
 	}
-
 }
 
 func TestIntSliceToStringSlice(t *testing.T) {
@@ -318,7 +305,6 @@ func TestContainsCG(t *testing.T) {
 }
 
 func TestFindFname(t *testing.T) {
-
 	testArr := []string{"abc", "bcd", "cde"}
 	pattern := regexp.MustCompile("abc")
 	_, err := FindFname(testArr, pattern)
@@ -331,7 +317,6 @@ func TestFindFname(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect multiple files")
 	}
-
 }
 
 func TestSearchInLog(t *testing.T) {
@@ -400,7 +385,6 @@ func TestSearchInLog(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestCreateJobHeader(t *testing.T) {
@@ -419,7 +403,6 @@ func TestCreateJobHeader(t *testing.T) {
 	if output == "" {
 		t.Errorf("Failed to create job header")
 	}
-
 }
 
 func TestCreateJobBody(t *testing.T) {
@@ -433,7 +416,6 @@ func TestCreateJobBody(t *testing.T) {
 }
 
 func TestFindNewestLogFile(t *testing.T) {
-
 	// Write two files, return the newest one
 	err := os.WriteFile("file1.txt", []byte("file1"), 0644)
 	if err != nil {
@@ -464,11 +446,9 @@ func TestFindNewestLogFile(t *testing.T) {
 	if newestFile != "" {
 		t.Errorf("Failed to detect wrong folder")
 	}
-
 }
 
 func TestGetJobID(t *testing.T) {
-
 	// Create a log file with the job ID
 	logF := "log.txt"
 	err := os.WriteFile(logF, []byte("Submitted batch job 12345678"), 0644)
@@ -546,11 +526,9 @@ func TestGetJobID(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestCheckSlurmStatus(t *testing.T) {
-
 	// Note: This test is full of assumptions, it assumes that the slurm command
 	//  is available and that the job ID is valid
 
@@ -611,7 +589,6 @@ func TestCheckSlurmStatus(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestFormatModelHeader(t *testing.T) {
@@ -658,6 +635,97 @@ func TestFormatModelHeader(t *testing.T) {
 
 			if got != tt.want {
 				t.Errorf("FormatModelHeader() got [%v], want [%v]", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCreateRootRegex(t *testing.T) {
+	type args struct {
+		rsuf string
+		lsuf string
+		ssuf string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantNil bool
+	}{
+		{
+			name: "No suffixes",
+			args: args{
+				rsuf: "",
+				lsuf: "",
+				ssuf: "",
+			},
+			wantNil: true,
+		},
+		{
+			name: "Only rec suffix",
+			args: args{
+				rsuf: "rec",
+				lsuf: "",
+				ssuf: "",
+			},
+			want: `(.*)(?:rec)`,
+		},
+		{
+			name: "Only lig suffix",
+			args: args{
+				rsuf: "",
+				lsuf: "lig",
+				ssuf: "",
+			},
+			want: `(.*)(?:lig)`,
+		},
+		{
+			name: "Only shape suffix",
+			args: args{
+				rsuf: "",
+				lsuf: "",
+				ssuf: "sha",
+			},
+			want: `(.*)(?:sha)`,
+		},
+		{
+			name: "Two suffixes",
+			args: args{
+				rsuf: ".txt",
+				lsuf: ".log",
+				ssuf: "",
+			},
+			want: `(.*)(?:.txt|.log)`,
+		},
+		{
+			name: "Three suffixes",
+			args: args{
+				rsuf: "rec",
+				lsuf: "lig",
+				ssuf: "sha",
+			},
+			want: `(.*)(?:rec|lig|sha)`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := CreateRootRegex(tt.args.rsuf, tt.args.lsuf, tt.args.ssuf)
+
+			if tt.wantNil {
+				if got != nil {
+					t.Errorf("CreateRootRegex() = %v, want nil", got)
+				}
+				return
+			}
+
+			if got == nil {
+				t.Errorf("CreateRootRegex() = nil, want non-nil")
+				return
+			}
+
+			if got.String() != tt.want {
+				t.Errorf("CreateRootRegex() regex = %v, want %v", got.String(), tt.want)
 			}
 		})
 	}
