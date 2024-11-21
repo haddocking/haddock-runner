@@ -1,9 +1,4 @@
 #!/bin/bash
 #===============================================================================
-
-# shellcheck source=/dev/null
-source /opt/conda/etc/profile.d/conda.sh
-conda activate env
-
-haddock3 "$@"
+/home/rodrigo/repos/haddock-runner/.venv/bin/haddock3 "$@"
 #===============================================================================
