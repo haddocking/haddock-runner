@@ -1,0 +1,7 @@
+example/shape/data/sha_ligand.param
+example/shape/data/sha_ligand.top
+example/shape/data/sha_l_u.pdb
+example/shape/data/sha_r_u.pdb
+example/shape/data/sha_ambig.tbl
+example/shape/data/sha_shape.pdb
+example/shape/data/sha_ref.pdb
