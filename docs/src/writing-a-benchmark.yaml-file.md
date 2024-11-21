@@ -15,6 +15,7 @@ Here you must define the following parameters:
 - `haddock_dir`: Path to the HADDOCK installation, this is used to validate the parameters of the [`scenarios`](#scenario-section) section
 - `receptor_suffix`: This pattern will identify what is the receptor file in the the suffix used to identify the receptor files
 - `ligand_suffix`: This will be used to identify the ligand files
+- `shape_suffix`: This will be used to identify the shape files
 - `input_list`: The path to the input list (see [here](./writing-a-input.list-file.md) for more details)
 - `work_dir`: The path where the results will be stored
 
