@@ -30,6 +30,7 @@ type Target struct {
 	Restraints   []string
 	Toppar       []string
 	MiscPDB      []string
+	Shape        []string
 }
 
 // Validate validates the Target checking if
@@ -37,7 +38,6 @@ type Target struct {
 //   - Files exist
 //   - Files are PDB files
 func (t *Target) Validate() error {
-
 	if t.ID == "" {
 		return errors.New("Target ID not defined")
 	}
@@ -67,14 +67,12 @@ func (t *Target) Validate() error {
 	}
 
 	return nil
-
 }
 
 // SetupHaddock24Scenario method prepares the scenario
 //   - Creates the scenario directory
 //   - Creates the run.params file
 func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario) (runner.Job, error) {
-
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
 	glog.Info("Preparing : " + s.Name)
 	_ = os.MkdirAll(sPath, 0755)
@@ -125,12 +123,10 @@ func (t *Target) SetupHaddock24Scenario(wd string, hdir string, s input.Scenario
 	}
 
 	return j, nil
-
 }
 
 // WriteRunParamStub writes the run.param file
 func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string, error) {
-
 	var runParamString string
 	nMol := 1
 
@@ -181,14 +177,12 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 	}
 
 	return runParamF, nil
-
 }
 
 // SetupHaddock3Scenario method prepares the scenario for HADDOCK3
 //   - Creates the scenario directory
 //   - Creates the `run.toml` file
 func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job, error) {
-
 	glog.Info("Preparing : " + s.Name)
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
 	dataPath := filepath.Join(wd, t.ID, "data")
@@ -218,12 +212,10 @@ func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job,
 	}
 
 	return j, nil
-
 }
 
 // WriteRunToml writes the run.toml file
 func (t *Target) WriteRunToml(projectDir string, general map[string]interface{}, mod input.ModuleParams) (string, error) {
-
 	runTomlString := ""
 	for k, v := range general {
 		switch v := v.(type) {
@@ -242,7 +234,6 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 		case []float64:
 			runTomlString += k + " = [" + strings.Join(utils.FloatSliceToStringSlice(v), ",") + "]\n"
 		}
-
 	}
 
 	runTomlString += "run_dir = \"run1\"\n"
@@ -251,6 +242,9 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 		runTomlString += "    \"../data/" + filepath.Base(r) + "\",\n"
 	}
 	for _, l := range t.Ligand {
+		runTomlString += "    \"../data/" + filepath.Base(l) + "\",\n"
+	}
+	for _, l := range t.Shape {
 		runTomlString += "    \"../data/" + filepath.Base(l) + "\",\n"
 	}
 	runTomlString += "]\n\n"
@@ -291,7 +285,6 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 				}
 				runTomlString += "[" + m + "]\n"
 				for k, v := range field.Interface().(map[string]interface{}) {
-
 					// Find the file to be used as fname
 					if strings.Contains(k, "_fname") {
 						pattern := regexp.MustCompile(v.(string))
@@ -340,21 +333,16 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 	}
 
 	return runTomlF, nil
-
 }
 
 // LoadDataset loads a dataset from a list file
-func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([]Target, error) {
-
+func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string, ssuf string) ([]Target, error) {
 	var rootRegex *regexp.Regexp
-	if lsuf == "" {
-		rootRegex = regexp.MustCompile(`(.*)(?:` + rsuf + `)`)
-	} else {
-		rootRegex = regexp.MustCompile(`(.*)(?:` + rsuf + `|` + lsuf + `)`)
-	}
+	rootRegex = utils.CreateRootRegex(rsuf, lsuf, ssuf)
 
 	recRegex := regexp.MustCompile(`(.*)` + rsuf)
 	ligRegex := regexp.MustCompile(`(.*)` + lsuf)
+	shapeRegex := regexp.MustCompile(`(.*)` + ssuf)
 	_ = os.MkdirAll(projectDir, 0755)
 
 	file, err := os.Open(pdbList)
@@ -374,12 +362,13 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 			continue
 		}
 
-		var receptor, ligand, root string
+		var receptor, ligand, root, shape string
 		fullPath := line
 		basePath := filepath.Base(fullPath)
 		// Find root and receptor/ligand names
 		match := rootRegex.FindStringSubmatch(basePath)
 		if len(match) == 0 {
+			glog.Info(fullPath)
 			// Neither receptor nor ligand, add to a list of PDBs
 			pdbArr = append(pdbArr, fullPath)
 			continue
@@ -396,6 +385,11 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 		LigMatch := ligRegex.MatchString(basePath)
 		if LigMatch && !basePathCG {
 			ligand = fullPath
+		}
+
+		ShapeMatch := shapeRegex.MatchString(basePath)
+		if ShapeMatch {
+			shape = fullPath
 		}
 
 		if entry, ok := m[root]; !ok {
@@ -421,6 +415,9 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 			}
 			if ligand != "" {
 				entry.Ligand = append(entry.Ligand, ligand)
+			}
+			if shape != "" {
+				entry.Shape = append(entry.Shape, shape)
 			}
 			m[root] = entry
 		}
@@ -485,12 +482,10 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string) ([
 	}
 
 	return arr, nil
-
 }
 
 // CreateDatasetDir creates the dataset folder
 func CreateDatasetDir(p string) error {
-
 	if _, err := os.Stat(p); os.IsNotExist(err) {
 		_ = os.Mkdir(p, 0755)
 	} else {
@@ -498,7 +493,6 @@ func CreateDatasetDir(p string) error {
 	}
 
 	return nil
-
 }
 
 // OrganizeDataset creates the folder structure
@@ -507,7 +501,6 @@ func CreateDatasetDir(p string) error {
 //   - Update the paths in the Target struct
 //   - Copy the restraints and toppars to the data folder
 func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
-
 	var tArr []Target
 
 	for _, t := range bm {
@@ -543,9 +536,14 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 			newT.Toppar = append(newT.Toppar, tdest)
 		}
 
+		for _, shape := range t.Shape {
+			sdest := filepath.Join(bmPath, t.ID, "data", filepath.Base(shape))
+			newT.Shape = append(newT.Shape, sdest)
+		}
+
 		// Copy to the data folder
 		dataDir := filepath.Join(bmPath, t.ID, "data")
-		objArr := [][]string{t.Receptor, t.Ligand, t.MiscPDB, t.Restraints, t.Toppar}
+		objArr := [][]string{t.Receptor, t.Ligand, t.MiscPDB, t.Restraints, t.Toppar, t.Shape}
 
 		for _, obj := range objArr {
 			err := utils.CopyFileArrTo(obj, dataDir)
@@ -580,5 +578,4 @@ func OrganizeDataset(bmPath string, bm []Target) ([]Target, error) {
 	}
 
 	return tArr, nil
-
 }

@@ -1,11 +1,11 @@
 general:
-  executable: /workspaces/haddock-runner/example/haddock3.sh
+  executable: /home/rodrigo/repos/haddock-runner/example/haddock3.sh
   max_concurrent: 4
   haddock_dir: /opt/haddock3
   receptor_suffix: _r_u
   ligand_suffix: _l_u
-  input_list: /workspaces/haddock-runner/example/input_list.txt
-  work_dir: /workspaces/haddock-runner/bm-goes-here
+  input_list: /home/rodrigo/repos/haddock-runner/example/docking/input_list.txt
+  work_dir: /home/rodrigo/repos/haddock-runner/bm-goes-here
 
 slurm:
   # partition: mypartition

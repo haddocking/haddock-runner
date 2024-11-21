@@ -1,0 +1,29 @@
+general:
+  executable: /home/rodrigo/repos/haddock-runner/example/haddock3.sh
+  max_concurrent: 4
+  haddock_dir: /home/rodrigo/repos/haddock3
+  receptor_suffix: _r_u
+  ligand_suffix: _l_u
+  shape_suffix: _shape
+  input_list: /home/rodrigo/repos/haddock-runner/example/shape/input.txt
+  work_dir: /home/rodrigo/repos/haddock-runner/bm-goes-here
+
+scenarios:
+  - name: shape-docking
+    parameters:
+      general:
+        mode: local
+        ncores: 1
+
+      modules:
+        order: [topoaa, rigidbody]
+        topoaa:
+          ligand_param_fname: _ligand.param
+          ligand_top_fname: _ligand.top
+        rigidbody:
+          sampling: 1
+          ambig_fname: _ambig.tbl
+          ligand_param_fname: _ligand.param
+          ligand_top_fname: _ligand.top
+          mol_shape_3: true
+  #-----------------------------------------------

@@ -32,6 +32,7 @@ type GeneralStruct struct {
 	HaddockDir        string `yaml:"haddock_dir"`
 	ReceptorSuffix    string `yaml:"receptor_suffix"`
 	LigandSuffix      string `yaml:"ligand_suffix"`
+	ShapeSuffix       string `yaml:"shape_suffix"`
 	InputList         string `yaml:"input_list"`
 	WorkDir           string `yaml:"work_dir"`
 	MaxConcurrent     int    `yaml:"max_concurrent"`
@@ -126,12 +127,10 @@ func (inp *Input) ValidateExecutable() error {
 		return nil
 	}
 	return errors.New("executable not executable")
-
 }
 
 // ValidatePatterns checks if there are duplicated patterns in the input struct
 func (inp *Input) ValidatePatterns() error {
-
 	// ReceptorSuffix and LigandSuffix
 	if inp.General.ReceptorSuffix == "" {
 		err := errors.New("receptor_suffix not defined in `general` section")
@@ -169,7 +168,6 @@ func (inp *Input) ValidatePatterns() error {
 				field := v.Field(i)
 				fieldName := types.Field(i).Name
 				if m == strings.ToLower(fieldName) {
-
 					if field.Kind() == reflect.Map {
 						for key, value := range field.Interface().(map[string]interface{}) {
 							if strings.Contains(key, "_fname") {
@@ -207,25 +205,21 @@ func (inp *Input) ValidatePatterns() error {
 	}
 
 	return nil
-
 }
 
 // ValidateRunCNSParams checks if the parameters names are valid
 func ValidateRunCNSParams(known map[string]interface{}, params map[string]interface{}) error {
-
 	for key := range params {
 		if known[key] == nil {
 			err := errors.New("`" + key + "` not valid")
 			return err
 		}
-
 	}
 	return nil
 }
 
 // ValidateExecutionModes checks if the execution modes are valid
 func (inp *Input) ValidateExecutionModes() error {
-
 	if inp.Slurm != (SlurmParams{}) {
 		// Check if the executable is HADDOCK3
 		if utils.IsHaddock24(inp.General.HaddockDir) {
@@ -340,7 +334,6 @@ func LoadInput(filename string) (*Input, error) {
 
 // FindHaddock24RunCns finds the run.cns-conf file based on the executable location
 func FindHaddock24RunCns(p string) (string, error) {
-
 	rootPath, _ := filepath.Abs(p)
 	runCnsLoc := filepath.Clean(filepath.Join(rootPath, "protocols", "run.cns-conf"))
 
@@ -349,12 +342,10 @@ func FindHaddock24RunCns(p string) (string, error) {
 	}
 
 	return runCnsLoc, nil
-
 }
 
 // LoadHaddock24Params loads the parameters from the run.cns-conf file
 func LoadHaddock24Params(filename string) (map[string]interface{}, error) {
-
 	runCnsFile, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -405,14 +396,12 @@ func LoadHaddock24Params(filename string) (map[string]interface{}, error) {
 	}
 
 	return m, nil
-
 }
 
 // LoadHaddock3Params reads the defaults.yaml files recursively and returns a list of modules
 //
 //	It returns an array of `Module` structs
 func LoadHaddock3Params(p string) (ModuleParams, error) {
-
 	paramPath := filepath.Join(p, "src/")
 	// Check if path exists
 	if _, err := os.Stat(paramPath); os.IsNotExist(err) {
@@ -458,12 +447,10 @@ func LoadHaddock3Params(p string) (ModuleParams, error) {
 	// TODO: Load the mandatory/optional parameters
 
 	return m, nil
-
 }
 
 // ValidateHaddock3Params checks if the parameters names are valid
 func ValidateHaddock3Params(known ModuleParams, loaded ModuleParams) error {
-
 	v := reflect.ValueOf(loaded)
 	k := reflect.ValueOf(known)
 
@@ -487,5 +474,4 @@ func ValidateHaddock3Params(known ModuleParams, loaded ModuleParams) error {
 	}
 
 	return nil
-
 }

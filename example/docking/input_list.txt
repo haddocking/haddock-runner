@@ -1,0 +1,31 @@
+#  Lines starting with # are comments
+# ------------------------------------------------------------ #
+# Input list
+# ------------------------------------------------------------ #
+# 1A2K
+example/docking/1A2K/1A2K_r_u.pdb
+example/docking/1A2K/1A2K_l_u.pdb
+example/docking/1A2K/1A2K_ligand.top
+example/docking/1A2K/1A2K_ligand.param
+example/docking/1A2K/1A2K_ti.tbl
+example/docking/1A2K/1A2K_unambig.tbl
+example/docking/1A2K/1A2K_ref.pdb
+# 1GGR
+example/docking/1GGR/1GGR_r_u.pdb
+example/docking/1GGR/1GGR_l_u_1.pdb
+example/docking/1GGR/1GGR_l_u_2.pdb
+example/docking/1GGR/1GGR_l_u_3.pdb
+example/docking/1GGR/1GGR_ti.tbl
+# 1PPE
+example/docking/1PPE/1PPE_l_u.pdb
+example/docking/1PPE/1PPE_r_u.pdb
+example/docking/1PPE/1PPE_ti.tbl
+example/docking/1PPE/1PPE_hb.tbl
+example/docking/1PPE/1PPE_unambig.tbl
+# 2OOB
+example/docking/2OOB/2OOB_ref.pdb
+example/docking/2OOB/2OOB_l_u.pdb
+example/docking/2OOB/2OOB_r_u.pdb
+example/docking/2OOB/2OOB_ti.tbl
+example/docking/2OOB/2OOB_hb.tbl
+# ------------------------------------------------------------ #

@@ -10,7 +10,6 @@ import (
 )
 
 func TestWriteRunParamStub(t *testing.T) {
-
 	_ = os.Mkdir("1abc", 0755)
 	defer os.RemoveAll("1abc")
 
@@ -113,11 +112,9 @@ func TestWriteRunParamStub(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
-
 }
 
 func TestLoadDataset(t *testing.T) {
-
 	var err error
 
 	fileArr := []string{"structure1_r_u.pdb", "structure1_l_u.pdb"}
@@ -166,7 +163,7 @@ func TestLoadDataset(t *testing.T) {
 
 	// Pass by loading a valid dataset
 
-	tArr, errData := LoadDataset(projectDir, "pdb.list", "_r_u", "_l_u")
+	tArr, errData := LoadDataset(projectDir, "pdb.list", "_r_u", "_l_u", "")
 	if errData != nil {
 		t.Errorf("Failed to load dataset: %s", err.Error())
 	}
@@ -200,7 +197,7 @@ func TestLoadDataset(t *testing.T) {
 	}
 
 	// Fail by loading a dataset with a wrong file
-	_, errData = LoadDataset(projectDir, "wrong_file.pdb", "_r_u", "_l_u")
+	_, errData = LoadDataset(projectDir, "wrong_file.pdb", "_r_u", "_l_u", "")
 	if errData == nil {
 		t.Errorf("Failed to detect wrong dataset file")
 	}
@@ -215,11 +212,10 @@ func TestLoadDataset(t *testing.T) {
 	}
 
 	defer os.Remove("pdb2.list")
-	_, errData = LoadDataset(projectDir, "pdb2.list", "_r_u", "")
+	_, errData = LoadDataset(projectDir, "pdb2.list", "_r_u", "", "")
 	if errData != nil {
 		t.Errorf("Failed to detect wrong dataset file")
 	}
-
 }
 
 func TestValidateTarget(t *testing.T) {
@@ -342,17 +338,14 @@ func TestValidateTarget(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong target")
 	}
-
 }
 
 func TestCreateDatasetDir(t *testing.T) {
-
 	// Create a temporary directory
 	// testDir, err := ioutil.TempDir("", "test")
 	defer os.RemoveAll("test")
 
 	err := CreateDatasetDir("test")
-
 	if err != nil {
 		t.Errorf("Failed to create directory: %s", err)
 	}
@@ -362,7 +355,6 @@ func TestCreateDatasetDir(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect existing directory")
 	}
-
 }
 
 func TestOrganizeDataset(t *testing.T) {
@@ -381,7 +373,9 @@ func TestOrganizeDataset(t *testing.T) {
 		"receptor_list.txt",
 		"ligand_list.txt",
 		"custom.top",
-		"custom.param"}
+		"custom.param",
+		"shape.pdb",
+	}
 
 	for _, file := range fileArr {
 		err := os.WriteFile(file, []byte(""), 0644)
@@ -407,6 +401,7 @@ func TestOrganizeDataset(t *testing.T) {
 		Restraints:   []string{"ambig.tbl", "unambig.tbl"},
 		Toppar:       []string{"custom.top", "custom.param"},
 		MiscPDB:      []string{"ref.pdb"},
+		Shape:        []string{"shape.pdb"},
 	}
 
 	// Pass by organizing data in a valid directory
@@ -421,7 +416,9 @@ func TestOrganizeDataset(t *testing.T) {
 		"receptor1.pdb", "receptor2.pdb", "ligand1.pdb",
 		"ligand2.pdb", "ambig.tbl", "unambig.tbl",
 		"custom.top",
-		"custom.param"}
+		"custom.param",
+		"shape.pdb",
+	}
 
 	for _, v := range expectedFiles {
 		f := path + "/" + v
@@ -510,11 +507,9 @@ func TestOrganizeDataset(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong directory")
 	}
-
 }
 
 func TestSetupHaddock3Scenario(t *testing.T) {
-
 	inp := input.Input{}
 	inp.Scenarios = []input.Scenario{
 		{
@@ -591,7 +586,6 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong scenario")
 	}
-
 }
 
 func TestTarget_SetupHaddock24Scenario(t *testing.T) {
@@ -712,6 +706,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 		Restraints   []string
 		Toppar       []string
 		MiscPDB      []string
+		Shape        []string
 	}
 	type args struct {
 		projectDir string
@@ -781,6 +776,48 @@ func TestTarget_WriteRunToml(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "pass-shape",
+			fields: fields{
+				ID:         "1abc",
+				Receptor:   []string{"receptor.pdb"},
+				Ligand:     []string{"ligand.pdb"},
+				Restraints: []string{"ambig_ti.tbl", "ambig5_ti.tbl", "other_unambig.tbl", "something.tbl"},
+				Toppar:     []string{"custom1.top", "custom2.param"},
+				MiscPDB:    []string{"ref.pdb"},
+				Shape:      []string{"shape.pdb"},
+			},
+			args: args{
+				projectDir: "_some-workdir",
+				general: map[string]interface{}{
+					"receptor":     "receptor.pdb",
+					"ligand":       "ligand.pdb",
+					"shape":        "shape.pdb",
+					"int":          10,
+					"float":        3.5,
+					"bool":         true,
+					"array-string": []string{"a", "b", "c"},
+					"array-int":    []int{1, 2, 3},
+					"array-float":  []float64{1.1, 2.2, 3.3},
+				},
+				mod: input.ModuleParams{
+					Order: []string{"topoaa", "rigidbody"},
+					Topoaa: map[string]interface{}{
+						"some-param": "some-value",
+					},
+					Rigidbody: map[string]interface{}{
+						"some-other-param":   10,
+						"some_fname":         "ambig_ti",
+						"another_fname":      "unambig",
+						"other_fname":        "custom1",
+						"someother_fname":    "custom2",
+						"thereference_fname": "ref",
+					},
+				},
+			},
+			want:    "_some-workdir/run.toml",
+			wantErr: false,
+		},
+		{
 			name: "fail-by-not-being-able-to-create-file",
 			fields: fields{
 				ID:         "1abc",
@@ -810,6 +847,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 				Restraints:   tt.fields.Restraints,
 				Toppar:       tt.fields.Toppar,
 				MiscPDB:      tt.fields.MiscPDB,
+				Shape:        tt.fields.Shape,
 			}
 			got, err := tr.WriteRunToml(tt.args.projectDir, tt.args.general, tt.args.mod)
 			if (err != nil) != tt.wantErr {
