@@ -108,9 +108,14 @@ func TestCreateEnsemble(t *testing.T) {
 		t.Errorf("Failed to write file: %s", err)
 	}
 	defer os.Remove("dummy.pdb")
+	err = os.WriteFile("hetatm.pdb", []byte("HETATM    1  N   ALA A   1      10.000  10.000  10.000  1.00  0.00           N\n"), 0644)
+	if err != nil {
+		t.Errorf("Failed to write file: %s", err)
+	}
+	defer os.Remove("hetatm.pdb")
 
 	// Make a list of PDB files and save it to a file
-	err = os.WriteFile("pdb-files.txt", []byte("\"dummy.pdb\"\n\"dummy.pdb\"\n\"dummy.pdb\"\n"), 0644)
+	err = os.WriteFile("pdb-files.txt", []byte("\"dummy.pdb\"\n\"dummy.pdb\"\n\"hetatm.pdb\"\n"), 0644)
 	if err != nil {
 		t.Errorf("Failed to write file: %s", err)
 	}

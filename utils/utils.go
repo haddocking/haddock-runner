@@ -112,7 +112,7 @@ func CreateEnsemble(p string, out string) error {
 		modelStr := ""
 		for modelScanner.Scan() {
 			line := modelScanner.Text()
-			if strings.HasPrefix(line, "ATOM") {
+			if strings.HasPrefix(line, "ATOM") || strings.HasPrefix(line, "HETATM") {
 				modelStr += line + "\n"
 			}
 		}
