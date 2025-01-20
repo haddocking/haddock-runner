@@ -152,7 +152,9 @@ func TestLoadDataset(t *testing.T) {
 				"some/path/structure4_ambig.tbl\n"+
 				"some/path/structure4_unambig-rest.tbl\n"+
 				"some/path/structure4_ATP.top\n"+
+				"some/path/structure42_ATP.top\n"+
 				"some/path/structure4_ATP.param\n"+
+				"some/path/structure42_ATP.param\n"+
 				"some/path/structure5_r_u.pdb\n"+
 				"some/path/structure5_l_u.pdb\n"+
 				"some/path/structure5_target.pdb\n"+
@@ -181,7 +183,11 @@ func TestLoadDataset(t *testing.T) {
 				t.Errorf("Failed: Not all restraints were loaded")
 			}
 			if len(v.Toppar) != 2 {
-				t.Errorf("Failed: Not all toppar files were loaded")
+				if len(v.Toppar) > 2 {
+					t.Errorf("Failed: Too many toppar were loaded")
+				} else {
+					t.Errorf("Failed: Not all toppar files were loaded")
+				}
 			}
 		}
 		if v.ID == "structure3" {
