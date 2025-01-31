@@ -368,7 +368,6 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string, ss
 		// Find root and receptor/ligand names
 		match := rootRegex.FindStringSubmatch(basePath)
 		if len(match) == 0 {
-			glog.Info(fullPath)
 			// Neither receptor nor ligand, add to a list of PDBs
 			pdbArr = append(pdbArr, fullPath)
 			continue
@@ -448,7 +447,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string, ss
 			}
 
 			// Handle the Toppar
-			topparRegex := regexp.MustCompile(`(` + k + `)\w+\.(top|param)`)
+			topparRegex := regexp.MustCompile(`(` + k + `)_.*(top|param)`)
 			topparMatch := topparRegex.FindStringSubmatch(line)
 			if len(topparMatch) != 0 {
 				v.Toppar = append(v.Toppar, s.Text())
@@ -480,7 +479,6 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string, ss
 	for _, v := range m {
 		arr = append(arr, v)
 	}
-
 	return arr, nil
 }
 
