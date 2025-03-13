@@ -1,6 +1,7 @@
 package dataset
 
 import (
+	"fmt"
 	"haddockrunner/input"
 	"haddockrunner/runner"
 	"os"
@@ -160,17 +161,21 @@ func TestLoadDataset(t *testing.T) {
 				"some/path/structure5_target.pdb\n"+
 				"some/path/structure5something_r_u.pdb\n"+
 				"some/path/structure5something_l_u.pdb\n"+
-				"some/path/structure5something_target.pdb\n"), 0644)
+				"some/path/structure5something_target.pdb\n"+
+				"some/path/structure6_r_u.pdb\n"+
+				"some/path/structure6_l_u.pdb\n"+
+				"some/path/structure6_shape.pdb\n"), 0644)
+
 	defer os.Remove("pdb.list")
 
 	// Pass by loading a valid dataset
 
-	tArr, errData := LoadDataset(projectDir, "pdb.list", "_r_u", "_l_u", "")
+	tArr, errData := LoadDataset(projectDir, "pdb.list", "_r_u", "_l_u", "_shape")
 	if errData != nil {
 		t.Errorf("Failed to load dataset: %s", err.Error())
 	}
 
-	if len(tArr) != 6 {
+	if len(tArr) != 7 {
 		t.Errorf("Failed to load dataset: %d", len(tArr))
 	}
 
@@ -189,6 +194,9 @@ func TestLoadDataset(t *testing.T) {
 					t.Errorf("Failed: Not all toppar files were loaded")
 				}
 			}
+			if len(v.Shape) != 0 {
+				t.Errorf("Failed: Shape wrongly loaded")
+			}
 		}
 		if v.ID == "structure3" {
 			if len(v.Receptor) != 3 {
@@ -198,6 +206,12 @@ func TestLoadDataset(t *testing.T) {
 		if v.ID == "structure5" {
 			if len(v.MiscPDB) != 1 {
 				t.Errorf("Failed: More than one miscpdb was loaded")
+			}
+		}
+		if v.ID == "structure6" {
+			fmt.Println(v)
+			if len(v.Shape) != 1 {
+				t.Errorf("Failed: Shape not identified")
 			}
 		}
 	}
