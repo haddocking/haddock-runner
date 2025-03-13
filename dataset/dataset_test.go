@@ -1,7 +1,6 @@
 package dataset
 
 import (
-	"fmt"
 	"haddockrunner/input"
 	"haddockrunner/runner"
 	"os"
@@ -209,10 +208,21 @@ func TestLoadDataset(t *testing.T) {
 			}
 		}
 		if v.ID == "structure6" {
-			fmt.Println(v)
 			if len(v.Shape) != 1 {
 				t.Errorf("Failed: Shape not identified")
 			}
+		}
+	}
+
+	// Pass by not loading an empty shape
+	tArr, errData = LoadDataset(projectDir, "pdb.list", "_r_u", "_l_u", "")
+	if errData != nil {
+		t.Errorf("Failed to load dataset: %s", err.Error())
+	}
+
+	for _, v := range tArr {
+		if len(v.Shape) != 0 {
+			t.Error("Failed: Shape wrongly loaded")
 		}
 	}
 
