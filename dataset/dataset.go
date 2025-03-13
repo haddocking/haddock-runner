@@ -386,9 +386,11 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string, ss
 			ligand = fullPath
 		}
 
-		ShapeMatch := shapeRegex.MatchString(basePath)
-		if ShapeMatch {
-			shape = fullPath
+		if ssuf != "" {
+			ShapeMatch := shapeRegex.MatchString(basePath)
+			if ShapeMatch {
+				shape = fullPath
+			}
 		}
 
 		if entry, ok := m[root]; !ok {
