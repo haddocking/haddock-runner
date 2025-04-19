@@ -31,4 +31,4 @@ I1116 13:30:40.741859   58085 main.go:226] 1A2K_true-interface - DONE in 151.02 
 I1116 13:30:40.741907   58085 main.go:235] ############################################
 ```
 
-To make sure the results are consistent, it will create a checksum of both the configuration yaml and of the input txt and show you a warning. This ensures that parameters and input has not changed mid-execution.
+To make sure the results are consistent, it will create a checksum of both `benchmark.yaml` and of `input.list` and show you a warning. This ensures that parameters and input have not changed mid-execution.

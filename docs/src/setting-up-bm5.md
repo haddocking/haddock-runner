@@ -1,12 +1,12 @@
 # Setting up BM5
 
-The Protein-Protein docking benchmark v5 ([Vreven, 2015](https://doi.org/10.1016/j.jmb.2015.07.016)), namely BM5, contains a is a large set of non-redundat high-quality structures, check [here](https://zlab.umassmed.edu/benchmark/) the full set.
+Protein-protein docking benchmark v5 ([Vreven, 2015](https://doi.org/10.1016/j.jmb.2015.07.016)), referred to as BM5, is a large set of non-redundant high-quality structures. The full set can be found [here](https://zlab.umassmed.edu/benchmark/).
 
-The BonvinLab provides a HADDOCK-ready sub-version of the BM5 which can be easily used as input for `haddock-runner`. This version is available the following repository; [github.com/haddocking/BM5-clean](https://github.com/haddocking/BM5-clean). Below we will go over step-by-step instructions on how to use it as input.
+The BonvinLab provides a HADDOCK-ready sub-version of the BM5 which can be easily used as input for `haddock-runner`. This version is available from the following repository: [github.com/haddocking/BM5-clean](https://github.com/haddocking/BM5-clean). Below we will go over step-by-step instructions on how to use it as input.
 
 ## Create a working directory
 
-Create a working directory and change to it;
+Create a working directory and change to it:
 
 ```bash
 mkdir -p ~/projects/benchmarking && cd ~/projects/benchmarking
@@ -16,7 +16,7 @@ mkdir -p ~/projects/benchmarking && cd ~/projects/benchmarking
 
 Clone the repository and checkout a version. Note that its always recomended to use a specific version, as the main branch might change and for reproducibility.
 
-As previously mentioned, the `BM5-clean` repository is already an organized sub-version, thus its very simple to create the `bm5-input.list` file with a few bash commands;
+As previously mentioned, the `BM5-clean` repository is already an organized sub-version, thus it's very simple to create the `bm5-input.list` file with a few bash commands:
 
 ```bash
 git clone https://github.com/haddocking/BM5-clean.git ~/projects/benchmarking/BM5-clean && \
@@ -29,7 +29,7 @@ git clone https://github.com/haddocking/BM5-clean.git ~/projects/benchmarking/BM
 
 ## Prepare a `haddock3.sh` script
 
-See below an example of a `haddock3.sh` script that can be used to run HADDOCK3.0 locally;
+See below an example of a `haddock3.sh` script that can be used to run HADDOCK3.0 locally:
 
 ```bash
 #!/bin/bash
@@ -38,7 +38,7 @@ conda activate env
 haddock3 "$@"
 ```
 
-Make sure to make this script executable;
+Make sure to make this script executable:
 
 ```bash
 chmod +x ~/projects/benchmarking/haddock3.sh
@@ -128,7 +128,7 @@ scenarios:
 
 ## Run the benchmarking
 
-Finally, run the benchmarking with the following command;
+Finally, run the benchmark with the following command:
 
 ```bash
 haddock-runner bm5.yaml

@@ -2,11 +2,11 @@
 
 The execution of the `haddock-runner` consists of a few steps:
 
-1. Setup the benchmark
+1. Set up the benchmark
 
    - Copy the target structures to the location where the HADDOCK run will be executed
 
-2. Setup the HADDOCK run
+2. Set up the HADDOCK run
    - For HADDOCK2.4, writing the `run.param` file and executing the `haddock2.4` program once to setup the folder structure
    - For HADDOCK3, writing the `run.toml`
 3. Distribute several HADDOCK runs in a HPC-friendly manner

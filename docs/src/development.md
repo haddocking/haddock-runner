@@ -1,6 +1,6 @@
 # Development
 
-The [code repository](https://github.com/haddocking/haddock-runner) contains a DevContainer configuration that can be used to setup a development environment, have a look at [Developing inside a Container](https://code.visualstudio.com/docs/devcontainers/containers) for more information.
+The [code repository](https://github.com/haddocking/haddock-runner) contains a DevContainer configuration that can be used to set up a development environment, have a look at [Developing inside a Container](https://code.visualstudio.com/docs/devcontainers/containers) for more information.
 
 The only caveat is that a `cns` binary must be in the `.devcontainer` path before building the container.
 
