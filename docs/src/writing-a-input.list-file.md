@@ -1,6 +1,6 @@
-# Writing a `input.list` file
+# Writing an `input.list` file
 
-The input list is a flat text file with the paths of the targets;
+The input list is a flat text file with the paths of the targets:
 
 ```text
 # input.list
@@ -34,9 +34,9 @@ In this example the suffixes are:
 
 These suffixes are defined in the `benchmark.yaml` file, see [here](./writing-a-benchmark.yaml-file.md) for more details.
 
-The same logic applies to the restraints files, in the example above the pattern for the ambiguous restraint can be defined as `ambig: "ti"`, so the file `complex1_ti.tbl` will be used as the ambiguous restraint for the target `complex1`, `complex2_ti.tbl` for the target `complex2`, etc. See section 3.2.2 for information specific to the definition of restraints when setting up a HADDOCK3.0 run.
+The same logic applies to the restraints files: in the example above, the ambiguous restraints can be specified in the [`benchmark.yaml`](./writing-a-benchmark.yaml-file.md) file as `ambig: "ti"`, so the file `complex1_ti.tbl` will be used as the ambiguous restraint for the target `complex1`, `complex2_ti.tbl` for the target `complex2`, etc. See the [relevant section](./writing-a-benchmark.yaml-file.md#haddock30) for information specific to the definition of restraints when setting up a HADDOCK3.0 run.
 
-HADDOCK supports many modified amino acids/bases/glycans/ions (check the [full list](https://wenmr.science.uu.nl/haddock2.4/library)). However if your target molecule is not present in this library, you can also provide it following the same logic; `topology: "_ligand.top"` and `param: "_ligand.param"` will use the files `protein2_ligand.top` and `protein2_ligand.param` for the target `protein2`.
+HADDOCK supports many modified amino acids/bases/glycans/ions (check the [full list](https://wenmr.science.uu.nl/haddock2.4/library)). However if your target molecule is not present in this library, you can also provide it following the same logic: `topology: "_ligand.top"` and `param: "_ligand.param"` will use the files `protein2_ligand.top` and `protein2_ligand.param` for the target `protein2`.
 
 > **IMPORTANT**: For ensembles, **provide each model individually** and append a number to the suffix, for example: `complex1_l_u_1.pdb`, `complex1_l_u_2.pdb`, etc.
 

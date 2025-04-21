@@ -2,7 +2,7 @@
 
 ![image](./banner_home-mini.jpg)
 
-The `haddock-runner` is an effort to reduce code duplication and to streamline the execution of HADDOCK benchmark.
+The `haddock-runner` is an effort to reduce code duplication and to streamline the execution of HADDOCK benchmarks.
 
 It is a standalone program, freely available at [https://github.com/haddocking/haddock-runner](https://github.com/haddocking/haddock-runner).
 

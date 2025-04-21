@@ -1,8 +1,8 @@
 # Installation
 
-The tool is designed for users/students/developers that are familiar with HADDOCK, command-line scripting and with access to a HPC infrastructure.
+The tool is designed for users/students/developers that are familiar with HADDOCK and command-line scripting, and have access to an HPC infrastructure.
 
-If this is the first time you are using HADDOCK, please familiarize first yourself with the software by running the basic [HADDOCK2.4](/education/HADDOCK24/index.md) or [HADDOCK3](/education/HADDOCK3/index.md) tutorials.
+If this is the first time you are using HADDOCK, please first familiarize yourself with the software by running the basic [HADDOCK2.4](/education/HADDOCK24/index.md) or [HADDOCK3](/education/HADDOCK3/index.md) tutorials.
 
 This tool is not meant to be used by end-users who want to run a single target, or a small set of targets; for that purpose we recommend instead using the [HADDOCK2.4 web server](https://wenmr.science.uu.nl/haddock2.4/).
 
@@ -12,7 +12,7 @@ This tool is not meant to be used by end-users who want to run a single target, 
 
 `haddock-runner` is a standalone open-source software licensed under Apache 2.0 and freely available from the following repository: [github.com/haddocking/haddock-runner](https://github.com/haddocking/haddock-runner).
 
-To us it simply download the latest binary from the [releases page](https://github.com/haddocking/haddock-runner/releases):
+To use it simply download the latest binary from the [releases page](https://github.com/haddocking/haddock-runner/releases):
 
 ```bash
 $ wget https://github.com/haddocking/haddock-runner/releases/download/v1.10.0/haddock-runner_1.10.0_linux_386.tar.gz
