@@ -274,6 +274,33 @@ type ModuleParams struct {
 	Seletopclusts_23  map[string]any `yaml:"seletopclusts.23"`
 	Seletopclusts_24  map[string]any `yaml:"seletopclusts.24"`
 	Seletopclusts_25  map[string]any `yaml:"seletopclusts.25"`
+	Cgtoaa            map[string]any `yaml:"cgtoaa"`
+	Cgtoaa_0          map[string]any `yaml:"cgtoaa.0"`
+	Cgtoaa_1          map[string]any `yaml:"cgtoaa.1"`
+	Cgtoaa_2          map[string]any `yaml:"cgtoaa.2"`
+	Cgtoaa_3          map[string]any `yaml:"cgtoaa.3"`
+	Cgtoaa_4          map[string]any `yaml:"cgtoaa.4"`
+	Cgtoaa_5          map[string]any `yaml:"cgtoaa.5"`
+	Cgtoaa_6          map[string]any `yaml:"cgtoaa.6"`
+	Cgtoaa_7          map[string]any `yaml:"cgtoaa.7"`
+	Cgtoaa_8          map[string]any `yaml:"cgtoaa.8"`
+	Cgtoaa_9          map[string]any `yaml:"cgtoaa.9"`
+	Cgtoaa_10         map[string]any `yaml:"cgtoaa.10"`
+	Cgtoaa_11         map[string]any `yaml:"cgtoaa.11"`
+	Cgtoaa_12         map[string]any `yaml:"cgtoaa.12"`
+	Cgtoaa_13         map[string]any `yaml:"cgtoaa.13"`
+	Cgtoaa_14         map[string]any `yaml:"cgtoaa.14"`
+	Cgtoaa_15         map[string]any `yaml:"cgtoaa.15"`
+	Cgtoaa_16         map[string]any `yaml:"cgtoaa.16"`
+	Cgtoaa_17         map[string]any `yaml:"cgtoaa.17"`
+	Cgtoaa_18         map[string]any `yaml:"cgtoaa.18"`
+	Cgtoaa_19         map[string]any `yaml:"cgtoaa.19"`
+	Cgtoaa_20         map[string]any `yaml:"cgtoaa.20"`
+	Cgtoaa_21         map[string]any `yaml:"cgtoaa.21"`
+	Cgtoaa_22         map[string]any `yaml:"cgtoaa.22"`
+	Cgtoaa_23         map[string]any `yaml:"cgtoaa.23"`
+	Cgtoaa_24         map[string]any `yaml:"cgtoaa.24"`
+	Cgtoaa_25         map[string]any `yaml:"cgtoaa.25"`
 	Emref             map[string]any `yaml:"emref"`
 	Emref_0           map[string]any `yaml:"emref.0"`
 	Emref_1           map[string]any `yaml:"emref.1"`
