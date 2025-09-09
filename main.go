@@ -150,6 +150,11 @@ func main() {
 		glog.Exit("Failed to validate checksum: " + errValidateChecksum.Error())
 	}
 
+	// Check if the workdir exists and confirm overwrite
+	if !utils.ConfirmOverwriteIfExists(inp.General.WorkDir, os.Stdin, os.Stdout) {
+		glog.Exit("terminating...")
+	}
+
 	// Organize the dataset
 	orgData, errOrganize := dataset.OrganizeDataset(inp.General.WorkDir, data)
 	if errOrganize != nil {
