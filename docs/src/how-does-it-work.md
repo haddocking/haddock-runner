@@ -3,7 +3,6 @@
 The execution of the `haddock-runner` consists of a few steps:
 
 1. Set up the benchmark
-
    - Copy the target structures to the location where the HADDOCK run will be executed
 
 2. Set up the HADDOCK run

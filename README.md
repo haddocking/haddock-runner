@@ -89,12 +89,13 @@ Use the pre-compiled binaries from the latest release
 **Check the step-by-step tutorial at [bonvinlab.org/education/haddock-runner](https://www.bonvinlab.org/education/haddock-runner/)**
 
 ```bash
-Usage: haddockrunner [options] <input file>
+Usage: haddock-runner [options] <input file>
 
-Run HADDOCK benchmarking
+Run HADDOCK on a dataset of complexes
 
 Options:
   -version: Print version and exit
+  -setup: Only perform the setup, do not execute the benchmark
 ```
 
 - `input.yml`
