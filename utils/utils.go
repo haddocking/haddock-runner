@@ -375,3 +375,30 @@ func CreateRootRegex(rsuf, lsuf, ssuf string) *regexp.Regexp {
 	pattern := `(.*)(?:` + strings.Join(suffixes, "|") + `)`
 	return regexp.MustCompile(pattern)
 }
+
+// RemoveString removes a string from a slice of strings
+func RemoveString(slice []string, s string) []string {
+	result := []string{}
+	for _, v := range slice {
+		if v != s {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+func ConfirmOverwriteIfExists(path string, in io.Reader, out io.Writer) bool {
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		fmt.Fprint(out, "The working directory "+path+" already exists!\n")
+		fmt.Fprint(out, "Do you want to continue and OVERWRITE the contents? (y/N): ")
+		scanner := bufio.NewScanner(in)
+		if scanner.Scan() {
+			answer := scanner.Text()
+			if answer != "y" && answer != "Y" {
+				fmt.Fprintln(out, "terminating...")
+				return false
+			}
+		}
+	}
+	return true
+}
