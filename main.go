@@ -18,10 +18,11 @@ import (
 	"github.com/golang/glog"
 )
 
-const version = "v1.12.3"
+const version = "v1.13.0"
 
 func init() {
 	var versionPrint bool
+	var setupOnly bool
 	const usage = `Usage: %s [options] <input file>
 
 Run HADDOCK on a dataset of complexes
@@ -33,10 +34,11 @@ Options:
 	_ = flag.Set("v", "2")
 
 	flag.BoolVar(&versionPrint, "version", false, "Print version and exit")
+	flag.BoolVar(&setupOnly, "setup", false, "Only perform the setup, do not execute the benchmark")
 	flag.Usage = func() {
 		flagSet := flag.CommandLine
-		fmt.Fprintf(flag.CommandLine.Output(), usage, "`executable`")
-		for _, f := range []string{"version"} {
+		fmt.Fprintf(flag.CommandLine.Output(), usage, "haddock-runner")
+		for _, f := range []string{"version", "setup"} {
 			flag := flagSet.Lookup(f)
 			fmt.Printf("  -%s: %s\n", f, flag.Usage)
 		}
@@ -46,9 +48,10 @@ Options:
 
 func main() {
 	flag.Parse()
+	args := os.Args[1:]
 
 	if utils.IsFlagPassed("version") {
-		fmt.Printf("haddockrunner version %s\n", version)
+		fmt.Printf("haddock-runner version %s\n", version)
 		os.Exit(0)
 	}
 
@@ -57,11 +60,18 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	args := os.Args[1:]
+
+	setupOnly := false
+	if utils.IsFlagPassed("setup") {
+		glog.Info("`setup` argument passed, the benchmark will not be executed")
+		args = utils.RemoveString(args, "-setup")
+		setupOnly = true
+	}
+
 	inputF := args[0]
 
 	glog.Info("###########################################")
-	glog.Info(" Starting haddockrunner " + version)
+	glog.Info(" Starting haddock-runner " + version)
 	glog.Info("###########################################")
 	glog.Info("Loading input file: " + inputF)
 
@@ -93,7 +103,8 @@ func main() {
 		haddockVersion = 3
 	}
 
-	if haddockVersion == 2 {
+	switch haddockVersion {
+	case 2:
 		runCns, errFind := input.FindHaddock24RunCns(inp.General.HaddockDir)
 		if errFind != nil {
 			glog.Exit("Failed to find run.cns-conf: " + errFind.Error())
@@ -111,8 +122,7 @@ func main() {
 				glog.Exit("Failed to validate scenario parameters: " + errValidate.Error())
 			}
 		}
-	} else if haddockVersion == 3 {
-
+	case 3:
 		moduleArr, errParams := input.LoadHaddock3Params(inp.General.HaddockDir)
 		if errParams != nil {
 			glog.Exit("Failed to load HADDOCK3 parameters: " + errParams.Error())
@@ -125,7 +135,6 @@ func main() {
 				glog.Exit("Failed to validate scenario parameters: " + errValidate.Error())
 			}
 		}
-
 	}
 
 	// Load the dataset
@@ -154,13 +163,14 @@ func main() {
 		glog.Info("Setting up target " + target.ID)
 
 		for _, scenario := range inp.Scenarios {
-			if haddockVersion == 2 {
+			switch haddockVersion {
+			case 2:
 				job, errSetup := target.SetupHaddock24Scenario(inp.General.WorkDir, inp.General.HaddockDir, scenario)
 				if errSetup != nil {
 					glog.Exit("Failed to setup scenario: " + errSetup.Error())
 				}
 				jobArr = append(jobArr, job)
-			} else if haddockVersion == 3 {
+			case 3:
 				job, errSetup := target.SetupHaddock3Scenario(inp.General.WorkDir, scenario)
 				if errSetup != nil {
 					glog.Exit("Failed to setup scenario: " + errSetup.Error())
@@ -168,6 +178,11 @@ func main() {
 				jobArr = append(jobArr, job)
 			}
 		}
+	}
+
+	if setupOnly {
+		glog.Exit("Benchmark setup finished successfully, exiting")
+		os.Exit(0)
 	}
 
 	// Sort the job array
