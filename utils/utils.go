@@ -375,3 +375,14 @@ func CreateRootRegex(rsuf, lsuf, ssuf string) *regexp.Regexp {
 	pattern := `(.*)(?:` + strings.Join(suffixes, "|") + `)`
 	return regexp.MustCompile(pattern)
 }
+
+// RemoveString removes a string from a slice of strings
+func RemoveString(slice []string, s string) []string {
+	result := []string{}
+	for _, v := range slice {
+		if v != s {
+			result = append(result, v)
+		}
+	}
+	return result
+}

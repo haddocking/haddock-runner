@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"testing"
 	"time"
 )
@@ -731,6 +732,37 @@ func TestCreateRootRegex(t *testing.T) {
 
 			if got.String() != tt.want {
 				t.Errorf("CreateRootRegex() regex = %v, want %v", got.String(), tt.want)
+			}
+		})
+	}
+}
+
+func TestRemoveString(t *testing.T) {
+	type args struct {
+		slice  []string
+		target string
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "remove existing string",
+			args: args{
+				slice:  []string{"a", "b", "c"},
+				target: "b",
+			},
+			want: []string{"a", "c"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := RemoveString(tt.args.slice, tt.args.target)
+			if !slices.Equal(got, tt.want) {
+				t.Errorf("RemoveString() = %v, want %v", got, tt.want)
 			}
 		})
 	}
