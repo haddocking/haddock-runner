@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"bytes"
 	"flag"
 	"os"
 	"reflect"
 	"regexp"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 )
@@ -765,5 +767,25 @@ func TestRemoveString(t *testing.T) {
 				t.Errorf("RemoveString() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestConfirmOverwriteIfExists(t *testing.T) {
+	tmpDir := t.TempDir()
+	var out bytes.Buffer
+
+	// Simulate user entering "n"
+	in := strings.NewReader("n\n")
+	result := ConfirmOverwriteIfExists(tmpDir, in, &out)
+	if result {
+		t.Error("expected false when user enters n")
+	}
+
+	// Simulate user entering "y"
+	in = strings.NewReader("y\n")
+	out.Reset()
+	result = ConfirmOverwriteIfExists(tmpDir, in, &out)
+	if !result {
+		t.Error("expected true when user enters y")
 	}
 }
