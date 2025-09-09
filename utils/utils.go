@@ -389,8 +389,12 @@ func RemoveString(slice []string, s string) []string {
 
 func ConfirmOverwriteIfExists(path string, in io.Reader, out io.Writer) bool {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		fmt.Fprint(out, "############################################\n")
+		fmt.Fprint(out, "############################################\n")
 		fmt.Fprint(out, "The working directory "+path+" already exists!\n")
-		fmt.Fprint(out, "Do you want to continue and OVERWRITE the contents? (y/N): ")
+		fmt.Fprint(out, "If you continue the benchmark will be setup again\n")
+		fmt.Fprint(out, "This will overwrite any manual changes that you have done to initial data files\n")
+		fmt.Fprint(out, "Partial results will not affected, do you want to continue? (y/N)")
 		scanner := bufio.NewScanner(in)
 		if scanner.Scan() {
 			answer := scanner.Text()

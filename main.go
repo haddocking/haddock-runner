@@ -80,6 +80,11 @@ func main() {
 		glog.Exit("Failed to load input file: " + errInp.Error())
 	}
 
+	// Check if the workdir exists and confirm overwrite
+	if !utils.ConfirmOverwriteIfExists(inp.General.WorkDir, os.Stdin, os.Stdout) {
+		glog.Exit("terminating...")
+	}
+
 	errExec := inp.ValidateExecutable()
 	if errExec != nil {
 		glog.Exit("Failed to validate executable: " + errExec.Error())
@@ -150,11 +155,6 @@ func main() {
 		glog.Exit("Failed to validate checksum: " + errValidateChecksum.Error())
 	}
 
-	// Check if the workdir exists and confirm overwrite
-	if !utils.ConfirmOverwriteIfExists(inp.General.WorkDir, os.Stdin, os.Stdout) {
-		glog.Exit("terminating...")
-	}
-
 	// Organize the dataset
 	orgData, errOrganize := dataset.OrganizeDataset(inp.General.WorkDir, data)
 	if errOrganize != nil {
@@ -186,7 +186,7 @@ func main() {
 	}
 
 	if setupOnly {
-		glog.Exit("Benchmark setup finished successfully, exiting")
+		glog.Info("Benchmark setup finished successfully, exiting")
 		os.Exit(0)
 	}
 
