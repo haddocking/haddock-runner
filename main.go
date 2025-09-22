@@ -18,7 +18,7 @@ import (
 	"github.com/golang/glog"
 )
 
-const version = "v1.13.1"
+const version = "v1.13.2"
 
 func init() {
 	var versionPrint bool
@@ -43,6 +43,11 @@ Options:
 			fmt.Printf("  -%s: %s\n", f, flag.Usage)
 		}
 		fmt.Println("")
+	}
+
+	if os.Getenv("SLURM_JOB_ID") != "" {
+		glog.Exit("haddock-runner cannot be run inside a SLURM job")
+		os.Exit(1)
 	}
 }
 
