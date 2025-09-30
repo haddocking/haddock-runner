@@ -789,15 +789,6 @@ func (mp ModuleParams) GetUndefinedModulesInOrder() []string {
 				found = true
 				break
 			}
-			// Check if this is an indexed version and the exact indexed module is defined
-			// For example: if moduleInOrder is "topoaa.1" and "topoaa.1" is explicitly defined
-			if strings.Contains(moduleInOrder, ".") {
-				// Only match if the exact indexed module is defined
-				if definedModule == moduleInOrder {
-					found = true
-					break
-				}
-			}
 		}
 		if !found {
 			undefined = append(undefined, moduleInOrder)

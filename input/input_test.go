@@ -1258,6 +1258,19 @@ func TestModuleParams_GetUndefinedModulesInOrder(t *testing.T) {
 			expected: []string{"topoaa.1"},
 		},
 		{
+			name: "base module and indexed module defined",
+			params: ModuleParams{
+				Order: []string{"topoaa", "topoaa.1"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Topoaa_1: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{},
+		},
+		{
 			name: "indexed module defined but base module in order is undefined",
 			params: ModuleParams{
 				Order: []string{"topoaa", "topoaa.1"},
