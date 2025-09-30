@@ -740,7 +740,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 	}
 	type args struct {
 		projectDir string
-		general    map[string]interface{}
+		general    map[string]any
 		mod        input.ModuleParams
 	}
 	tests := []struct {
@@ -750,6 +750,19 @@ func TestTarget_WriteRunToml(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
+		{
+			name:   "fail-with-nil-fname-field",
+			fields: fields{},
+			args: args{
+				mod: input.ModuleParams{
+					Order: []string{"topoaa"},
+					Topoaa: map[string]any{
+						"param_fname": nil,
+					},
+				},
+			},
+			wantErr: true,
+		},
 		{
 			name: "pass",
 			fields: fields{
@@ -762,7 +775,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 			},
 			args: args{
 				projectDir: "_some-workdir",
-				general: map[string]interface{}{
+				general: map[string]any{
 					"receptor":     "receptor.pdb",
 					"ligand":       "ligand.pdb",
 					"int":          10,
@@ -774,10 +787,10 @@ func TestTarget_WriteRunToml(t *testing.T) {
 				},
 				mod: input.ModuleParams{
 					Order: []string{"topoaa", "rigidbody", "caprieval", "flexref", "caprieval.2", "mdref", "caprieval.3"},
-					Topoaa: map[string]interface{}{
+					Topoaa: map[string]any{
 						"some-param": "some-value",
 					},
-					Rigidbody: map[string]interface{}{
+					Rigidbody: map[string]any{
 						"some-other-param":   10,
 						"some_fname":         "ambig_ti",
 						"another_fname":      "unambig",
@@ -785,21 +798,21 @@ func TestTarget_WriteRunToml(t *testing.T) {
 						"someother_fname":    "custom2",
 						"thereference_fname": "ref",
 					},
-					Caprieval: map[string]interface{}{},
-					Flexref: map[string]interface{}{
+					Caprieval: map[string]any{},
+					Flexref: map[string]any{
 						"some-other-param": 3.5,
 						"array-int":        []int{1, 2, 3},
 						"array-float":      []float64{1.1, 2.2, 3.3},
 						"array-string":     []string{"a", "b", "c"},
 						"array-bool":       []bool{true, false, true},
-						"array-interface":  []interface{}{1, 2.2, "three", true},
+						"array-interface":  []any{1, 2.2, "three", true},
 						"expandable_":      []int{1, 2, 3},
 					},
-					Caprieval_2: map[string]interface{}{},
-					Mdref: map[string]interface{}{
+					Caprieval_2: map[string]any{},
+					Mdref: map[string]any{
 						"some-other-param": false,
 					},
-					Caprieval_3: map[string]interface{}{},
+					Caprieval_3: map[string]any{},
 				},
 			},
 			want:    "_some-workdir/run.toml",
@@ -818,7 +831,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 			},
 			args: args{
 				projectDir: "_some-workdir",
-				general: map[string]interface{}{
+				general: map[string]any{
 					"receptor":     "receptor.pdb",
 					"ligand":       "ligand.pdb",
 					"shape":        "shape.pdb",
@@ -831,10 +844,10 @@ func TestTarget_WriteRunToml(t *testing.T) {
 				},
 				mod: input.ModuleParams{
 					Order: []string{"topoaa", "rigidbody"},
-					Topoaa: map[string]interface{}{
+					Topoaa: map[string]any{
 						"some-param": "some-value",
 					},
-					Rigidbody: map[string]interface{}{
+					Rigidbody: map[string]any{
 						"some-other-param":   10,
 						"some_fname":         "ambig_ti",
 						"another_fname":      "unambig",
@@ -859,7 +872,7 @@ func TestTarget_WriteRunToml(t *testing.T) {
 			},
 			args: args{
 				projectDir: "unexisting-directory",
-				general:    map[string]interface{}{},
+				general:    map[string]any{},
 				mod:        input.ModuleParams{},
 			},
 			want:    "",

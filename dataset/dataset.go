@@ -215,7 +215,7 @@ func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job,
 }
 
 // WriteRunToml writes the run.toml file
-func (t *Target) WriteRunToml(projectDir string, general map[string]interface{}, mod input.ModuleParams) (string, error) {
+func (t *Target) WriteRunToml(projectDir string, general map[string]any, mod input.ModuleParams) (string, error) {
 	runTomlString := ""
 	for k, v := range general {
 		switch v := v.(type) {
@@ -284,7 +284,11 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 					m = "'" + m + "'"
 				}
 				runTomlString += "[" + m + "]\n"
-				for k, v := range field.Interface().(map[string]interface{}) {
+				for k, v := range field.Interface().(map[string]any) {
+					// Check if v is nil
+					if v == nil {
+						return "", errors.New("Parameter " + k + " is empty (nil), please check your input")
+					}
 					// Find the file to be used as fname
 					if strings.Contains(k, "_fname") {
 						pattern := regexp.MustCompile(v.(string))
@@ -316,7 +320,7 @@ func (t *Target) WriteRunToml(projectDir string, general map[string]interface{},
 							runTomlString += k + " = [" + strings.Join(utils.IntSliceToStringSlice(v), ",") + "]\n"
 						case []float64:
 							runTomlString += k + " = [" + strings.Join(utils.FloatSliceToStringSlice(v), ",") + "]\n"
-						case []interface{}:
+						case []any:
 							runTomlString += k + " = [" + strings.Join(utils.InterfaceSliceToStringSlice(v), ",") + "]\n"
 						}
 					}
