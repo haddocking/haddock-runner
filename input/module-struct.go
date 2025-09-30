@@ -747,7 +747,7 @@ func (mp ModuleParams) String() string {
 	return sb.String()
 }
 
-// GetDefinedModules returns a map of all module names that have non-empty configurations
+// GetDefinedModules returns a map of all module names that have non-nil configurations
 func (mp ModuleParams) GetDefinedModules() map[string]map[string]any {
 	defined := make(map[string]map[string]any)
 
@@ -763,8 +763,9 @@ func (mp ModuleParams) GetDefinedModules() map[string]map[string]any {
 			continue
 		}
 
-		// Only consider map fields
-		if field.Type().Kind() == reflect.Map && !field.IsNil() && field.Len() > 0 {
+		// Only consider map fields that are not nil
+		// Include empty maps as they represent modules with no parameters
+		if field.Type().Kind() == reflect.Map && !field.IsNil() {
 			yamlTag := fieldType.Tag.Get("yaml")
 			if yamlTag != "" {
 				defined[yamlTag] = field.Interface().(map[string]any)

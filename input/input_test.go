@@ -1129,26 +1129,27 @@ func TestModuleParams_GetDefinedModules(t *testing.T) {
 			},
 		},
 		{
-			name: "ignores empty maps",
+			name: "dont ignore empty maps",
 			params: ModuleParams{
 				Order: []string{"topoaa"},
 				Topoaa: map[string]any{
 					"param1": "value1",
 				},
-				Rigidbody: map[string]any{}, // empty map should be ignored
+				Rigidbody: map[string]any{},
 			},
 			expected: map[string]map[string]any{
 				"topoaa": {
 					"param1": "value1",
 				},
+				"rigidbody": {},
 			},
 		},
 		{
-			name: "ignores nil maps",
+			name: "ignore nil maps",
 			params: ModuleParams{
 				Order:     []string{"topoaa"},
 				Topoaa:    map[string]any{"param1": "value1"},
-				Rigidbody: nil, // nil map should be ignored
+				Rigidbody: nil,
 			},
 			expected: map[string]map[string]any{
 				"topoaa": {
@@ -1200,13 +1201,14 @@ func TestModuleParams_GetUndefinedModulesInOrder(t *testing.T) {
 		{
 			name: "all modules defined",
 			params: ModuleParams{
-				Order: []string{"topoaa", "rigidbody"},
+				Order: []string{"topoaa", "rigidbody", "clustfcc"},
 				Topoaa: map[string]any{
 					"param1": "value1",
 				},
 				Rigidbody: map[string]any{
 					"param2": "value2",
 				},
+				Clustfcc: map[string]any{},
 			},
 			expected: []string{},
 		},
@@ -1332,13 +1334,14 @@ func TestModuleParams_GetMissingModulesFromOrder(t *testing.T) {
 		{
 			name: "all defined modules in order",
 			params: ModuleParams{
-				Order: []string{"topoaa", "rigidbody"},
+				Order: []string{"topoaa", "rigidbody", "clustfcc"},
 				Topoaa: map[string]any{
 					"param1": "value1",
 				},
 				Rigidbody: map[string]any{
 					"param2": "value2",
 				},
+				Clustfcc: map[string]any{},
 			},
 			expected: []string{},
 		},
