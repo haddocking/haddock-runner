@@ -783,12 +783,19 @@ func (mp ModuleParams) GetUndefinedModulesInOrder() []string {
 	for _, moduleInOrder := range mp.Order {
 		found := false
 		for definedModule := range definedModules {
-			// Check exact match or base module match (e.g., "alascan.1" vs "alascan")
-			if definedModule == moduleInOrder ||
-				strings.HasPrefix(definedModule, moduleInOrder+".") ||
-				strings.HasPrefix(moduleInOrder, definedModule+".") {
+			// Check exact match only
+			if definedModule == moduleInOrder {
 				found = true
 				break
+			}
+			// Check if this is an indexed version and the exact indexed module is defined
+			// For example: if moduleInOrder is "topoaa.1" and "topoaa.1" is explicitly defined
+			if strings.Contains(moduleInOrder, ".") {
+				// Only match if the exact indexed module is defined
+				if definedModule == moduleInOrder {
+					found = true
+					break
+				}
 			}
 		}
 		if !found {

@@ -1244,10 +1244,56 @@ func TestModuleParams_GetUndefinedModulesInOrder(t *testing.T) {
 			expected: []string{},
 		},
 		{
-			name: "base module covers indexed",
+			name: "base module defined but indexed module in order is undefined",
 			params: ModuleParams{
 				Order: []string{"topoaa", "topoaa.1"},
 				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+			},
+			expected: []string{"topoaa.1"},
+		},
+		{
+			name: "indexed module defined but base module in order is undefined",
+			params: ModuleParams{
+				Order: []string{"topoaa", "topoaa.1"},
+				Topoaa_1: map[string]any{
+					"param1": "value1",
+				},
+			},
+			expected: []string{"topoaa"},
+		},
+		{
+			name: "mixed scenario",
+			params: ModuleParams{
+				Order: []string{"topoaa", "topoaa.1", "rigidbody.2", "caprieval"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Topoaa_1: map[string]any{
+					"param2": "value2",
+				},
+				Rigidbody_2: map[string]any{
+					"param3": "value3",
+				},
+			},
+			expected: []string{"caprieval"},
+		},
+		{
+			name: "only base module defined and in order",
+			params: ModuleParams{
+				Order: []string{"topoaa"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+			},
+			expected: []string{},
+		},
+		{
+			name: "only indexed module defined and in order",
+			params: ModuleParams{
+				Order: []string{"topoaa.1"},
+				Topoaa_1: map[string]any{
 					"param1": "value1",
 				},
 			},
