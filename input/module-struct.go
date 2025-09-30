@@ -826,7 +826,7 @@ func (mp ModuleParams) GetMissingModulesFromOrder() []string {
 func (mp ModuleParams) ValidateOrder() error {
 	undefined := mp.GetUndefinedModulesInOrder()
 	if len(undefined) > 0 {
-		return fmt.Errorf("modules in order but not defined: %v", undefined)
+		return fmt.Errorf("modules in order but not defined: %v, if this is an empty module define it with `%v: {}` in the .yaml", undefined, undefined)
 	}
 
 	missing := mp.GetMissingModulesFromOrder()
