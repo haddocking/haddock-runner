@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/go-test/deep"
@@ -527,11 +528,9 @@ func TestInput_ValidatePatterns(t *testing.T) {
 }
 
 func TestValidateHaddock3Executable(t *testing.T) {
-
 }
 
 func TestFindHaddock24RunCns(t *testing.T) {
-
 	// Based on the executable, return the location of run.cns
 
 	// Create an executable and place it two levels above run.cns
@@ -558,7 +557,6 @@ func TestFindHaddock24RunCns(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong executable")
 	}
-
 }
 
 func TestLoadHaddock24Params(t *testing.T) {
@@ -601,11 +599,9 @@ func TestLoadHaddock24Params(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong executable")
 	}
-
 }
 
 func TestValidateRunCNSParams(t *testing.T) {
-
 	valid := map[string]interface{}{
 		"param1": true,
 		"param2": 1,
@@ -636,11 +632,9 @@ func TestValidateRunCNSParams(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong parameters")
 	}
-
 }
 
 func TestValidateExecutionModes(t *testing.T) {
-
 	// Setup a haddock3 folder structure, it must have this subdirectories:
 	wd, _ := os.Getwd()
 	haddock3Dir := filepath.Join(wd, "TestValidateExecutionModes")
@@ -773,11 +767,9 @@ func TestValidateExecutionModes(t *testing.T) {
 			t.Errorf("Input.ValidateExecutionModes() error = %v, wantErr %v", err, tt.wantErr)
 		}
 	}
-
 }
 
 func TestLoadHaddock3DefaultParams(t *testing.T) {
-
 	// Create a folder structure and fill it with dummy files
 
 	rootPath := "_haddock3"
@@ -789,7 +781,8 @@ func TestLoadHaddock3DefaultParams(t *testing.T) {
 		Default string
 	}
 
-	moduleNames := []string{"topoaa",
+	moduleNames := []string{
+		"topoaa",
 		"topocg",
 		"exit",
 		"emref",
@@ -805,7 +798,8 @@ func TestLoadHaddock3DefaultParams(t *testing.T) {
 		"clustrmsd",
 		"rmsdmatrix",
 		"seletop",
-		"seletopclusts"}
+		"seletopclusts",
+	}
 
 	for _, mod := range moduleNames {
 		_ = os.MkdirAll(filepath.Join(modulePath, mod), 0755)
@@ -846,7 +840,6 @@ func TestLoadHaddock3DefaultParams(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to load parameters: %s", err)
 	}
-
 }
 
 func TestInput_ValidateExecutable(t *testing.T) {
@@ -1060,4 +1053,559 @@ func TestValidateHaddock3Params(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestModuleParams_GetDefinedModules(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   ModuleParams
+		expected map[string]map[string]any
+	}{
+		{
+			name: "empty params",
+			params: ModuleParams{
+				Order: []string{},
+			},
+			expected: map[string]map[string]any{},
+		},
+		{
+			name: "single module",
+			params: ModuleParams{
+				Order: []string{"topoaa"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+			},
+			expected: map[string]map[string]any{
+				"topoaa": {
+					"param1": "value1",
+				},
+			},
+		},
+		{
+			name: "multiple modules",
+			params: ModuleParams{
+				Order: []string{"topoaa", "rigidbody", "caprieval"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+				Caprieval: map[string]any{
+					"param3": "value3",
+				},
+			},
+			expected: map[string]map[string]any{
+				"topoaa": {
+					"param1": "value1",
+				},
+				"rigidbody": {
+					"param2": "value2",
+				},
+				"caprieval": {
+					"param3": "value3",
+				},
+			},
+		},
+		{
+			name: "indexed modules",
+			params: ModuleParams{
+				Order: []string{"topoaa.0", "rigidbody.1"},
+				Topoaa_0: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody_1: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: map[string]map[string]any{
+				"topoaa.0": {
+					"param1": "value1",
+				},
+				"rigidbody.1": {
+					"param2": "value2",
+				},
+			},
+		},
+		{
+			name: "ignores empty maps",
+			params: ModuleParams{
+				Order: []string{"topoaa"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{}, // empty map should be ignored
+			},
+			expected: map[string]map[string]any{
+				"topoaa": {
+					"param1": "value1",
+				},
+			},
+		},
+		{
+			name: "ignores nil maps",
+			params: ModuleParams{
+				Order:     []string{"topoaa"},
+				Topoaa:    map[string]any{"param1": "value1"},
+				Rigidbody: nil, // nil map should be ignored
+			},
+			expected: map[string]map[string]any{
+				"topoaa": {
+					"param1": "value1",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.params.GetDefinedModules()
+			if len(result) != len(tt.expected) {
+				t.Errorf("GetDefinedModules() returned %d modules, expected %d", len(result), len(tt.expected))
+			}
+
+			for key, expectedConfig := range tt.expected {
+				actualConfig, exists := result[key]
+				if !exists {
+					t.Errorf("GetDefinedModules() missing expected module: %s", key)
+					continue
+				}
+
+				if len(actualConfig) != len(expectedConfig) {
+					t.Errorf("GetDefinedModules() for module %s: config length %d, expected %d", key, len(actualConfig), len(expectedConfig))
+				}
+
+				for configKey, expectedValue := range expectedConfig {
+					actualValue, exists := actualConfig[configKey]
+					if !exists {
+						t.Errorf("GetDefinedModules() for module %s: missing config key %s", key, configKey)
+						continue
+					}
+					if actualValue != expectedValue {
+						t.Errorf("GetDefinedModules() for module %s, key %s: got %v, expected %v", key, configKey, actualValue, expectedValue)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestModuleParams_GetUndefinedModulesInOrder(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   ModuleParams
+		expected []string
+	}{
+		{
+			name: "all modules defined",
+			params: ModuleParams{
+				Order: []string{"topoaa", "rigidbody"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{},
+		},
+		{
+			name: "some undefined modules",
+			params: ModuleParams{
+				Order: []string{"topoaa", "undefined1", "rigidbody", "undefined2"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{"undefined1", "undefined2"},
+		},
+		{
+			name: "all modules undefined",
+			params: ModuleParams{
+				Order: []string{"undefined1", "undefined2"},
+			},
+			expected: []string{"undefined1", "undefined2"},
+		},
+		{
+			name: "indexed modules - defined",
+			params: ModuleParams{
+				Order: []string{"topoaa.0", "rigidbody.1"},
+				Topoaa_0: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody_1: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{},
+		},
+		{
+			name: "base module covers indexed",
+			params: ModuleParams{
+				Order: []string{"topoaa", "topoaa.1"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+			},
+			expected: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.params.GetUndefinedModulesInOrder()
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("GetUndefinedModulesInOrder() returned %v, expected %v", result, tt.expected)
+				return
+			}
+
+			for i, expected := range tt.expected {
+				if i >= len(result) {
+					t.Errorf("GetUndefinedModulesInOrder() missing expected undefined module: %s", expected)
+					continue
+				}
+				if result[i] != expected {
+					t.Errorf("GetUndefinedModulesInOrder() at index %d: got %s, expected %s", i, result[i], expected)
+				}
+			}
+		})
+	}
+}
+
+func TestModuleParams_GetMissingModulesFromOrder(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   ModuleParams
+		expected []string
+	}{
+		{
+			name: "all defined modules in order",
+			params: ModuleParams{
+				Order: []string{"topoaa", "rigidbody"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{},
+		},
+		{
+			name: "some modules missing from order",
+			params: ModuleParams{
+				Order: []string{"topoaa"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+				Caprieval: map[string]any{
+					"param3": "value3",
+				},
+			},
+			expected: []string{"rigidbody", "caprieval"},
+		},
+		{
+			name: "all modules missing from order",
+			params: ModuleParams{
+				Order: []string{},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{"topoaa", "rigidbody"},
+		},
+		{
+			name: "indexed modules - all in order",
+			params: ModuleParams{
+				Order: []string{"topoaa.0", "rigidbody.1"},
+				Topoaa_0: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody_1: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{},
+		},
+		{
+			name: "base module covers indexed in order",
+			params: ModuleParams{
+				Order: []string{"topoaa"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Topoaa_0: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.params.GetMissingModulesFromOrder()
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("GetMissingModulesFromOrder() returned %v, expected %v", result, tt.expected)
+				return
+			}
+
+			// Convert to map for order-independent comparison since order doesn't matter
+			resultMap := make(map[string]bool)
+			for _, r := range result {
+				resultMap[r] = true
+			}
+
+			for _, expected := range tt.expected {
+				if !resultMap[expected] {
+					t.Errorf("GetMissingModulesFromOrder() missing expected module: %s", expected)
+				}
+			}
+		})
+	}
+}
+
+func TestModuleParams_ValidateOrder(t *testing.T) {
+	tests := []struct {
+		name        string
+		params      ModuleParams
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "valid configuration",
+			params: ModuleParams{
+				Order: []string{"topoaa", "rigidbody"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "undefined modules in order",
+			params: ModuleParams{
+				Order: []string{"topoaa", "undefined"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+			},
+			expectError: true,
+			errorMsg:    "modules in order but not defined",
+		},
+		{
+			name: "defined modules not in order",
+			params: ModuleParams{
+				Order: []string{"topoaa"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expectError: true,
+			errorMsg:    "modules defined but not in order",
+		},
+		{
+			name: "both undefined and missing modules",
+			params: ModuleParams{
+				Order: []string{"topoaa", "undefined"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expectError: true,
+			// Should report undefined modules first
+			errorMsg: "modules in order but not defined",
+		},
+		{
+			name: "empty configuration",
+			params: ModuleParams{
+				Order: []string{},
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.params.ValidateOrder()
+
+			if tt.expectError {
+				if err == nil {
+					t.Error("ValidateOrder() expected error, got nil")
+				} else if tt.errorMsg != "" && !strings.Contains(err.Error(), tt.errorMsg) {
+					t.Errorf("ValidateOrder() error message %q does not contain expected %q", err.Error(), tt.errorMsg)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("ValidateOrder() unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestModuleParams_String(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   ModuleParams
+		expected []string // substrings that should be present in the output
+	}{
+		{
+			name: "valid configuration",
+			params: ModuleParams{
+				Order: []string{"topoaa", "rigidbody"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{
+				"ModuleParams:",
+				"Order: [topoaa rigidbody]",
+				"Defined modules:",
+				"topoaa:",
+				"rigidbody:",
+			},
+		},
+		{
+			name: "with warnings",
+			params: ModuleParams{
+				Order: []string{"topoaa", "undefined"},
+				Topoaa: map[string]any{
+					"param1": "value1",
+				},
+				Rigidbody: map[string]any{
+					"param2": "value2",
+				},
+			},
+			expected: []string{
+				"ModuleParams:",
+				"Order: [topoaa undefined]",
+				"WARNING: Modules in order but not defined: [undefined]",
+				"WARNING: Modules defined but not in order: [rigidbody]",
+				"Defined modules:",
+				"topoaa:",
+				"rigidbody:",
+			},
+		},
+		{
+			name: "empty configuration",
+			params: ModuleParams{
+				Order: []string{},
+			},
+			expected: []string{
+				"ModuleParams:",
+				"Order: []",
+				"Defined modules:",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.params.String()
+
+			for _, expectedSubstring := range tt.expected {
+				if !strings.Contains(result, expectedSubstring) {
+					t.Errorf("String() output missing expected substring: %q\nFull output:\n%s", expectedSubstring, result)
+				}
+			}
+		})
+	}
+}
+
+func TestModuleParams_ComplexScenarios(t *testing.T) {
+	t.Run("mixed base and indexed modules", func(t *testing.T) {
+		params := ModuleParams{
+			Order: []string{"topoaa", "rigidbody.0", "caprieval.1"},
+			Topoaa: map[string]any{
+				"general_param": "value",
+			},
+			Rigidbody_0: map[string]any{
+				"specific_param": "value0",
+			},
+			Caprieval_1: map[string]any{
+				"specific_param": "value1",
+			},
+		}
+
+		// Test GetDefinedModules
+		defined := params.GetDefinedModules()
+		if len(defined) != 3 {
+			t.Errorf("Expected 3 defined modules, got %d", len(defined))
+		}
+
+		// Test GetUndefinedModulesInOrder
+		undefined := params.GetUndefinedModulesInOrder()
+		if len(undefined) != 0 {
+			t.Errorf("Expected no undefined modules, got %v", undefined)
+		}
+
+		// Test GetMissingModulesFromOrder
+		missing := params.GetMissingModulesFromOrder()
+		if len(missing) != 0 {
+			t.Errorf("Expected no missing modules, got %v", missing)
+		}
+
+		// Test ValidateOrder
+		err := params.ValidateOrder()
+		if err != nil {
+			t.Errorf("ValidateOrder() unexpected error: %v", err)
+		}
+	})
+
+	t.Run("complex validation scenario", func(t *testing.T) {
+		params := ModuleParams{
+			Order: []string{"topoaa", "undefined1", "rigidbody.0", "undefined2"},
+			Topoaa: map[string]any{
+				"param1": "value1",
+			},
+			Rigidbody_0: map[string]any{
+				"param2": "value2",
+			},
+			Caprieval: map[string]any{ // This is defined but not in order
+				"param3": "value3",
+			},
+		}
+
+		undefined := params.GetUndefinedModulesInOrder()
+		expectedUndefined := []string{"undefined1", "undefined2"}
+		if len(undefined) != len(expectedUndefined) {
+			t.Errorf("GetUndefinedModulesInOrder() got %v, expected %v", undefined, expectedUndefined)
+		}
+
+		missing := params.GetMissingModulesFromOrder()
+		expectedMissing := []string{"caprieval"}
+		if len(missing) != len(expectedMissing) {
+			t.Errorf("GetMissingModulesFromOrder() got %v, expected %v", missing, expectedMissing)
+		}
+
+		err := params.ValidateOrder()
+		if err == nil {
+			t.Error("ValidateOrder() expected error, got nil")
+		}
+	})
 }

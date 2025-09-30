@@ -1,5 +1,11 @@
 package input
 
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
+
 // This is a very ugly hack to allow for "repeated" fields in the YAML file.
 type ModuleParams struct {
 	Order []string `yaml:"order"`
@@ -706,4 +712,128 @@ type ModuleParams struct {
 	Exit_23           map[string]any `yaml:"exit.23"`
 	Exit_24           map[string]any `yaml:"exit.24"`
 	Exit_25           map[string]any `yaml:"exit.25"`
+}
+
+func (mp ModuleParams) String() string {
+	var sb strings.Builder
+
+	// Get all defined module configurations
+	definedModules := mp.GetDefinedModules()
+
+	sb.WriteString("ModuleParams:\n")
+	sb.WriteString("  Order: ")
+	sb.WriteString(fmt.Sprintf("%v\n", mp.Order))
+
+	// Check for modules in order that aren't defined
+	undefinedInOrder := mp.GetUndefinedModulesInOrder()
+	if len(undefinedInOrder) > 0 {
+		sb.WriteString("  WARNING: Modules in order but not defined: ")
+		sb.WriteString(fmt.Sprintf("%v\n", undefinedInOrder))
+	}
+
+	// Check for defined modules not in order
+	missingFromOrder := mp.GetMissingModulesFromOrder()
+	if len(missingFromOrder) > 0 {
+		sb.WriteString("  WARNING: Modules defined but not in order: ")
+		sb.WriteString(fmt.Sprintf("%v\n", missingFromOrder))
+	}
+
+	// List all defined modules with their configurations
+	sb.WriteString("  Defined modules:\n")
+	for moduleName, config := range definedModules {
+		sb.WriteString(fmt.Sprintf("    %s: %v\n", moduleName, config))
+	}
+
+	return sb.String()
+}
+
+// GetDefinedModules returns a map of all module names that have non-empty configurations
+func (mp ModuleParams) GetDefinedModules() map[string]map[string]any {
+	defined := make(map[string]map[string]any)
+
+	val := reflect.ValueOf(mp)
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldType := typ.Field(i)
+
+		// Skip the Order field
+		if fieldType.Name == "Order" {
+			continue
+		}
+
+		// Only consider map fields
+		if field.Type().Kind() == reflect.Map && !field.IsNil() && field.Len() > 0 {
+			yamlTag := fieldType.Tag.Get("yaml")
+			if yamlTag != "" {
+				defined[yamlTag] = field.Interface().(map[string]any)
+			}
+		}
+	}
+
+	return defined
+}
+
+// GetUndefinedModulesInOrder returns modules in Order that don't have configurations
+func (mp ModuleParams) GetUndefinedModulesInOrder() []string {
+	definedModules := mp.GetDefinedModules()
+	var undefined []string
+
+	for _, moduleInOrder := range mp.Order {
+		found := false
+		for definedModule := range definedModules {
+			// Check exact match or base module match (e.g., "alascan.1" vs "alascan")
+			if definedModule == moduleInOrder ||
+				strings.HasPrefix(definedModule, moduleInOrder+".") ||
+				strings.HasPrefix(moduleInOrder, definedModule+".") {
+				found = true
+				break
+			}
+		}
+		if !found {
+			undefined = append(undefined, moduleInOrder)
+		}
+	}
+
+	return undefined
+}
+
+// GetMissingModulesFromOrder returns defined modules that aren't in Order
+func (mp ModuleParams) GetMissingModulesFromOrder() []string {
+	definedModules := mp.GetDefinedModules()
+	var missing []string
+
+	for definedModule := range definedModules {
+		found := false
+		for _, moduleInOrder := range mp.Order {
+			// Check if this defined module or its base is in order
+			if definedModule == moduleInOrder ||
+				strings.HasPrefix(definedModule, moduleInOrder+".") ||
+				strings.HasPrefix(moduleInOrder, definedModule+".") {
+				found = true
+				break
+			}
+		}
+		if !found {
+			missing = append(missing, definedModule)
+		}
+	}
+
+	return missing
+}
+
+// ValidateOrder checks if all modules in order are properly defined
+func (mp ModuleParams) ValidateOrder() error {
+	undefined := mp.GetUndefinedModulesInOrder()
+	if len(undefined) > 0 {
+		return fmt.Errorf("modules in order but not defined: %v", undefined)
+	}
+
+	missing := mp.GetMissingModulesFromOrder()
+	if len(missing) > 0 {
+		return fmt.Errorf("modules defined but not in order: %v", missing)
+	}
+
+	return nil
 }

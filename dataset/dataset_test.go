@@ -616,6 +616,30 @@ func TestSetupHaddock3Scenario(t *testing.T) {
 	if err == nil {
 		t.Errorf("Failed to detect wrong scenario")
 	}
+
+	// Fail to setup a scenario in which modules defined in the `order` are not defined
+	inp.Scenarios = []input.Scenario{
+		{
+			Name: "scenario1",
+			Parameters: input.ParametersStruct{
+				Modules: input.ModuleParams{
+					Order: []string{"topoaa"},
+					Topoaa: map[string]any{
+						"some-param": "some-value",
+					},
+					Rigidbody: map[string]any{
+						"ambig_fname": "_ti",
+					},
+				},
+			},
+		},
+	}
+	s = inp.Scenarios[0]
+	j, err = target.SetupHaddock3Scenario(wd, s)
+	if err == nil {
+		t.Errorf("Failed to identify missing module")
+	}
+	// Fail to setup a scenarion in which modules defined in the parameters are not in the order
 }
 
 func TestTarget_SetupHaddock24Scenario(t *testing.T) {

@@ -184,6 +184,11 @@ func (t *Target) WriteRunParamStub(projectDir string, haddockDir string) (string
 //   - Creates the `run.toml` file
 func (t *Target) SetupHaddock3Scenario(wd string, s input.Scenario) (runner.Job, error) {
 	glog.Info("Preparing : " + s.Name)
+
+	if err := s.Parameters.Modules.ValidateOrder(); err != nil {
+		return runner.Job{}, errors.New("Validation error: " + err.Error())
+	}
+
 	sPath := filepath.Join(wd, t.ID, "scenario-"+s.Name)
 	dataPath := filepath.Join(wd, t.ID, "data")
 	_ = os.MkdirAll(sPath, 0755)
