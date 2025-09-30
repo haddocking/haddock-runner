@@ -1,7 +1,7 @@
 general:
   executable: /home/rodrigo/repos/haddock-runner/example/haddock3.sh
   max_concurrent: 4
-  haddock_dir: /opt/haddock3
+  haddock_dir: /home/rodrigo/repos/haddock3
   receptor_suffix: _r_u
   ligand_suffix: _l_u
   input_list: /home/rodrigo/repos/haddock-runner/example/docking/input_list.txt
@@ -35,7 +35,7 @@ scenarios:
           unambig_fname: _unambig.tbl
           ligand_top_fname: _ligand.top
           ligand_param_fname: _ligand.param
-        emref: ~
+        emref: {}
         caprieval:
           reference_fname: _ref.pdb
 
