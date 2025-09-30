@@ -34,7 +34,8 @@ scenarios:
       general:
         ncores: 1
       modules:
-        order: [rigidbody]
+        order: [topoaa, rigidbody]
+        topoaa: {}
         rigidbody:
           param1: value1
 `)
@@ -239,12 +240,13 @@ scenarios:
 								Topology: "_ligand.top",
 							},
 							Modules: ModuleParams{
-								Order: []string{"rigidbody"},
+								Order:  []string{"topoaa", "rigidbody"},
+								Topoaa: map[string]any{},
 								Rigidbody: map[string]any{
 									"param1": "value1",
 								},
 							},
-							CnsParams: map[string]interface{}{
+							CnsParams: map[string]any{
 								"noecv": false,
 							},
 						},
