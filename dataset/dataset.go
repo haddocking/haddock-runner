@@ -458,7 +458,7 @@ func LoadDataset(projectDir string, pdbList string, rsuf string, lsuf string, ss
 			}
 
 			// Handle the Toppar
-			topparRegex := regexp.MustCompile(`(` + k + `)_.*(top|param)`)
+			topparRegex := regexp.MustCompile(`(` + k + `)_.*(top|param)$`)
 			topparMatch := topparRegex.FindStringSubmatch(line)
 			if len(topparMatch) != 0 {
 				v.Toppar = append(v.Toppar, s.Text())
