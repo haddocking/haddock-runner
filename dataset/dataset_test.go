@@ -150,6 +150,7 @@ func TestLoadDataset(t *testing.T) {
 				"some/path/structure4_l_u_0.pdb\n"+
 				"some/path/structure4_l_u_1.pdb\n"+
 				"some/path/structure4_ambig.tbl\n"+
+				"some/path/structure4_ambig.tbl.tgz\n"+
 				"some/path/structure4_unambig-rest.tbl\n"+
 				"some/path/structure4_ATP.top\n"+
 				"some/path/structure42_ATP.top\n"+
@@ -183,7 +184,7 @@ func TestLoadDataset(t *testing.T) {
 			if len(v.Ligand) != 2 {
 				t.Errorf("Failed: Not all ligands were loaded")
 			}
-			if len(v.Restraints) != 2 {
+			if len(v.Restraints) != 3 {
 				t.Errorf("Failed: Not all restraints were loaded")
 			}
 			if len(v.Toppar) != 2 {
