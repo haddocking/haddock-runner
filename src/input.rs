@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -11,11 +12,100 @@ pub struct Input {
     pub scenarios: Vec<Scenario>,
 }
 
+impl Input {
+    /// Validates the input configuration.
+    /// Checks for required fields, valid paths, and logical consistency.
+    pub fn validate(&self) -> Result<()> {
+        // Validate executable
+        self.validate_executable()?;
+
+        // Validate patterns
+        self.validate_patterns()?;
+
+        // Validate general fields
+        self.validate_general()?;
+
+        Ok(())
+    }
+
+    /// Validates the executable path and permissions.
+    fn validate_executable(&self) -> Result<()> {
+        if self.general.executable.to_string_lossy().is_empty() {
+            anyhow::bail!("executable not defined");
+        }
+
+        if !self.general.executable.is_absolute() {
+            anyhow::bail!(
+                "{} is not an absolute path",
+                self.general.executable.display()
+            );
+        }
+
+        // Check if file exists and is executable
+        let metadata = std::fs::metadata(&self.general.executable).with_context(|| {
+            format!(
+                "Failed to access executable: {}",
+                self.general.executable.display()
+            )
+        })?;
+
+        if metadata.permissions().mode() & 0o111 == 0 {
+            anyhow::bail!("executable is not executable");
+        }
+
+        Ok(())
+    }
+
+    /// Validates patterns (suffixes) for duplicates and conflicts.
+    fn validate_patterns(&self) -> Result<()> {
+        // Check mol_suffixes
+        if self.general.mol_suffixes.is_empty() {
+            anyhow::bail!("mol_suffixes not defined in general section");
+        }
+
+        // Check for at least 2 suffixes (receptor and ligand)
+        if self.general.mol_suffixes.len() < 2 {
+            anyhow::bail!("mol_suffixes should contain at least 2 suffixes (receptor and ligand)");
+        }
+
+        // Check for duplicates in mol_suffixes
+        let mut unique_suffixes = std::collections::HashSet::new();
+        for suffix in &self.general.mol_suffixes {
+            if !unique_suffixes.insert(suffix) {
+                anyhow::bail!("Duplicate suffix found in mol_suffixes: {}", suffix);
+            }
+        }
+
+        // TODO: Add more pattern validation as needed
+        // - Check for conflicting patterns
+        // - Validate shape_suffix if present
+
+        Ok(())
+    }
+
+    /// Validates general configuration fields.
+    fn validate_general(&self) -> Result<()> {
+        if self.general.work_dir.is_empty() {
+            anyhow::bail!("work_dir not defined in general section");
+        }
+
+        if self.general.input_list.is_empty() {
+            anyhow::bail!("input_list not defined in general section");
+        }
+
+        if self.general.max_concurrent == 0 {
+            anyhow::bail!("max_concurrent must be greater than 0");
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct General {
     pub executable: PathBuf,
     pub mol_suffixes: Vec<String>,
-    pub shape_suffix: String,
+    pub shape_suffix: Option<String>,
     pub input_list: String,
     pub work_dir: String,
     pub max_concurrent: u16,
@@ -175,5 +265,37 @@ mod tests {
                 "caprieval"
             ]
         );
+    }
+
+    #[test]
+    fn test_validation() -> Result<()> {
+        let yaml_content = std::fs::read_to_string("example/bm.yml").unwrap();
+        let input: Input = serde_yaml::from_str(&yaml_content).unwrap();
+
+        // This should pass validation
+        input.validate()?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_validation_errors() {
+        let yaml_content = std::fs::read_to_string("example/bm.yml").unwrap();
+        let mut input: Input = serde_yaml::from_str(&yaml_content).unwrap();
+
+        // Test empty mol_suffixes
+        input.general.mol_suffixes = vec![];
+        let result = input.validate();
+        assert!(result.is_err());
+
+        // Test only one suffix
+        input.general.mol_suffixes = vec!["_test".to_string()];
+        let result = input.validate();
+        assert!(result.is_err());
+
+        // Test duplicate suffixes
+        input.general.mol_suffixes = vec!["_test".to_string(), "_test".to_string()];
+        let result = input.validate();
+        assert!(result.is_err());
     }
 }
