@@ -3,7 +3,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Input {
@@ -13,6 +13,30 @@ pub struct Input {
 }
 
 impl Input {
+    pub fn new(yaml_path: &Path) -> Result<Self> {
+        // let yaml_path = Path::new("example/bm.yml");
+        let yaml_content =
+            std::fs::read_to_string(yaml_path).context("Failed to read input file")?;
+        let mut input: Input =
+            serde_yaml::from_str(&yaml_content).context("Failed to parse YAML")?;
+
+        // Convert absolute paths to relative paths based on YAML location
+        let base_dir = yaml_path.parent().unwrap();
+
+        // Convert work_dir to relative path
+        if let Ok(relative_work_dir) = input.general.work_dir.strip_prefix(base_dir) {
+            input.general.work_dir = relative_work_dir.to_path_buf();
+        }
+
+        // Convert input_list to relative path
+        if let Ok(relative_input_list) = Path::new(&input.general.input_list).strip_prefix(base_dir)
+        {
+            input.general.input_list = relative_input_list.to_string_lossy().into_owned();
+        };
+
+        Ok(input)
+    }
+
     /// Validates the input configuration.
     /// Checks for required fields, valid paths, and logical consistency.
     pub fn validate(&self) -> Result<()> {
@@ -85,7 +109,7 @@ impl Input {
 
     /// Validates general configuration fields.
     fn validate_general(&self) -> Result<()> {
-        if self.general.work_dir.is_empty() {
+        if self.general.work_dir == PathBuf::new() {
             anyhow::bail!("work_dir not defined in general section");
         }
 
@@ -107,7 +131,7 @@ pub struct General {
     pub mol_suffixes: Vec<String>,
     pub shape_suffix: Option<String>,
     pub input_list: String,
-    pub work_dir: String,
+    pub work_dir: PathBuf,
     pub max_concurrent: u16,
 }
 

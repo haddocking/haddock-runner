@@ -4,25 +4,26 @@ pub mod runner;
 pub mod scenario;
 pub mod utils;
 
+use anyhow::Result;
 use input::Input;
+use std::path::Path;
 
-use crate::dataset::load_dataset;
+fn main() -> Result<()> {
+    let yaml_path = Path::new("example/bm.yml");
 
-fn main() {
-    let yaml_content = std::fs::read_to_string("example/bm.yml").unwrap();
-    let input: Input = serde_yaml::from_str(&yaml_content).unwrap();
+    let input = Input::new(yaml_path)?;
 
-    // println!("{:?}", input);
-
-    for scenario in input.scenarios {
-        println!("{:?}", scenario.workflow)
-    }
-
-    let dataset = load_dataset(
+    let dataset = dataset::load_dataset(
         &input.general.input_list,
         &input.general.mol_suffixes,
         input.general.shape_suffix.as_deref(),
     );
 
-    println!("{:?}", dataset)
+    // println!("{:?}", dataset);
+
+    let targets = dataset.organize(&input.general.work_dir)?;
+
+    println!("Organized {} targets successfully", targets.0.len());
+
+    Ok(())
 }
