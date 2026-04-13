@@ -1,13 +1,16 @@
-use anyhow::{Context, Result};
+use crate::slurm;
+use anyhow::{Context, Result, bail};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    thread,
+};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Input {
     pub general: General,
-    pub slurm: Option<Slurm>,
     pub scenarios: Vec<Scenario>,
 }
 
@@ -92,6 +95,23 @@ impl Input {
             anyhow::bail!("max_concurrent must be greater than 0");
         }
 
+        match &self.general.execution {
+            Execution::Local => {
+                let num_cpus = thread::available_parallelism().unwrap().get();
+                let needed_cpus = self.general.max_concurrent * self.general.ncores;
+                if needed_cpus > num_cpus as u16 {
+                    bail!(
+                        "execution = local max_concurrent = {} and ncores = {}, you need {} cores for this but this machine only has {}",
+                        self.general.max_concurrent,
+                        self.general.ncores,
+                        needed_cpus,
+                        num_cpus,
+                    );
+                }
+            }
+            Execution::Slurm => slurm::validate_slurm()?,
+        }
+
         Ok(())
     }
 }
@@ -104,11 +124,14 @@ pub struct General {
     pub work_dir: PathBuf,
     pub max_concurrent: u16,
     pub ncores: u16,
+    pub execution: Execution,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct Slurm {
-    pub cpus_per_task: u16,
+#[serde(rename_all = "lowercase")]
+pub enum Execution {
+    Local,
+    Slurm,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]

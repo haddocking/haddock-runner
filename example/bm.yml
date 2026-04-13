@@ -1,41 +1,41 @@
 general:
-  max_concurrent: 4
-  ncores: 1
+  max_concurrent: 5
+  ncores: 2
+  execution: local # slurm
   mol_suffixes: [_r_u, _l_u, _x_u]
-  shape_suffix: _shape
   input_list: docking/input_list.txt
-  work_dir: bm-goes-here
+  work_dir: ../bm-goes-here
 
-slurm:
-  cpus_per_task: 1
+# slurm:
+#   cpus_per_task: 1
 
 scenarios:
-  # - name: true-interface
-  #   workflow:
-  #     topoaa:
-  #       autohis: true
-  #     rigidbody:
-  #       sampling: 10
-  #       ambig_fname: _ti.tbl
-  #       unambig_fname: _unambig.tbl
-  #       ligand_top_fname: _ligand.top
-  #       ligand_param_fname: _ligand.param
-  #     seletop:
-  #       select: 2
-  #     flexref:
-  #       ambig_fname: _ti.tbl
-  #       unambig_fname: _unambig.tbl
-  #       ligand_top_fname: _ligand.top
-  #       ligand_param_fname: _ligand.param
-  #     emref:
-  #     caprieval:
-  #       reference_fname: _ref.pdb
+  - name: true-interface
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 10
+        ambig_fname: _ti.tbl
+        unambig_fname: _unambig.tbl
+        ligand_top_fname: _ligand.top
+        ligand_param_fname: _ligand.param
+      seletop:
+        select: 2
+      flexref:
+        ambig_fname: _ti.tbl
+        unambig_fname: _unambig.tbl
+        ligand_top_fname: _ligand.top
+        ligand_param_fname: _ligand.param
+      emref:
+      caprieval:
+        reference_fname: _ref.pdb
 
   - name: ab-initio
     workflow:
       topoaa:
       rigidbody:
-        sampling: 5
+        sampling: 1
         cmrest: true
 
   #-----------------------------------------------
