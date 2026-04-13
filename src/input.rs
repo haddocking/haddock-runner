@@ -20,19 +20,22 @@ impl Input {
         let mut input: Input =
             serde_yaml::from_str(&yaml_content).context("Failed to parse YAML")?;
 
-        // Convert absolute paths to relative paths based on YAML location
+        // Convert relative paths to absolute paths based on YAML location
         let base_dir = yaml_path.parent().unwrap();
 
-        // Convert work_dir to relative path
-        if let Ok(relative_work_dir) = input.general.work_dir.strip_prefix(base_dir) {
-            input.general.work_dir = relative_work_dir.to_path_buf();
+        // Convert work_dir to absolute path if it's relative
+        if input.general.work_dir.is_relative() {
+            input.general.work_dir = base_dir.join(&input.general.work_dir);
         }
 
-        // Convert input_list to relative path
-        if let Ok(relative_input_list) = Path::new(&input.general.input_list).strip_prefix(base_dir)
-        {
-            input.general.input_list = relative_input_list.to_string_lossy().into_owned();
-        };
+        // Convert input_list to absolute path if it's relative
+        let input_list_path = Path::new(&input.general.input_list);
+        if input_list_path.is_relative() {
+            input.general.input_list = base_dir
+                .join(input_list_path)
+                .to_string_lossy()
+                .into_owned();
+        }
 
         Ok(input)
     }
@@ -40,42 +43,11 @@ impl Input {
     /// Validates the input configuration.
     /// Checks for required fields, valid paths, and logical consistency.
     pub fn validate(&self) -> Result<()> {
-        // Validate executable
-        self.validate_executable()?;
-
         // Validate patterns
         self.validate_patterns()?;
 
         // Validate general fields
         self.validate_general()?;
-
-        Ok(())
-    }
-
-    /// Validates the executable path and permissions.
-    fn validate_executable(&self) -> Result<()> {
-        if self.general.executable.to_string_lossy().is_empty() {
-            anyhow::bail!("executable not defined");
-        }
-
-        if !self.general.executable.is_absolute() {
-            anyhow::bail!(
-                "{} is not an absolute path",
-                self.general.executable.display()
-            );
-        }
-
-        // Check if file exists and is executable
-        let metadata = std::fs::metadata(&self.general.executable).with_context(|| {
-            format!(
-                "Failed to access executable: {}",
-                self.general.executable.display()
-            )
-        })?;
-
-        if metadata.permissions().mode() & 0o111 == 0 {
-            anyhow::bail!("executable is not executable");
-        }
 
         Ok(())
     }
@@ -127,7 +99,6 @@ impl Input {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct General {
-    pub executable: PathBuf,
     pub mol_suffixes: Vec<String>,
     pub shape_suffix: Option<String>,
     pub input_list: String,
@@ -140,16 +111,16 @@ pub struct Slurm {
     pub cpus_per_task: u16,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub struct Scenario {
     pub name: String,
     pub workflow: Workflow,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 pub struct Workflow {
     #[serde(flatten)]
-    modules: IndexMap<String, Value>,
+    pub modules: IndexMap<String, Value>,
 }
 
 impl Workflow {
