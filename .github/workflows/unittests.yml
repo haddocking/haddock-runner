@@ -17,16 +17,19 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ^1.21
       - uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: go mod download
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
       - name: Run tests
-        run: go test -v ./... -coverprofile=coverage.out
+        run: cargo test --all-features
+
+      - name: Generate coverage
+        run: cargo tarpaulin --out Xml
 
       - name: Run codacy-coverage-reporter
-        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --force-coverage-parser go -r coverage.out
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report -l Rust --force-coverage-parser cobertura -r cobertura.xml
