@@ -6,4 +6,5 @@ pub enum JobStatus {
     Incomplete,
     Unknown,
     Submitted,
+    Prepared,
 }
