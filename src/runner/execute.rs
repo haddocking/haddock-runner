@@ -28,7 +28,11 @@ pub fn run(command: &str, arg: &str, path: &Path) -> Result<PathBuf> {
 
     // Check exit code
     if !output.status.success() {
-        bail!("command failed with status: {}", output.status)
+        bail!(
+            "command failed with status: {} log: {:?}",
+            output.status,
+            log_path
+        )
     }
 
     Ok(log_path)

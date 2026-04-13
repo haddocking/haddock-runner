@@ -1,11 +1,12 @@
 use anyhow::Context;
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use itertools::Itertools;
 use serde_yaml::Value;
 
+use crate::input::General;
 use crate::runner::status::JobStatus;
 use crate::{
     dataset::Target,
@@ -29,30 +30,38 @@ pub fn create_jobs(input: Input, targets: Vec<Target>) -> Vec<Job> {
         .scenarios
         .into_iter()
         .cartesian_product(targets.iter())
-        .map(|(scenario, target)| Job::new(&input.general.work_dir, scenario, target.clone()))
+        .map(|(scenario, target)| Job::new(input.general.clone(), scenario, target.clone()))
         .collect::<Vec<Job>>()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Job {
     pub name: String,
     pub status: JobStatus,
     pub wd: PathBuf,
     pub target: Target,
     pub scenario: Scenario,
+    pub general: General,
 }
 
 impl Job {
-    fn new(data_dir: &Path, scenario: Scenario, target: Target) -> Self {
+    fn new(general: General, scenario: Scenario, target: Target) -> Self {
         let name = target.id.to_string() + "-" + &scenario.name;
-        let wd = data_dir.join(&scenario.name).join(&target.id);
+        let wd = general.work_dir.join(&scenario.name).join(&target.id);
         Job {
             name,
             wd,
             target,
             scenario,
+            general,
             status: JobStatus::Unknown,
         }
+    }
+
+    pub fn clean(&mut self) -> anyhow::Result<()> {
+        fs::remove_dir_all(&self.wd)?;
+
+        Ok(())
     }
 
     pub fn setup(&mut self) -> anyhow::Result<()> {
@@ -163,6 +172,9 @@ impl Job {
         toml_content.push_str("]\n\n");
 
         // TODO: Add the general options
+
+        // Add ncores section
+        toml_content.push_str(&format!("ncores = {}\n", &self.general.ncores));
 
         // Add workflow modules from scenario
         for (module_name, module_params) in &self.scenario.workflow.modules {

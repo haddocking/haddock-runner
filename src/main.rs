@@ -1,12 +1,15 @@
 pub mod dataset;
 pub mod input;
 pub mod job;
+pub mod queue;
 pub mod runner;
 pub mod utils;
 
 use anyhow::Result;
 use input::Input;
 use std::path::Path;
+
+use crate::queue::Queue;
 
 fn main() -> Result<()> {
     let yaml_path = Path::new("example/bm.yml");
@@ -31,13 +34,13 @@ fn main() -> Result<()> {
         .iter()
         .for_each(|s| println!("{:?}", s.name));
 
-    let mut jobs = job::create_jobs(input, targets);
-    jobs.iter_mut().for_each(|j| {
-        println!("{:?}", j.wd);
-        j.setup().unwrap();
-        j.run().unwrap();
-    });
-    // println!("{:?}", input.scenarios);
+    let jobs = job::create_jobs(input.clone(), targets);
+
+    let queue = Queue::new(input.general.max_concurrent, jobs);
+
+    queue.setup();
+
+    queue.start();
 
     Ok(())
 }

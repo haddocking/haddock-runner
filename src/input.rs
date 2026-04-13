@@ -2,10 +2,9 @@ use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Input {
     pub general: General,
     pub slurm: Option<Slurm>,
@@ -97,16 +96,17 @@ impl Input {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct General {
     pub mol_suffixes: Vec<String>,
     pub shape_suffix: Option<String>,
     pub input_list: String,
     pub work_dir: PathBuf,
     pub max_concurrent: u16,
+    pub ncores: u16,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Slurm {
     pub cpus_per_task: u16,
 }
