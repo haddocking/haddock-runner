@@ -1,7 +1,7 @@
 pub mod dataset;
 pub mod input;
+pub mod job;
 pub mod runner;
-pub mod scenario;
 pub mod utils;
 
 use anyhow::Result;
@@ -13,7 +13,7 @@ fn main() -> Result<()> {
 
     let input = Input::new(yaml_path)?;
 
-    let dataset = dataset::load_dataset(
+    let targets = dataset::load_dataset(
         &input.general.input_list,
         &input.general.mol_suffixes,
         input.general.shape_suffix.as_deref(),
@@ -21,9 +21,23 @@ fn main() -> Result<()> {
 
     // println!("{:?}", dataset);
 
-    let targets = dataset.organize(&input.general.work_dir)?;
+    // let targets = dataset::organize_dataset(raw_targets, &input.general.work_dir)?;
 
-    println!("Organized {} targets successfully", targets.0.len());
+    // println!("Organized {} targets successfully", targets.len());
+
+    // scenario + target = job
+    input
+        .scenarios
+        .iter()
+        .for_each(|s| println!("{:?}", s.name));
+
+    let mut jobs = job::create_jobs(input, targets);
+    jobs.iter_mut().for_each(|j| {
+        println!("{:?}", j.wd);
+        j.setup().unwrap();
+        j.run().unwrap();
+    });
+    // println!("{:?}", input.scenarios);
 
     Ok(())
 }
