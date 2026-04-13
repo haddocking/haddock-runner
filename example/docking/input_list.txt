@@ -28,4 +28,9 @@ example/docking/2OOB/2OOB_l_u.pdb
 example/docking/2OOB/2OOB_r_u.pdb
 example/docking/2OOB/2OOB_ti.tbl
 example/docking/2OOB/2OOB_hb.tbl
+# 1QU9
+example/docking/1QU9/1QU9_r_u.pdb
+example/docking/1QU9/1QU9_l_u.pdb
+example/docking/1QU9/1QU9_x_u.pdb
+example/docking/1QU9/1QU9_ti.tbl
 # ------------------------------------------------------------ #
