@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, PartialEq)]
-pub enum JobStatus {
+pub enum Status {
     Done,
     Failed,
     Queued,

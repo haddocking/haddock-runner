@@ -6,8 +6,9 @@ use std::path::PathBuf;
 use itertools::Itertools;
 use serde_yaml::Value;
 
-use crate::input::General;
-use crate::runner::status::JobStatus;
+use crate::input::{Execution, General};
+use crate::runner::status::Status;
+use crate::runner::{local, slurm};
 use crate::{
     dataset::Target,
     input::{Input, Scenario},
@@ -37,7 +38,7 @@ pub fn create_jobs(input: Input, targets: Vec<Target>) -> Vec<Job> {
 #[derive(Debug, Clone)]
 pub struct Job {
     pub name: String,
-    pub status: JobStatus,
+    pub status: Status,
     pub wd: PathBuf,
     pub target: Target,
     pub scenario: Scenario,
@@ -54,7 +55,7 @@ impl Job {
             target,
             scenario,
             general,
-            status: JobStatus::Unknown,
+            status: Status::Unknown,
         }
     }
 
@@ -74,18 +75,35 @@ impl Job {
         // Write the run.toml file
         self.write_run_toml()?;
 
+        if let Execution::Slurm = self.general.execution {
+            slurm::prepare_job_file();
+        }
+
         // Mark it are ready for execution
-        self.status = JobStatus::Prepared;
+        self.status = Status::Prepared;
 
         Ok(())
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
+        match self.general.execution {
+            Execution::Local => self.run_local(),
+            Execution::Slurm => self.run_slurm(),
+        }
+    }
+
+    pub fn run_slurm(&mut self) -> anyhow::Result<()> {
+        // slurm::submit();
+        // slurm::wait();
+        todo!()
+    }
+
+    pub fn run_local(&mut self) -> anyhow::Result<()> {
         // Execute haddock3 command in the working directory
-        let log_path = crate::runner::execute::run("haddock3", "run.toml", &self.wd)?;
+        let log_path = local::run("haddock3", "run.toml", &self.wd)?;
 
         // Update status to Done
-        self.status = JobStatus::Done;
+        self.status = Status::Done;
 
         // Log the execution
         println!(
@@ -170,8 +188,6 @@ impl Job {
             }
         }
         toml_content.push_str("]\n\n");
-
-        // TODO: Add the general options
 
         // Add ncores section
         toml_content.push_str(&format!("ncores = {}\n", &self.general.ncores));
