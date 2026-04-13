@@ -10,3 +10,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 indexmap = { version = "2.14.0", features = ["serde"] }
 regex = "1.12.3"
+tempfile = "3.27.0"
+itertools = "0.14"
