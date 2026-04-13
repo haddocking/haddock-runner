@@ -1,3 +1,4 @@
+use crate::utils::{extract_root, extract_root_from_filename};
 use regex::Regex;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -100,7 +101,7 @@ pub fn load_dataset(
         // Try to match restraint pattern
         if !matched && restraint_pattern.is_match(&file_name) {
             // Extract root from restraint file (pattern: ROOT_*.tbl)
-            if let Some(root) = extract_root_from_restraint(&file_name) {
+            if let Some(root) = extract_root(&file_name) {
                 let builder = targets
                     .entry(root.clone())
                     .or_insert_with(|| TargetBuilder::new(root));
@@ -112,7 +113,7 @@ pub fn load_dataset(
         // Try to match toppar pattern
         if !matched && toppar_pattern.is_match(&file_name) {
             // Extract root from toppar file (pattern: ROOT_*.top/param)
-            if let Some(root) = extract_root_from_toppar(&file_name) {
+            if let Some(root) = extract_root(&file_name) {
                 let builder = targets
                     .entry(root.clone())
                     .or_insert_with(|| TargetBuilder::new(root));
@@ -169,41 +170,5 @@ impl TargetBuilder {
             misc: Vec::new(),
             shape: None,
         }
-    }
-}
-
-// Helper functions for extracting roots from filenames
-fn extract_root_from_restraint(filename: &str) -> Option<String> {
-    // Pattern: ROOT_*.tbl
-    let parts: Vec<&str> = filename.split('_').collect();
-    if parts.len() >= 2 {
-        Some(parts[0].to_string())
-    } else {
-        None
-    }
-}
-
-fn extract_root_from_toppar(filename: &str) -> Option<String> {
-    // Pattern: ROOT_*.top or ROOT_*.param
-    let parts: Vec<&str> = filename.split('_').collect();
-    if parts.len() >= 2 {
-        Some(parts[0].to_string())
-    } else {
-        None
-    }
-}
-
-fn extract_root_from_filename(filename: &str) -> Option<String> {
-    // Try to extract root by removing common suffixes
-    let filename = filename.replace(".pdb", "");
-    let filename = filename.replace(".tbl", "");
-    let filename = filename.replace(".top", "");
-    let filename = filename.replace(".param", "");
-
-    // Remove any remaining suffixes after underscores
-    if let Some(pos) = filename.find('_') {
-        Some(filename[..pos].to_string())
-    } else {
-        Some(filename)
     }
 }
