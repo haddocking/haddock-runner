@@ -89,6 +89,8 @@ impl Job {
     pub fn run(&mut self) -> anyhow::Result<()> {
         info!("Starting execution of job: {}", self.name);
 
+        // TODO: Figure out if this job is incomplete and should be restarted
+
         match self.general.execution {
             Execution::Local => self.run_local(),
             Execution::Slurm => self.run_slurm(),
