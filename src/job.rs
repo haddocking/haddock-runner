@@ -282,3 +282,269 @@ impl Job {
         files
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::input::{Execution, General, Scenario, Workflow};
+    use crate::runner::status::Status;
+    use indexmap::IndexMap;
+    use std::path::PathBuf;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_job_new() {
+        let general = General {
+            mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+            shape_suffix: None,
+            input_list: "test.txt".to_string(),
+            work_dir: PathBuf::from("/tmp"),
+            max_concurrent: 1,
+            ncores: 1,
+            execution: Execution::Local,
+        };
+
+        let scenario = Scenario {
+            name: "test_scenario".to_string(),
+            workflow: Workflow {
+                modules: IndexMap::new(),
+            },
+        };
+
+        let target = Target {
+            id: "test_target".to_string(),
+            molecules: vec![PathBuf::from("mol.pdb")],
+            restraints: vec![PathBuf::from("restraint.tbl")],
+            toppar: vec![PathBuf::from("toppar.top")],
+            misc: vec![PathBuf::from("misc.txt")],
+            shape: None,
+        };
+
+        let job = Job::new(general, scenario, target);
+
+        assert_eq!(job.name, "test_target-test_scenario");
+        assert_eq!(job.wd, PathBuf::from("/tmp/test_scenario/test_target"));
+        assert_eq!(job.target.id, "test_target");
+        assert_eq!(job.scenario.name, "test_scenario");
+    }
+
+    #[test]
+    fn test_create_jobs() {
+        let input = Input {
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                shape_suffix: None,
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Local,
+            },
+            scenarios: vec![
+                Scenario {
+                    name: "scenario1".to_string(),
+                    workflow: Workflow {
+                        modules: IndexMap::new(),
+                    },
+                },
+                Scenario {
+                    name: "scenario2".to_string(),
+                    workflow: Workflow {
+                        modules: IndexMap::new(),
+                    },
+                },
+            ],
+        };
+
+        let targets = vec![
+            Target {
+                id: "target1".to_string(),
+                molecules: vec![PathBuf::from("mol1.pdb")],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+            },
+            Target {
+                id: "target2".to_string(),
+                molecules: vec![PathBuf::from("mol2.pdb")],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+            },
+        ];
+
+        let jobs = create_jobs(input, targets);
+
+        // Should create 2 scenarios × 2 targets = 4 jobs
+        assert_eq!(jobs.len(), 4);
+        assert_eq!(jobs[0].name, "target1-scenario1");
+        assert_eq!(jobs[1].name, "target2-scenario1");
+        assert_eq!(jobs[2].name, "target1-scenario2");
+        assert_eq!(jobs[3].name, "target2-scenario2");
+    }
+
+    #[test]
+    fn test_job_clean() {
+        let temp_dir = tempdir().unwrap();
+        let work_dir = temp_dir.path().join("test_work");
+
+        // Create a job with a work directory
+        let general = General {
+            mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+            shape_suffix: None,
+            input_list: "test.txt".to_string(),
+            work_dir: work_dir.clone(),
+            max_concurrent: 1,
+            ncores: 1,
+            execution: Execution::Local,
+        };
+
+        let scenario = Scenario {
+            name: "test_scenario".to_string(),
+            workflow: Workflow {
+                modules: IndexMap::new(),
+            },
+        };
+
+        let target = Target {
+            id: "test_target".to_string(),
+            molecules: vec![],
+            restraints: vec![],
+            toppar: vec![],
+            misc: vec![],
+            shape: None,
+        };
+
+        let mut job = Job::new(general, scenario, target);
+
+        // Create the work directory
+        std::fs::create_dir_all(&job.wd).unwrap();
+
+        // Verify directory exists
+        assert!(job.wd.exists());
+
+        // Clean the job
+        let result = job.clean();
+        assert!(result.is_ok());
+
+        // Verify directory was removed
+        assert!(!job.wd.exists());
+    }
+
+    #[test]
+    fn test_resolve_fname_pattern() {
+        let temp_dir = tempdir().unwrap();
+        let temp_path = temp_dir.path();
+
+        // Create test files
+        let file1 = temp_path.join("test_file1.pdb");
+        let file2 = temp_path.join("test_file2.pdb");
+        let file3 = temp_path.join("other_file.pdb");
+
+        std::fs::write(&file1, "content1").unwrap();
+        std::fs::write(&file2, "content2").unwrap();
+        std::fs::write(&file3, "content3").unwrap();
+
+        let files = vec![file1.clone(), file2.clone(), file3.clone()];
+
+        let job = Job {
+            name: "test".to_string(),
+            status: Status::Unknown,
+            wd: temp_path.to_path_buf(),
+            target: Target {
+                id: "test".to_string(),
+                molecules: vec![],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+            },
+            scenario: Scenario {
+                name: "test".to_string(),
+                workflow: Workflow {
+                    modules: IndexMap::new(),
+                },
+            },
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                shape_suffix: None,
+                input_list: "test.txt".to_string(),
+                work_dir: temp_path.to_path_buf(),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Local,
+            },
+        };
+
+        // Test pattern matching
+        let result = job.resolve_fname_pattern("test_file1\\.pdb", &files);
+        assert!(result.is_some());
+        assert!(result.unwrap().contains("test_file1.pdb"));
+
+        // Test pattern with no match
+        let result = job.resolve_fname_pattern("nonexistent.*\\.pdb", &files);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_get_all_target_files() {
+        let temp_dir = tempdir().unwrap();
+        let temp_path = temp_dir.path();
+
+        // Create test files
+        let mol_file = temp_path.join("mol.pdb");
+        let restraint_file = temp_path.join("restraint.tbl");
+        let toppar_file = temp_path.join("toppar.top");
+        let misc_file = temp_path.join("misc.txt");
+        let shape_file = temp_path.join("shape.pdb");
+
+        std::fs::write(&mol_file, "content").unwrap();
+        std::fs::write(&restraint_file, "content").unwrap();
+        std::fs::write(&toppar_file, "content").unwrap();
+        std::fs::write(&misc_file, "content").unwrap();
+        std::fs::write(&shape_file, "content").unwrap();
+
+        let target = Target {
+            id: "test".to_string(),
+            molecules: vec![mol_file.clone()],
+            restraints: vec![restraint_file.clone()],
+            toppar: vec![toppar_file.clone()],
+            misc: vec![misc_file.clone()],
+            shape: Some(shape_file.clone()),
+        };
+
+        let job = Job {
+            name: "test".to_string(),
+            status: Status::Unknown,
+            wd: temp_path.to_path_buf(),
+            target: target.clone(),
+            scenario: Scenario {
+                name: "test".to_string(),
+                workflow: Workflow {
+                    modules: IndexMap::new(),
+                },
+            },
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                shape_suffix: None,
+                input_list: "test.txt".to_string(),
+                work_dir: temp_path.to_path_buf(),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Local,
+            },
+        };
+
+        let all_files = job.get_all_target_files();
+
+        // Should contain all files
+        assert_eq!(all_files.len(), 5);
+        assert!(all_files.contains(&mol_file));
+        assert!(all_files.contains(&restraint_file));
+        assert!(all_files.contains(&toppar_file));
+        assert!(all_files.contains(&misc_file));
+        assert!(all_files.contains(&shape_file));
+    }
+}

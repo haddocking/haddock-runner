@@ -79,3 +79,89 @@ impl Queue {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::runner::status::Status;
+
+    #[test]
+    fn test_queue_new() {
+        let workload = vec![
+            Job {
+                name: "job1".to_string(),
+                status: Status::Unknown,
+                wd: std::path::PathBuf::from("/tmp/job1"),
+                target: crate::dataset::Target {
+                    id: "target1".to_string(),
+                    molecules: vec![],
+                    restraints: vec![],
+                    toppar: vec![],
+                    misc: vec![],
+                    shape: None,
+                },
+                scenario: crate::input::Scenario {
+                    name: "scenario1".to_string(),
+                    workflow: crate::input::Workflow {
+                        modules: indexmap::IndexMap::new(),
+                    },
+                },
+                general: crate::input::General {
+                    mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                    shape_suffix: None,
+                    input_list: "test.txt".to_string(),
+                    work_dir: std::path::PathBuf::from("/tmp"),
+                    max_concurrent: 1,
+                    ncores: 1,
+                    execution: crate::input::Execution::Local,
+                },
+            },
+            Job {
+                name: "job2".to_string(),
+                status: Status::Unknown,
+                wd: std::path::PathBuf::from("/tmp/job2"),
+                target: crate::dataset::Target {
+                    id: "target2".to_string(),
+                    molecules: vec![],
+                    restraints: vec![],
+                    toppar: vec![],
+                    misc: vec![],
+                    shape: None,
+                },
+                scenario: crate::input::Scenario {
+                    name: "scenario2".to_string(),
+                    workflow: crate::input::Workflow {
+                        modules: indexmap::IndexMap::new(),
+                    },
+                },
+                general: crate::input::General {
+                    mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                    shape_suffix: None,
+                    input_list: "test.txt".to_string(),
+                    work_dir: std::path::PathBuf::from("/tmp"),
+                    max_concurrent: 1,
+                    ncores: 1,
+                    execution: crate::input::Execution::Local,
+                },
+            },
+        ];
+
+        let queue = Queue::new(2, workload);
+
+        assert_eq!(queue.concurrent, 2);
+        assert_eq!(queue.workload.len(), 2);
+    }
+
+    #[test]
+    fn test_queue_setup() {
+        // This test would normally test the setup method, but since it involves
+        // file system operations and complex job setup, we'll just verify
+        // that the method can be called without panicking
+        let workload = vec![];
+        let queue = Queue::new(1, workload);
+
+        // This should not panic, though it won't do much with an empty workload
+        let result = queue.setup();
+        assert!(result.is_ok());
+    }
+}

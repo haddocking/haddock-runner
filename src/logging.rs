@@ -15,4 +15,3 @@ pub fn init_logging(log_level: LevelFilter) {
         })
         .init();
 }
-

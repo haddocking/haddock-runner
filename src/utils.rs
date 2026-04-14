@@ -52,3 +52,111 @@ pub fn command_exists(command: &str) -> bool {
         false
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_yaml::Value;
+
+    #[test]
+    fn test_generate_timestamp() {
+        let timestamp = generate_timestamp();
+
+        // Should be in the format YYYY-MM-DD_HH-MM-SS
+        assert_eq!(timestamp.len(), 19);
+        assert!(timestamp.contains('-'));
+        assert!(timestamp.contains('_'));
+    }
+
+    #[test]
+    fn test_extract_root() {
+        // Test normal case
+        assert_eq!(extract_root("protein1_r.pdb"), Some("protein1".to_string()));
+
+        // Test multiple underscores
+        assert_eq!(extract_root("protein_1_r.pdb"), Some("protein".to_string()));
+
+        // Test no underscore
+        assert_eq!(extract_root("protein.pdb"), None);
+
+        // Test single part
+        assert_eq!(extract_root("protein"), None);
+    }
+
+    #[test]
+    fn test_extract_root_from_filename() {
+        // Test PDB file
+        assert_eq!(
+            extract_root_from_filename("protein1_r.pdb"),
+            Some("protein1".to_string())
+        );
+
+        // Test TBL file
+        assert_eq!(
+            extract_root_from_filename("protein1_restraints.tbl"),
+            Some("protein1".to_string())
+        );
+
+        // Test TOP file
+        assert_eq!(
+            extract_root_from_filename("protein1.top"),
+            Some("protein1".to_string())
+        );
+
+        // Test PARAM file
+        assert_eq!(
+            extract_root_from_filename("protein1.param"),
+            Some("protein1".to_string())
+        );
+
+        // Test file with multiple underscores
+        assert_eq!(
+            extract_root_from_filename("protein_1_r.pdb"),
+            Some("protein".to_string())
+        );
+
+        // Test file without common suffixes - this should return the full filename without extension
+        assert_eq!(
+            extract_root_from_filename("protein.txt"),
+            Some("protein.txt".to_string())
+        );
+    }
+
+    #[test]
+    fn test_format_toml_value() {
+        // Test bool
+        assert_eq!(format_toml_value(&Value::Bool(true)), "true");
+        assert_eq!(format_toml_value(&Value::Bool(false)), "false");
+
+        // Test number
+        assert_eq!(format_toml_value(&Value::Number(42.into())), "42");
+
+        // Test string
+        assert_eq!(
+            format_toml_value(&Value::String("test".to_string())),
+            "\"test\""
+        );
+
+        // Test sequence
+        let seq = vec![
+            Value::String("item1".to_string()),
+            Value::String("item2".to_string()),
+        ];
+        assert_eq!(
+            format_toml_value(&Value::Sequence(seq)),
+            "[\"item1\", \"item2\"]"
+        );
+
+        // Test null (fallback)
+        assert_eq!(format_toml_value(&Value::Null), "null");
+    }
+
+    #[test]
+    fn test_command_exists() {
+        // Test with a command that should exist
+        assert!(command_exists("ls"));
+
+        // Test with a command that should not exist
+        assert!(!command_exists("nonexistent_command_12345"));
+    }
+}

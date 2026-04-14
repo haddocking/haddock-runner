@@ -90,3 +90,6 @@ pub fn validate_slurm() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {}

@@ -77,3 +77,6 @@ pub fn validate_local() -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {}

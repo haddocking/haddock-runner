@@ -157,3 +157,178 @@ fn find_modified(
 
     error_msg
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+    use std::io::Write;
+    use tempfile::{NamedTempFile, tempdir};
+
+    #[test]
+    fn test_calculate_checksum() {
+        // Create a temporary file with known content
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "test content").unwrap();
+        let file_path = temp_file.path().to_path_buf();
+
+        // Calculate checksum
+        let checksum = calculate_checksum(&file_path).unwrap();
+
+        // Verify checksum is not empty and is a hex string
+        assert!(!checksum.is_empty());
+        assert!(checksum.len() == 32); // MD5 should be 32 characters
+        assert!(checksum.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_calculate_checksum_different_content() {
+        // Create two files with different content
+        let mut temp_file1 = NamedTempFile::new().unwrap();
+        writeln!(temp_file1, "content1").unwrap();
+        let file_path1 = temp_file1.path().to_path_buf();
+
+        let mut temp_file2 = NamedTempFile::new().unwrap();
+        writeln!(temp_file2, "content2").unwrap();
+        let file_path2 = temp_file2.path().to_path_buf();
+
+        // Calculate checksums
+        let checksum1 = calculate_checksum(&file_path1).unwrap();
+        let checksum2 = calculate_checksum(&file_path2).unwrap();
+
+        // Verify checksums are different
+        assert_ne!(checksum1, checksum2);
+    }
+
+    #[test]
+    fn test_calculate_target_checksums() {
+        // Create a temporary target with some files
+        let temp_dir = tempdir().unwrap();
+        let temp_path = temp_dir.path();
+
+        // Create test files
+        let mol_file = temp_path.join("test_mol.pdb");
+        let restraint_file = temp_path.join("test_restraint.tbl");
+        let toppar_file = temp_path.join("test_toppar.top");
+        let misc_file = temp_path.join("test_misc.txt");
+
+        fs::write(&mol_file, "molecule content").unwrap();
+        fs::write(&restraint_file, "restraint content").unwrap();
+        fs::write(&toppar_file, "toppar content").unwrap();
+        fs::write(&misc_file, "misc content").unwrap();
+
+        // Create target with cloned paths
+        let mol_file_clone = mol_file.clone();
+        let restraint_file_clone = restraint_file.clone();
+        let toppar_file_clone = toppar_file.clone();
+        let misc_file_clone = misc_file.clone();
+
+        let target = crate::dataset::Target {
+            id: "test".to_string(),
+            molecules: vec![mol_file],
+            restraints: vec![restraint_file],
+            toppar: vec![toppar_file],
+            misc: vec![misc_file],
+            shape: None,
+        };
+
+        // Calculate target checksums
+        let checksums = calculate_target_checksums(&target).unwrap();
+
+        // Verify we have checksums for all files
+        assert_eq!(checksums.len(), 4);
+        assert!(checksums.contains_key(mol_file_clone.to_str().unwrap()));
+        assert!(checksums.contains_key(restraint_file_clone.to_str().unwrap()));
+        assert!(checksums.contains_key(toppar_file_clone.to_str().unwrap()));
+        assert!(checksums.contains_key(misc_file_clone.to_str().unwrap()));
+    }
+
+    #[test]
+    fn test_calculate_target_checksums_with_shape() {
+        // Create a temporary target with shape file
+        let temp_dir = tempdir().unwrap();
+        let temp_path = temp_dir.path();
+
+        // Create test files including shape
+        let mol_file = temp_path.join("test_mol.pdb");
+        let shape_file = temp_path.join("test_shape.pdb");
+
+        fs::write(&mol_file, "molecule content").unwrap();
+        fs::write(&shape_file, "shape content").unwrap();
+
+        // Create target with shape using cloned paths
+        let mol_file_clone = mol_file.clone();
+        let shape_file_clone = shape_file.clone();
+
+        let target = crate::dataset::Target {
+            id: "test".to_string(),
+            molecules: vec![mol_file],
+            restraints: vec![],
+            toppar: vec![],
+            misc: vec![],
+            shape: Some(shape_file),
+        };
+
+        // Calculate target checksums
+        let checksums = calculate_target_checksums(&target).unwrap();
+
+        // Verify we have checksums for both files
+        assert_eq!(checksums.len(), 2);
+        assert!(checksums.contains_key(mol_file_clone.to_str().unwrap()));
+        assert!(checksums.contains_key(shape_file_clone.to_str().unwrap()));
+    }
+
+    #[test]
+    fn test_validate_checksums_new_file() {
+        // Create a temporary directory for the checksum file
+        let temp_dir = tempdir().unwrap();
+        let checksum_file = temp_dir.path().join("checksum.json");
+
+        // Create a test target
+        let temp_target_dir = tempdir().unwrap();
+        let mol_file = temp_target_dir.path().join("test_mol.pdb");
+        fs::write(&mol_file, "molecule content").unwrap();
+
+        let target = crate::dataset::Target {
+            id: "test".to_string(),
+            molecules: vec![mol_file],
+            restraints: vec![],
+            toppar: vec![],
+            misc: vec![],
+            shape: None,
+        };
+
+        // Validate checksums (should create new file)
+        let result = validate_checksums(&[target], &checksum_file);
+
+        // Should succeed and create the file
+        assert!(result.is_ok());
+        assert!(checksum_file.exists());
+    }
+
+    #[test]
+    fn test_find_modified() {
+        // Create test checksums
+        let mut current = HashMap::new();
+        current.insert("file1.txt".to_string(), "checksum1".to_string());
+        current.insert("file2.txt".to_string(), "checksum2".to_string());
+        current.insert("file3.txt".to_string(), "checksum3".to_string());
+
+        let mut stored = HashMap::new();
+        stored.insert("file1.txt".to_string(), "checksum1_changed".to_string()); // Changed
+        stored.insert("file4.txt".to_string(), "checksum4".to_string()); // Removed
+        // file2.txt and file3.txt are new
+
+        // Find modified files
+        let error_msg = find_modified(current, stored);
+
+        // Verify error message contains expected information
+        assert!(error_msg.contains("Modified files:"));
+        assert!(error_msg.contains("file1.txt"));
+        assert!(error_msg.contains("New files added:"));
+        assert!(error_msg.contains("file2.txt"));
+        assert!(error_msg.contains("file3.txt"));
+        assert!(error_msg.contains("Files removed:"));
+        assert!(error_msg.contains("file4.txt"));
+    }
+}

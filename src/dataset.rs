@@ -171,3 +171,127 @@ impl TargetBuilder {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_target_new() {
+        let target = Target::new(
+            "test_id".to_string(),
+            vec![PathBuf::from("mol1.pdb")],
+            vec![PathBuf::from("restraint1.tbl")],
+            vec![PathBuf::from("toppar1.top")],
+            vec![PathBuf::from("misc1.txt")],
+            Some(PathBuf::from("shape1.pdb")),
+        );
+
+        assert_eq!(target.id, "test_id");
+        assert_eq!(target.molecules.len(), 1);
+        assert_eq!(target.restraints.len(), 1);
+        assert_eq!(target.toppar.len(), 1);
+        assert_eq!(target.misc.len(), 1);
+        assert!(target.shape.is_some());
+    }
+
+    #[test]
+    fn test_load_dataset_simple() {
+        // Create a temporary input list file
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "protein1_r.pdb").unwrap();
+        writeln!(temp_file, "protein1_l.pdb").unwrap();
+        writeln!(temp_file, "protein1_restraints.tbl").unwrap();
+        let file_path = temp_file.path().to_str().unwrap().to_string();
+
+        // Load dataset
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+
+        // Should have one target
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].id, "protein1");
+        assert_eq!(targets[0].molecules.len(), 2);
+        assert_eq!(targets[0].restraints.len(), 1);
+    }
+
+    #[test]
+    fn test_load_dataset_with_shape() {
+        // Create a temporary input list file with shape
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "protein1_r.pdb").unwrap();
+        writeln!(temp_file, "protein1_l.pdb").unwrap();
+        writeln!(temp_file, "protein1_shape.pdb").unwrap();
+        let file_path = temp_file.path().to_str().unwrap().to_string();
+
+        // Load dataset
+        let targets = load_dataset(
+            &file_path,
+            &["_r".to_string(), "_l".to_string()],
+            Some("_shape"),
+        );
+
+        // Should have one target with shape
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].id, "protein1");
+        assert!(targets[0].shape.is_some());
+    }
+
+    #[test]
+    fn test_load_dataset_multiple_targets() {
+        // Create a temporary input list file with multiple targets
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "protein1_r.pdb").unwrap();
+        writeln!(temp_file, "protein1_l.pdb").unwrap();
+        writeln!(temp_file, "protein2_r.pdb").unwrap();
+        writeln!(temp_file, "protein2_l.pdb").unwrap();
+        let file_path = temp_file.path().to_str().unwrap().to_string();
+
+        // Load dataset
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+
+        // Should have two targets
+        assert_eq!(targets.len(), 2);
+        // Check that both targets are present (order may vary)
+        let target_ids: Vec<_> = targets.iter().map(|t| t.id.as_str()).collect();
+        assert!(target_ids.contains(&"protein1"));
+        assert!(target_ids.contains(&"protein2"));
+    }
+
+    #[test]
+    fn test_load_dataset_with_comments_and_empty_lines() {
+        // Create a temporary input list file with comments and empty lines
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "# This is a comment").unwrap();
+        writeln!(temp_file).unwrap(); // Empty line
+        writeln!(temp_file, "protein1_r.pdb").unwrap();
+        writeln!(temp_file, "protein1_l.pdb").unwrap();
+        writeln!(temp_file, "# Another comment").unwrap();
+        let file_path = temp_file.path().to_str().unwrap().to_string();
+
+        // Load dataset
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+
+        // Should have one target (comments and empty lines should be ignored)
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].id, "protein1");
+    }
+
+    #[test]
+    fn test_load_dataset_with_misc_files() {
+        // Create a temporary input list file with misc files
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "protein1_r.pdb").unwrap();
+        writeln!(temp_file, "protein1_l.pdb").unwrap();
+        writeln!(temp_file, "protein1_other.txt").unwrap(); // This should be misc for protein1
+        let file_path = temp_file.path().to_str().unwrap().to_string();
+
+        // Load dataset
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+
+        // Should have one target with misc file
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].misc.len(), 1);
+    }
+}
