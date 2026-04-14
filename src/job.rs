@@ -1,4 +1,5 @@
 use anyhow::Context;
+use log::{debug, info};
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
@@ -66,26 +67,39 @@ impl Job {
     }
 
     pub fn setup(&mut self) -> anyhow::Result<()> {
+        info!(
+            "Setting up job {} in directory: {}",
+            self.name,
+            self.wd.display()
+        );
+
         // Create the working directory
+        debug!("Creating working directory: {}", self.wd.display());
         fs::create_dir_all(&self.wd)?;
 
         // Copy the data
+        debug!("Copying data files");
         self.copy_data()?;
 
         // Write the run.toml file
+        debug!("Writing run.toml file");
         self.write_run_toml()?;
 
         if let Execution::Slurm = self.general.execution {
-            slurm::prepare_job_file();
+            debug!("Preparing SLURM job file");
+            slurm::prepare_job_file(&self.wd, "haddock3")?;
         }
 
         // Mark it are ready for execution
         self.status = Status::Prepared;
+        info!("Job {} setup completed successfully", self.name);
 
         Ok(())
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
+        info!("Starting execution of job: {}", self.name);
+
         match self.general.execution {
             Execution::Local => self.run_local(),
             Execution::Slurm => self.run_slurm(),
@@ -93,20 +107,39 @@ impl Job {
     }
 
     pub fn run_slurm(&mut self) -> anyhow::Result<()> {
-        // slurm::submit();
-        // slurm::wait();
-        todo!()
+        // Prepare job file
+        let job_script = self.wd.join("job.sh");
+
+        // Submit job
+        let output = slurm::submit(&job_script)?;
+
+        // Parse job ID from output (simplified - would need proper parsing)
+        let job_id = output.split_whitespace().last().unwrap_or("");
+
+        if job_id.is_empty() {
+            anyhow::bail!("Failed to parse job ID from sbatch output");
+        }
+
+        // Wait for job completion
+        slurm::wait(job_id)?;
+
+        // Update status to Done
+        self.status = Status::Done;
+
+        Ok(())
     }
 
     pub fn run_local(&mut self) -> anyhow::Result<()> {
+        info!("Running local execution for job: {}", self.name);
+
         // Execute haddock3 command in the working directory
-        let log_path = local::run("haddock3", "run.toml", &self.wd)?;
+        let log_path = local::run(&self.wd)?;
 
         // Update status to Done
         self.status = Status::Done;
 
         // Log the execution
-        println!(
+        info!(
             "Job '{}' executed successfully. Log: {}",
             self.name,
             log_path.display()
@@ -272,8 +305,4 @@ impl Job {
 
         files
     }
-    //
-    // fn execute() {
-    //     todo!()
-    // }
 }

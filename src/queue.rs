@@ -1,5 +1,6 @@
 use crate::job::Job;
 use anyhow::Context;
+use log::{info, error};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
@@ -21,7 +22,7 @@ impl Queue {
         // Run setup for all jobs sequentially - this is I/O and doesn't benefit much from parallelism
         for job in &self.workload {
             let mut job_clone = job.clone();
-            println!("Setting up job: {}", job_clone.name);
+            info!("Setting up job: {}", job_clone.name);
             job_clone.setup()?;
         }
         Ok(())
@@ -44,9 +45,10 @@ impl Queue {
                 for (index, job) in workload.iter().enumerate() {
                     if index % concurrent == thread_id {
                         let mut job_clone = job.clone();
-                        println!("Thread {} processing job: {}", thread_id, job_clone.name);
+                        info!("Thread {} processing job: {}", thread_id, job_clone.name);
 
                         if let Err(e) = job_clone.run() {
+                            error!("Thread {} failed processing job {}: {}", thread_id, job_clone.name, e);
                             tx.send(Err(e)).unwrap();
                             return;
                         }
