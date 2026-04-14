@@ -83,19 +83,18 @@ pub fn load_dataset(
         }
 
         // Try to match shape pattern
-        if !matched {
-            if let Some(pattern) = &shape_pattern {
-                if let Some(captures) = pattern.captures(&file_name) {
-                    let root = captures.get(1).unwrap().as_str().to_string();
+        if !matched
+            && let Some(pattern) = &shape_pattern
+            && let Some(captures) = pattern.captures(&file_name)
+        {
+            let root = captures.get(1).unwrap().as_str().to_string();
 
-                    // Add to target builder
-                    let builder = targets
-                        .entry(root.clone())
-                        .or_insert_with(|| TargetBuilder::new(root));
-                    builder.shape = Some(path.clone());
-                    matched = true;
-                }
-            }
+            // Add to target builder
+            let builder = targets
+                .entry(root.clone())
+                .or_insert_with(|| TargetBuilder::new(root));
+            builder.shape = Some(path.clone());
+            matched = true;
         }
 
         // Try to match restraint pattern

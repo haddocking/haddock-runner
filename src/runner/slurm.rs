@@ -72,3 +72,8 @@ pub fn wait(job_id: &str) -> Result<()> {
         anyhow::bail!("Job {} failed or has unexpected status: {}", job_id, status)
     }
 }
+
+pub fn validate_slurm() -> Result<()> {
+    // TODO: Should check if we can access the needed commands from the PATH
+    todo!()
+}

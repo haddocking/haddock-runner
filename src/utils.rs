@@ -1,4 +1,5 @@
 use chrono::Local;
+use serde_yaml::Value;
 
 pub fn generate_timestamp() -> String {
     Local::now().format("%Y-%m-%d_%H-%M-%S").to_string()
@@ -26,5 +27,18 @@ pub fn extract_root_from_filename(filename: &str) -> Option<String> {
         Some(filename[..pos].to_string())
     } else {
         Some(filename)
+    }
+}
+
+pub fn format_toml_value(value: &Value) -> String {
+    match value {
+        Value::Bool(b) => b.to_string(),
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => format!("\"{}\"", s),
+        Value::Sequence(seq) => {
+            let items: Vec<String> = seq.iter().map(format_toml_value).collect();
+            format!("[{}]", items.join(", "))
+        }
+        _ => "null".to_string(), // Fallback for other types
     }
 }

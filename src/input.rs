@@ -1,4 +1,4 @@
-use crate::slurm;
+use crate::runner::slurm::validate_slurm;
 use anyhow::{Context, Result, bail};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -109,7 +109,7 @@ impl Input {
                     );
                 }
             }
-            Execution::Slurm => slurm::validate_slurm()?,
+            Execution::Slurm => validate_slurm()?,
         }
 
         Ok(())

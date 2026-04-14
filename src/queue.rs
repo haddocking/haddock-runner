@@ -1,6 +1,6 @@
 use crate::job::Job;
 use anyhow::Context;
-use log::{info, error};
+use log::{error, info};
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
@@ -48,7 +48,10 @@ impl Queue {
                         info!("Thread {} processing job: {}", thread_id, job_clone.name);
 
                         if let Err(e) = job_clone.run() {
-                            error!("Thread {} failed processing job {}: {}", thread_id, job_clone.name, e);
+                            error!(
+                                "Thread {} failed processing job {}: {}",
+                                thread_id, job_clone.name, e
+                            );
                             tx.send(Err(e)).unwrap();
                             return;
                         }

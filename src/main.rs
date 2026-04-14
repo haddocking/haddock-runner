@@ -5,7 +5,6 @@ pub mod job;
 pub mod logging;
 pub mod queue;
 pub mod runner;
-pub mod slurm;
 pub mod utils;
 
 use anyhow::Result;

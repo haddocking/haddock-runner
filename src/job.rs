@@ -1,3 +1,4 @@
+use crate::utils::format_toml_value;
 use anyhow::Context;
 use log::{debug, info};
 use std::fs;
@@ -5,7 +6,6 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use itertools::Itertools;
-use serde_yaml::Value;
 
 use crate::input::{Execution, General};
 use crate::runner::status::Status;
@@ -15,17 +15,6 @@ use crate::{
     input::{Input, Scenario},
 };
 use regex::Regex;
-
-// type Job struct {
-// 	ID         string
-// 	Path       string
-// 	Params     map[string]interface{}
-// 	Restraints input.Airs
-// 	Toppar     input.TopologyParams
-// 	Status     string
-// }
-//
-//
 
 pub fn create_jobs(input: Input, targets: Vec<Target>) -> Vec<Job> {
     input
@@ -232,19 +221,19 @@ impl Job {
             if let Some(params) = module_params.as_mapping() {
                 for (key, value) in params.iter() {
                     if let Some(key_str) = key.as_str() {
-                        if key_str.contains("_fname") {
+                        if key_str.contains("_fname") 
                             // Handle _fname parameters by resolving the file pattern
-                            if let Some(pattern) = value.as_str() {
-                                if let Some(resolved_path) =
-                                    self.resolve_fname_pattern(pattern, &all_files)
-                                {
-                                    toml_content
-                                        .push_str(&format!("{} = {}\n", key_str, resolved_path));
-                                }
+                            && let Some(pattern) = value.as_str()
+                        {
+                            if let Some(resolved_path) =
+                                self.resolve_fname_pattern(pattern, &all_files)
+                            {
+                                toml_content
+                                    .push_str(&format!("{} = {}\n", key_str, resolved_path));
                             }
                         } else {
                             // Handle regular parameters
-                            let value_str = self.format_toml_value(value);
+                            let value_str = format_toml_value(value);
                             toml_content.push_str(&format!("{} = {}\n", key_str, value_str));
                         }
                     }
@@ -257,33 +246,20 @@ impl Job {
         Ok(toml_content)
     }
 
-    fn format_toml_value(&self, value: &Value) -> String {
-        match value {
-            Value::Bool(b) => b.to_string(),
-            Value::Number(n) => n.to_string(),
-            Value::String(s) => format!("\"{}\"", s),
-            Value::Sequence(seq) => {
-                let items: Vec<String> = seq.iter().map(|v| self.format_toml_value(v)).collect();
-                format!("[{}]", items.join(", "))
-            }
-            _ => "null".to_string(), // Fallback for other types
-        }
-    }
-
     /// Resolves _fname patterns to actual file paths
     fn resolve_fname_pattern(&self, pattern_str: &str, files: &[PathBuf]) -> Option<String> {
         let pattern = Regex::new(pattern_str).ok()?;
         let mut matching_file: Option<PathBuf> = None;
 
         for file in files {
-            if let Some(file_name) = file.file_name().and_then(|n| n.to_str()) {
-                if pattern.is_match(file_name) {
-                    if matching_file.is_some() {
-                        // Multiple matches - return None to indicate ambiguity
-                        return None;
-                    }
-                    matching_file = Some(file.clone());
+            if let Some(file_name) = file.file_name().and_then(|n| n.to_str())
+                && pattern.is_match(file_name)
+            {
+                if matching_file.is_some() {
+                    // Multiple matches - return None to indicate ambiguity
+                    return None;
                 }
+                matching_file = Some(file.clone());
             }
         }
 
