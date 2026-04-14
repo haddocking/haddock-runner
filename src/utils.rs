@@ -1,5 +1,6 @@
 use chrono::Local;
 use serde_yaml::Value;
+use std::process::Command;
 
 pub fn generate_timestamp() -> String {
     Local::now().format("%Y-%m-%d_%H-%M-%S").to_string()
@@ -40,5 +41,14 @@ pub fn format_toml_value(value: &Value) -> String {
             format!("[{}]", items.join(", "))
         }
         _ => "null".to_string(), // Fallback for other types
+    }
+}
+
+/// Check if a command exists in the system PATH
+pub fn command_exists(command: &str) -> bool {
+    if let Ok(output) = Command::new("which").arg(command).output() {
+        output.status.success()
+    } else {
+        false
     }
 }

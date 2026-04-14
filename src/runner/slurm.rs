@@ -1,3 +1,4 @@
+use crate::utils::command_exists;
 use anyhow::{Context, Result};
 use std::fs;
 use std::io::Write;
@@ -74,6 +75,18 @@ pub fn wait(job_id: &str) -> Result<()> {
 }
 
 pub fn validate_slurm() -> Result<()> {
-    // TODO: Should check if we can access the needed commands from the PATH
-    todo!()
+    // Check if needed commands are available
+    let needed_slurm_commands = vec!["sbatch", "sacct"];
+
+    for command in needed_slurm_commands {
+        // Check if sbatch command is available
+        if !command_exists(command) {
+            anyhow::bail!(format!(
+                "{} command not found in PATH. Please ensure SLURM is installed and configured.",
+                command
+            ));
+        }
+    }
+
+    Ok(())
 }

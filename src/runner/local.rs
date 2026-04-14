@@ -4,7 +4,7 @@ use std::{fs, path::Path, process::Command};
 use anyhow::{Context, Result, bail};
 use log::{debug, error, info};
 
-use crate::utils::generate_timestamp;
+use crate::utils::{command_exists, generate_timestamp};
 
 pub fn run(path: &Path) -> Result<PathBuf> {
     debug!("Running command in directory: {}", path.display());
@@ -69,4 +69,11 @@ pub fn run(path: &Path) -> Result<PathBuf> {
 
     info!("Command executed successfully");
     Ok(log_path)
+}
+
+pub fn validate_local() -> Result<()> {
+    if !command_exists("haddock3") {
+        bail!("haddock3 command not found in PATH, make sure its installed")
+    }
+    Ok(())
 }

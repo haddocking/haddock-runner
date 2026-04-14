@@ -1,9 +1,11 @@
+use crate::runner::local::validate_local;
 use crate::runner::slurm::validate_slurm;
 use anyhow::{Context, Result, bail};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 use std::{
+    fs,
     path::{Path, PathBuf},
     thread,
 };
@@ -38,6 +40,9 @@ impl Input {
                 .to_string_lossy()
                 .into_owned();
         }
+
+        // Create the work_dir
+        fs::create_dir_all(&input.general.work_dir)?;
 
         Ok(input)
     }
@@ -97,6 +102,7 @@ impl Input {
 
         match &self.general.execution {
             Execution::Local => {
+                validate_local()?;
                 let num_cpus = thread::available_parallelism().unwrap().get();
                 let needed_cpus = self.general.max_concurrent * self.general.ncores;
                 if needed_cpus > num_cpus as u16 {
