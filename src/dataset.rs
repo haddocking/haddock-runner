@@ -11,6 +11,7 @@ pub struct Target {
     pub toppar: Vec<PathBuf>,
     pub misc: Vec<PathBuf>,
     pub shape: Option<PathBuf>,
+    pub size: u64,
 }
 
 impl Target {
@@ -22,6 +23,7 @@ impl Target {
         misc: Vec<PathBuf>,
         shape: Option<PathBuf>,
     ) -> Target {
+        let size = calculate_target_size(&molecules, &restraints, &toppar, &misc, shape.as_ref());
         Target {
             id,
             molecules,
@@ -29,8 +31,56 @@ impl Target {
             toppar,
             misc,
             shape,
+            size,
         }
     }
+}
+
+fn calculate_target_size(
+    molecules: &[PathBuf],
+    restraints: &[PathBuf],
+    toppar: &[PathBuf],
+    misc: &[PathBuf],
+    shape: Option<&PathBuf>,
+) -> u64 {
+    let mut total_size = 0;
+
+    // Sum sizes of all molecule files
+    for path in molecules {
+        if let Ok(metadata) = std::fs::metadata(path) {
+            total_size += metadata.len();
+        }
+    }
+
+    // Sum sizes of all restraint files
+    for path in restraints {
+        if let Ok(metadata) = std::fs::metadata(path) {
+            total_size += metadata.len();
+        }
+    }
+
+    // Sum sizes of all toppar files
+    for path in toppar {
+        if let Ok(metadata) = std::fs::metadata(path) {
+            total_size += metadata.len();
+        }
+    }
+
+    // Sum sizes of all misc files
+    for path in misc {
+        if let Ok(metadata) = std::fs::metadata(path) {
+            total_size += metadata.len();
+        }
+    }
+
+    // Add shape file size if present
+    if let Some(shape_path) = shape
+        && let Ok(metadata) = std::fs::metadata(shape_path)
+    {
+        total_size += metadata.len();
+    }
+
+    total_size
 }
 
 pub fn load_dataset(
