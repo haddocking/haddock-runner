@@ -56,11 +56,11 @@ impl Job {
     }
 
     pub fn setup(&mut self) -> anyhow::Result<()> {
-        info!(
-            "Setting up job {} in directory: {}",
-            self.name,
-            self.wd.display()
-        );
+        // info!(
+        //     "Setting up job {} in directory: {}",
+        //     self.name,
+        //     self.wd.display()
+        // );
 
         // Create the working directory
         debug!("Creating working directory: {}", self.wd.display());
@@ -81,13 +81,13 @@ impl Job {
 
         // Mark it are ready for execution
         self.status = Status::Prepared;
-        info!("Job {} setup completed successfully", self.name);
+        info!("> {}", self.name);
 
         Ok(())
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
-        info!("Starting execution of job: {}", self.name);
+        info!("Starting {}", self.name);
 
         // TODO: Figure out if this job is incomplete and should be restarted
 
@@ -121,20 +121,22 @@ impl Job {
     }
 
     pub fn run_local(&mut self) -> anyhow::Result<()> {
-        info!("Running local execution for job: {}", self.name);
+        // info!("Running {} locally", self.name);
 
         // Execute haddock3 command in the working directory
-        let log_path = local::run(&self.wd)?;
+        let _ = local::run(&self.wd)?;
 
         // Update status to Done
         self.status = Status::Done;
 
-        // Log the execution
-        info!(
-            "Job '{}' executed successfully. Log: {}",
-            self.name,
-            log_path.display()
-        );
+        // // Log the execution
+        // info!(
+        //     "Job '{}' executed successfully. Log: {}",
+        //     self.name,
+        //     log_path.display()
+        // );
+        //
+        info!("{} done", self.name);
 
         Ok(())
     }
@@ -179,6 +181,7 @@ impl Job {
             toppar,
             misc,
             shape: shape.clone(),
+            size: self.target.size,
         };
 
         self.target = organized_target;
@@ -320,6 +323,7 @@ mod tests {
             toppar: vec![PathBuf::from("toppar.top")],
             misc: vec![PathBuf::from("misc.txt")],
             shape: None,
+            size: 0,
         };
 
         let job = Job::new(general, scenario, target);
@@ -366,6 +370,7 @@ mod tests {
                 toppar: vec![],
                 misc: vec![],
                 shape: None,
+                size: 0,
             },
             Target {
                 id: "target2".to_string(),
@@ -374,6 +379,7 @@ mod tests {
                 toppar: vec![],
                 misc: vec![],
                 shape: None,
+                size: 0,
             },
         ];
 
@@ -417,6 +423,7 @@ mod tests {
             toppar: vec![],
             misc: vec![],
             shape: None,
+            size: 0,
         };
 
         let mut job = Job::new(general, scenario, target);
@@ -462,6 +469,7 @@ mod tests {
                 toppar: vec![],
                 misc: vec![],
                 shape: None,
+                size: 0,
             },
             scenario: Scenario {
                 name: "test".to_string(),
@@ -515,6 +523,7 @@ mod tests {
             toppar: vec![toppar_file.clone()],
             misc: vec![misc_file.clone()],
             shape: Some(shape_file.clone()),
+            size: 0,
         };
 
         let job = Job {

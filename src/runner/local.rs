@@ -67,7 +67,7 @@ pub fn run(path: &Path) -> Result<PathBuf> {
         )
     }
 
-    info!("Command executed successfully");
+    // info!("Command executed successfully");
     Ok(log_path)
 }
 
