@@ -71,12 +71,5 @@ pub fn run(path: &Path) -> Result<PathBuf> {
     Ok(log_path)
 }
 
-pub fn validate_local() -> Result<()> {
-    if !command_exists("haddock3") {
-        bail!("haddock3 command not found in PATH, make sure its installed")
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {}

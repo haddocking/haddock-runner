@@ -1,6 +1,6 @@
 use crate::job::fs::canonicalize;
 use crate::runner::slurm::SlurmJob;
-use crate::utils::format_toml_value;
+use crate::utils::{find_haddock3_executable, format_toml_value};
 use anyhow::Context;
 use log::{debug, info};
 use std::fs;
@@ -19,7 +19,6 @@ use crate::{
 use regex::Regex;
 
 pub const JOB_FILENAME: &str = "job.sh";
-const EXECUTABLE: &str = "/home/rodrigo/repos/haddock-runner/.venv/bin/haddock3";
 const WORKFLOW_FILENAME: &str = "run.toml";
 
 pub fn create_jobs(input: Input, targets: Vec<Target>) -> Vec<Job> {
@@ -256,7 +255,7 @@ impl Job {
         let body = format!(
             "cd {}\n{} {}\n",
             absolute_wd.display(),
-            EXECUTABLE,
+            find_haddock3_executable()?,
             WORKFLOW_FILENAME
         );
 

@@ -1,3 +1,4 @@
+use anyhow::bail;
 use chrono::Local;
 use serde_yaml::Value;
 use std::process::Command;
@@ -51,6 +52,23 @@ pub fn command_exists(command: &str) -> bool {
     } else {
         false
     }
+}
+
+pub fn find_haddock3_executable() -> anyhow::Result<String> {
+    // Try to find haddock3 in PATH
+    if let Ok(output) = Command::new("which").arg("haddock3").output()
+        && output.status.success()
+    {
+        let path = String::from_utf8_lossy(&output.stdout);
+        Ok(path.trim().to_string())
+    } else {
+        bail!("could not find `haddock3` executable in the PATH")
+    }
+}
+
+pub fn validate_haddock3() -> anyhow::Result<()> {
+    find_haddock3_executable()?;
+    Ok(())
 }
 
 #[cfg(test)]
