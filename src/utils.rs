@@ -62,7 +62,7 @@ pub fn find_haddock3_executable() -> anyhow::Result<String> {
         let path = String::from_utf8_lossy(&output.stdout);
         Ok(path.trim().to_string())
     } else {
-        bail!("could not find `haddock3` executable in the PATH")
+        bail!("could not find `haddock3` executable in the PATH");
     }
 }
 

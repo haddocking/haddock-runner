@@ -2,9 +2,9 @@ use std::path::PathBuf;
 use std::{fs, path::Path, process::Command};
 
 use anyhow::{Context, Result, bail};
-use log::{debug, error, info};
+use log::{debug, error};
 
-use crate::utils::{command_exists, generate_timestamp};
+use crate::utils::generate_timestamp;
 
 pub fn run(path: &Path) -> Result<PathBuf> {
     debug!("Running command in directory: {}", path.display());
