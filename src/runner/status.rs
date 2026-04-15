@@ -30,6 +30,18 @@ pub enum SlurmJobState {
 }
 
 impl SlurmJobState {
+    /// Convert SLURM status code to SlurmJobState enum
+    ///
+    /// This method converts SLURM status codes (like "PD", "R", "COMPLETED")
+    /// to the corresponding SlurmJobState enum variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `code` - SLURM status code string
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - Corresponding SlurmJobState enum variant
     pub fn from_status_code(code: &str) -> Self {
         match code {
             "PD" | "PENDING" => SlurmJobState::Pending,
@@ -66,6 +78,13 @@ impl SlurmJobState {
         )
     }
 
+    /// Check if the job state represents successful completion
+    ///
+    /// This method returns true if the job state is Completed.
+    ///
+    /// # Returns
+    ///
+    /// * `bool` - True if job completed successfully, false otherwise
     pub fn is_success(&self) -> bool {
         matches!(self, SlurmJobState::Completed)
     }

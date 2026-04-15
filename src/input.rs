@@ -17,6 +17,18 @@ pub struct Input {
 }
 
 impl Input {
+    /// Create a new Input instance from a YAML file
+    ///
+    /// This method reads and parses a YAML configuration file, converts relative paths
+    /// to absolute paths based on the YAML file location, and creates the working directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `yaml_path` - Path to the YAML configuration file
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self>` - Parsed Input configuration or error
     pub fn new(yaml_path: &Path) -> Result<Self> {
         // let yaml_path = Path::new("example/bm.yml");
         let yaml_content =

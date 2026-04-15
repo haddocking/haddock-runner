@@ -4,12 +4,25 @@ use std::{fs, path::Path, process::Command};
 use anyhow::{Context, Result, bail};
 use log::{debug, error};
 
-use crate::utils::generate_timestamp;
+use crate::job::WORKFLOW_FILENAME;
+use crate::utils::{find_haddock3_executable, generate_timestamp};
 
+/// Run haddock3 locally in the specified directory
+///
+/// This function executes the haddock3 command with the run.toml configuration file
+/// in the given working directory, captures the output, and writes it to a timestamped log file.
+///
+/// # Arguments
+///
+/// * `path` - The working directory where haddock3 should be executed
+///
+/// # Returns
+///
+/// * `Result<PathBuf>` - Path to the log file if successful, error otherwise
 pub fn run(path: &Path) -> Result<PathBuf> {
     debug!("Running command in directory: {}", path.display());
-    let command = "haddock3";
-    let arg = "run.toml";
+    let command = find_haddock3_executable()?;
+    let arg = WORKFLOW_FILENAME;
 
     let log_path = path.join(format!("log_{}.txt", generate_timestamp()));
     debug!("Log will be written to: {}", log_path.display());
@@ -21,7 +34,7 @@ pub fn run(path: &Path) -> Result<PathBuf> {
         arg,
         path.display()
     );
-    let output = match Command::new(command).arg(arg).current_dir(path).output() {
+    let output = match Command::new(&command).arg(arg).current_dir(path).output() {
         Ok(output) => output,
         Err(e) => {
             error!(

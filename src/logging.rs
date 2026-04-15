@@ -1,6 +1,15 @@
 use log::LevelFilter;
 use std::io::Write;
 
+/// Initialize logging with colored output
+///
+/// This function sets up the env_logger with the specified log level filter
+/// and configures colored output based on log level (red for errors, yellow for warnings,
+/// green for info, cyan for debug, magenta for trace).
+///
+/// # Arguments
+///
+/// * `log_level` - The log level filter to apply
 pub fn init_logging(log_level: LevelFilter) {
     env_logger::Builder::from_default_env()
         .filter_level(log_level)
@@ -13,7 +22,7 @@ pub fn init_logging(log_level: LevelFilter) {
                 log::Level::Trace => "\x1b[35m", // Magenta
             };
             let reset = "\x1b[0m";
-            
+
             writeln!(
                 buf,
                 "{}[{}]{} {} - {}",

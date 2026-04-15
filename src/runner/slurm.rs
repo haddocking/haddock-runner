@@ -12,6 +12,17 @@ pub struct SlurmJob {
 }
 
 impl SlurmJob {
+    /// Create a new SlurmJob instance
+    ///
+    /// This method creates a new SLURM job with the specified working directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `wd` - Working directory for the SLURM job
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - Newly created SlurmJob instance
     pub fn new(wd: PathBuf) -> Self {
         SlurmJob {
             id: u64::MIN,
@@ -20,6 +31,13 @@ impl SlurmJob {
         }
     }
 
+    /// Run the SLURM job
+    ///
+    /// This method submits the job to SLURM and waits for its completion.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<()>` - Ok if job completes successfully, error otherwise
     pub fn run(&mut self) -> Result<()> {
         self.submit()?;
         self.wait()?;
@@ -27,6 +45,13 @@ impl SlurmJob {
         Ok(())
     }
 
+    /// Submit the job to SLURM
+    ///
+    /// This method submits the job script to SLURM using sbatch and captures the job ID.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<()>` - Ok if submission successful, error otherwise
     pub fn submit(&mut self) -> Result<()> {
         let job_script = self.wd.join(JOB_FILENAME);
         let output = Command::new("sbatch")
@@ -53,6 +78,14 @@ impl SlurmJob {
         Ok(())
     }
 
+    /// Wait for SLURM job completion
+    ///
+    /// This method monitors the job status using sacct and waits until the job
+    /// reaches a terminal state (completed, failed, etc.).
+    ///
+    /// # Returns
+    ///
+    /// * `Result<()>` - Ok if job completes successfully, error otherwise
     pub fn wait(&mut self) -> Result<()> {
         loop {
             self.update_status()?;
@@ -91,6 +124,14 @@ impl SlurmJob {
     }
 }
 
+/// Validate that SLURM commands are available
+///
+/// This function checks if the required SLURM commands (sbatch, sacct) are available
+/// in the system PATH, which are needed for SLURM job submission and monitoring.
+///
+/// # Returns
+///
+/// * `Result<()>` - Ok if all required SLURM commands are available, error otherwise
 pub fn validate_slurm() -> Result<()> {
     // Check if needed commands are available
     let needed_slurm_commands = vec!["sbatch", "sacct"];

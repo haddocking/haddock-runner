@@ -15,7 +15,10 @@ use std::path::Path;
 
 use crate::queue::Queue;
 
-/// Print the welcome message
+/// Print the welcome message with version information
+///
+/// This function displays the haddock-runner welcome banner including
+/// the current version from the cargo package information.
 fn print_welcome_message() {
     info!("###########################################");
     info!(" Starting haddock-runner {}", env!("CARGO_PKG_VERSION"));
@@ -38,6 +41,14 @@ struct Args {
     input_file: String,
 }
 
+/// Main entry point for the haddock-runner application
+///
+/// This function parses command line arguments, initializes logging,
+/// loads input configuration, validates inputs, creates jobs, and executes them.
+///
+/// # Returns
+///
+/// * `Result<()>` - Ok if execution completes successfully, error otherwise
 fn main() -> Result<()> {
     // Parse command line arguments using clap
     let args = Args::parse();

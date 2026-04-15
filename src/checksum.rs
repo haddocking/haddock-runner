@@ -34,6 +34,17 @@ fn calculate_checksum<P: AsRef<Path>>(file_path: P) -> Result<String> {
 }
 
 /// Calculate checksums for all files in a target
+///
+/// This function calculates MD5 checksums for all files associated with a target,
+/// including molecules, restraints, toppar files, misc files, and optionally shape files.
+///
+/// # Arguments
+///
+/// * `target` - The target containing file paths to calculate checksums for
+///
+/// # Returns
+///
+/// * `Result<HashMap<String, String>>` - HashMap mapping file paths to their MD5 checksums
 fn calculate_target_checksums(target: &crate::dataset::Target) -> Result<HashMap<String, String>> {
     let mut checksums = HashMap::new();
 
@@ -62,6 +73,19 @@ fn calculate_target_checksums(target: &crate::dataset::Target) -> Result<HashMap
 }
 
 /// Validate checksums against stored checksum file
+///
+/// This function validates the integrity of input files by comparing their current MD5 checksums
+/// against previously stored checksums. If the checksum file doesn't exist, it creates one.
+/// If checksums don't match, it identifies which files have been modified, added, or removed.
+///
+/// # Arguments
+///
+/// * `targets` - Array of targets containing files to validate
+/// * `checksum_file` - Path to the JSON file storing checksums
+///
+/// # Returns
+///
+/// * `Result<()>` - Ok if checksums match or new file created, Err if files have changed
 pub fn validate_checksums(targets: &[crate::dataset::Target], checksum_file: &Path) -> Result<()> {
     // Check if checksum file exists
     let mut current_checksums = HashMap::new();

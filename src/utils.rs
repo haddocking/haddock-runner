@@ -3,10 +3,30 @@ use chrono::Local;
 use serde_yaml::Value;
 use std::process::Command;
 
+/// Generate a timestamp string in the format YYYY-MM-DD_HH-MM-SS
+///
+/// This function creates a timestamp using the local system time, formatted
+/// for use in filenames and log files.
+///
+/// # Returns
+///
+/// * `String` - Formatted timestamp string
 pub fn generate_timestamp() -> String {
     Local::now().format("%Y-%m-%d_%H-%M-%S").to_string()
 }
 
+/// Extract the root part from a filename by splitting on underscores
+///
+/// This function splits a filename by underscores and returns the first part,
+/// which is typically used as the root identifier in HADDOCK file naming conventions.
+///
+/// # Arguments
+///
+/// * `filename` - The filename to extract the root from
+///
+/// # Returns
+///
+/// * `Option<String>` - The root part if underscore exists, None otherwise
 pub fn extract_root(filename: &str) -> Option<String> {
     // Pattern: ROOT_*.xxx
     let parts: Vec<&str> = filename.split('_').collect();
@@ -17,6 +37,18 @@ pub fn extract_root(filename: &str) -> Option<String> {
     }
 }
 
+/// Extract root from filename by removing common file extensions and suffixes
+///
+/// This function removes common HADDOCK file extensions (.pdb, .tbl, .top, .param)
+/// and then extracts the root part before the first underscore.
+///
+/// # Arguments
+///
+/// * `filename` - The filename to process
+///
+/// # Returns
+///
+/// * `Option<String>` - The extracted root part
 pub fn extract_root_from_filename(filename: &str) -> Option<String> {
     // Try to extract root by removing common suffixes
     let filename = filename.replace(".pdb", "");
@@ -32,6 +64,18 @@ pub fn extract_root_from_filename(filename: &str) -> Option<String> {
     }
 }
 
+/// Format a YAML value for TOML output
+///
+/// This function converts YAML values to their TOML string representation,
+/// handling booleans, numbers, strings, sequences, and providing a fallback for other types.
+///
+/// # Arguments
+///
+/// * `value` - The YAML value to format
+///
+/// # Returns
+///
+/// * `String` - TOML-formatted string representation
 pub fn format_toml_value(value: &Value) -> String {
     match value {
         Value::Bool(b) => b.to_string(),
@@ -46,6 +90,17 @@ pub fn format_toml_value(value: &Value) -> String {
 }
 
 /// Check if a command exists in the system PATH
+///
+/// This function checks whether a specified command is available in the system's PATH
+/// by attempting to locate it using the 'which' command.
+///
+/// # Arguments
+///
+/// * `command` - The command name to check
+///
+/// # Returns
+///
+/// * `bool` - True if command exists and is executable, false otherwise
 pub fn command_exists(command: &str) -> bool {
     if let Ok(output) = Command::new("which").arg(command).output() {
         output.status.success()
@@ -54,6 +109,14 @@ pub fn command_exists(command: &str) -> bool {
     }
 }
 
+/// Find the haddock3 executable in the system PATH
+///
+/// This function attempts to locate the haddock3 executable using the 'which' command
+/// and returns its full path if found.
+///
+/// # Returns
+///
+/// * `anyhow::Result<String>` - Path to haddock3 executable if found, error otherwise
 pub fn find_haddock3_executable() -> anyhow::Result<String> {
     // Try to find haddock3 in PATH
     if let Ok(output) = Command::new("which").arg("haddock3").output()
@@ -66,6 +129,14 @@ pub fn find_haddock3_executable() -> anyhow::Result<String> {
     }
 }
 
+/// Validate that haddock3 is available and executable
+///
+/// This function checks if the haddock3 executable can be found in the system PATH
+/// and is ready for use.
+///
+/// # Returns
+///
+/// * `anyhow::Result<()>` - Ok if haddock3 is available, error otherwise
 pub fn validate_haddock3() -> anyhow::Result<()> {
     find_haddock3_executable()?;
     Ok(())

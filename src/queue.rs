@@ -11,6 +11,19 @@ pub struct Queue {
 }
 
 impl Queue {
+    /// Create a new Queue instance
+    ///
+    /// This method creates a job queue that will execute jobs with the specified concurrency.
+    /// The workload is sorted by target size in descending order (largest first).
+    ///
+    /// # Arguments
+    ///
+    /// * `concurrent` - Maximum number of jobs to run concurrently
+    /// * `workload` - Vector of jobs to be executed
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - Configured Queue instance
     pub fn new(concurrent: u16, mut workload: Vec<Job>) -> Self {
         // Sort workload by target size in descending order (largest first)
         workload.sort_by(|a, b| b.target.size.cmp(&a.target.size));
@@ -21,6 +34,14 @@ impl Queue {
         }
     }
 
+    /// Set up all jobs in the queue
+    ///
+    /// This method runs the setup phase for all jobs sequentially, which includes
+    /// creating working directories, copying input files, and generating configuration files.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if all jobs set up successfully, error otherwise
     pub fn setup(&self) -> anyhow::Result<()> {
         // Run setup for all jobs sequentially - this is I/O and doesn't benefit much from parallelism
         info!("Setting up {} jobs", &self.workload.len());
@@ -32,6 +53,15 @@ impl Queue {
         Ok(())
     }
 
+    /// Start executing jobs in the queue
+    ///
+    /// This method executes all jobs in the queue with the specified concurrency level,
+    /// using a rolling window approach to maintain exactly N concurrent jobs.
+    /// Progress is displayed with a progress bar.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if all jobs complete successfully, error otherwise
     pub fn start(&self) -> anyhow::Result<()> {
         info!("Start!");
         let concurrent = self.concurrent as usize;

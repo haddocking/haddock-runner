@@ -15,6 +15,23 @@ pub struct Target {
 }
 
 impl Target {
+    /// Create a new Target instance
+    ///
+    /// This method creates a new Target with the specified files and calculates
+    /// the total size of all associated files.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Target identifier
+    /// * `molecules` - Vector of molecule file paths
+    /// * `restraints` - Vector of restraint file paths
+    /// * `toppar` - Vector of topology/parameter file paths
+    /// * `misc` - Vector of miscellaneous file paths
+    /// * `shape` - Optional shape file path
+    ///
+    /// # Returns
+    ///
+    /// * `Target` - Newly created Target instance
     fn new(
         id: String,
         molecules: Vec<PathBuf>,
@@ -83,6 +100,21 @@ fn calculate_target_size(
     total_size
 }
 
+/// Load dataset from input list file
+///
+/// This function parses an input list file containing file paths and groups them
+/// into targets based on their common root identifiers. It handles molecule files,
+/// restraint files, topology/parameter files, miscellaneous files, and optional shape files.
+///
+/// # Arguments
+///
+/// * `input_list` - Path to the input list file
+/// * `mol_suffixes` - Suffixes used to identify molecule files
+/// * `shape_suffix` - Optional suffix for shape files
+///
+/// # Returns
+///
+/// * `Vec<Target>` - Vector of Target instances created from the input files
 pub fn load_dataset(
     input_list: &str,
     mol_suffixes: &[String],
@@ -210,6 +242,17 @@ struct TargetBuilder {
 }
 
 impl TargetBuilder {
+    /// Create a new TargetBuilder instance
+    ///
+    /// This method creates a new TargetBuilder with the specified target ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Target identifier
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - Newly created TargetBuilder instance
     fn new(id: String) -> Self {
         TargetBuilder {
             id,

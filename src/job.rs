@@ -19,8 +19,21 @@ use crate::{
 use regex::Regex;
 
 pub const JOB_FILENAME: &str = "job.sh";
-const WORKFLOW_FILENAME: &str = "run.toml";
+pub const WORKFLOW_FILENAME: &str = "run.toml";
 
+/// Create jobs from input scenarios and targets
+///
+/// This function creates a Cartesian product of all scenarios and targets,
+/// generating a separate job for each combination.
+///
+/// # Arguments
+///
+/// * `input` - The input configuration containing scenarios
+/// * `targets` - Vector of targets to process
+///
+/// # Returns
+///
+/// * `Vec<Job>` - Vector of created jobs
 pub fn create_jobs(input: Input, targets: Vec<Target>) -> Vec<Job> {
     input
         .scenarios
@@ -41,6 +54,21 @@ pub struct Job {
 }
 
 impl Job {
+    /// Create a new Job instance
+    ///
+    /// This method creates a new Job by combining general configuration,
+    /// a specific scenario, and a target. The job name is formed by combining
+    /// the target ID and scenario name.
+    ///
+    /// # Arguments
+    ///
+    /// * `general` - General configuration
+    /// * `scenario` - Scenario to execute
+    /// * `target` - Target to process
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - Newly created Job instance
     fn new(general: General, scenario: Scenario, target: Target) -> Self {
         let name = target.id.to_string() + "-" + &scenario.name;
         let wd = general.work_dir.join(&scenario.name).join(&target.id);
@@ -54,12 +82,28 @@ impl Job {
         }
     }
 
+    /// Clean up job working directory
+    ///
+    /// This method removes the entire working directory and all its contents.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if cleanup successful, error otherwise
     pub fn clean(&mut self) -> anyhow::Result<()> {
         fs::remove_dir_all(&self.wd)?;
 
         Ok(())
     }
 
+    /// Set up job working directory and files
+    ///
+    /// This method prepares the job for execution by creating the working directory,
+    /// copying all required input files, generating the run.toml configuration file,
+    /// and optionally preparing SLURM job files.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if setup successful, error otherwise
     pub fn setup(&mut self) -> anyhow::Result<()> {
         // info!(
         //     "Setting up job {} in directory: {}",
@@ -91,6 +135,14 @@ impl Job {
         Ok(())
     }
 
+    /// Run the job
+    ///
+    /// This method executes the job using the configured execution method
+    /// (local or SLURM) and updates the job status upon completion.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if job completes successfully, error otherwise
     pub fn run(&mut self) -> anyhow::Result<()> {
         // info!("Starting {}", self.name);
 
@@ -102,6 +154,13 @@ impl Job {
         }
     }
 
+    /// Run the job using SLURM
+    ///
+    /// This method submits and monitors a SLURM job for this HADDOCK run.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if SLURM job completes successfully, error otherwise
     pub fn run_slurm(&mut self) -> anyhow::Result<()> {
         // Create a SlurmJob
         let mut slurm_job = SlurmJob::new(self.wd.clone());
@@ -115,6 +174,14 @@ impl Job {
         Ok(())
     }
 
+    /// Run the job locally
+    ///
+    /// This method executes the HADDOCK run directly on the local machine
+    /// using the haddock3 command.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if local execution completes successfully, error otherwise
     pub fn run_local(&mut self) -> anyhow::Result<()> {
         // info!("Running {} locally", self.name);
 
@@ -236,6 +303,14 @@ impl Job {
 
         Ok(toml_content)
     }
+    /// Prepare SLURM job submission script
+    ///
+    /// This method creates a SLURM job script with the appropriate header
+    /// and commands to execute the HADDOCK run.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if job script created successfully, error otherwise
     pub fn prepare_job_file(&self) -> anyhow::Result<()> {
         // Create SLURM job script
         let job_script = self.wd.join(JOB_FILENAME);
