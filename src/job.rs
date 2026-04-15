@@ -1,3 +1,5 @@
+use crate::job::fs::canonicalize;
+use crate::runner::slurm::SlurmJob;
 use crate::utils::format_toml_value;
 use anyhow::Context;
 use log::{debug, info};
@@ -8,13 +10,17 @@ use std::path::PathBuf;
 use itertools::Itertools;
 
 use crate::input::{Execution, General};
+use crate::runner::local;
 use crate::runner::status::Status;
-use crate::runner::{local, slurm};
 use crate::{
     dataset::Target,
     input::{Input, Scenario},
 };
 use regex::Regex;
+
+pub const JOB_FILENAME: &str = "job.sh";
+const EXECUTABLE: &str = "/home/rodrigo/repos/haddock-runner/.venv/bin/haddock3";
+const WORKFLOW_FILENAME: &str = "run.toml";
 
 pub fn create_jobs(input: Input, targets: Vec<Target>) -> Vec<Job> {
     input
@@ -76,7 +82,7 @@ impl Job {
 
         if let Execution::Slurm = self.general.execution {
             debug!("Preparing SLURM job file");
-            slurm::prepare_job_file(&self.wd, "haddock3")?;
+            self.prepare_job_file()?;
         }
 
         // Mark it are ready for execution
@@ -98,21 +104,11 @@ impl Job {
     }
 
     pub fn run_slurm(&mut self) -> anyhow::Result<()> {
-        // Prepare job file
-        let job_script = self.wd.join("job.sh");
+        // Create a SlurmJob
+        let mut slurm_job = SlurmJob::new(self.wd.clone());
 
-        // Submit job
-        let output = slurm::submit(&job_script)?;
-
-        // Parse job ID from output (simplified - would need proper parsing)
-        let job_id = output.split_whitespace().last().unwrap_or("");
-
-        if job_id.is_empty() {
-            anyhow::bail!("Failed to parse job ID from sbatch output");
-        }
-
-        // Wait for job completion
-        slurm::wait(job_id)?;
+        // Run
+        slurm_job.run()?;
 
         // Update status to Done
         self.status = Status::Done;
@@ -128,15 +124,6 @@ impl Job {
 
         // Update status to Done
         self.status = Status::Done;
-
-        // // Log the execution
-        // info!(
-        //     "Job '{}' executed successfully. Log: {}",
-        //     self.name,
-        //     log_path.display()
-        // );
-        //
-        // info!("{} done", self.name);
 
         Ok(())
     }
@@ -190,7 +177,7 @@ impl Job {
     }
 
     fn write_run_toml(&self) -> anyhow::Result<()> {
-        let toml_path = self.wd.join("run.toml");
+        let toml_path = self.wd.join(WORKFLOW_FILENAME);
         let mut toml_file = fs::File::create(&toml_path)?;
 
         // Write the TOML content
@@ -249,6 +236,34 @@ impl Job {
         }
 
         Ok(toml_content)
+    }
+    pub fn prepare_job_file(&self) -> anyhow::Result<()> {
+        // Create SLURM job script
+        let job_script = self.wd.join(JOB_FILENAME);
+        let mut file = fs::File::create(&job_script)?;
+
+        let absolute_wd = canonicalize(&self.wd).unwrap_or_else(|_| self.wd.to_path_buf());
+
+        // Write SLURM header
+        let header = "#!/bin/bash\n".to_string()
+            + "#SBATCH --job-name=haddock\n"
+            + "#SBATCH --output=haddock-%j.out\n"
+            + "#SBATCH --error=haddock-%j.err\n"
+            + &format!("#SBATCH --cpus-per-task={}\n", self.general.ncores)
+            + "#SBATCH --ntasks=1\n";
+
+        // Write job body
+        let body = format!(
+            "cd {}\n{} {}\n",
+            absolute_wd.display(),
+            EXECUTABLE,
+            WORKFLOW_FILENAME
+        );
+
+        file.write_all(header.as_bytes())?;
+        file.write_all(body.as_bytes())?;
+
+        Ok(())
     }
 
     /// Resolves _fname patterns to actual file paths
