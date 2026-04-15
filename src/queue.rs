@@ -1,5 +1,6 @@
 use crate::job::Job;
 use anyhow::Context;
+use indicatif::{ProgressBar, ProgressStyle};
 use log::{error, info};
 use std::sync::mpsc;
 use std::thread;
@@ -32,9 +33,22 @@ impl Queue {
     }
 
     pub fn start(&self) -> anyhow::Result<()> {
-        info!("Submitting of jobs...");
+        info!("Start!");
         let concurrent = self.concurrent as usize;
         let total_jobs = self.workload.len();
+
+        // Create progress bar with continuous spinner
+        let pb = ProgressBar::new(total_jobs as u64);
+        pb.set_style(
+            ProgressStyle::with_template(
+                "{spinner:.green} [{elapsed_precise}] {pos}/{len} [{wide_bar:.cyan/blue}] {percent}% (ETA: {eta})",
+            )
+            .unwrap()
+            .progress_chars("##-"),
+        );
+
+        // Enable continuous spinner animation
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
         // Rolling window: maintain exactly N concurrent jobs
         // - tx/rx: channel for communication between worker threads and main thread
@@ -60,7 +74,7 @@ impl Queue {
             let handle = thread::spawn(move || {
                 // info!("Processing job: {}", job_clone.name);
                 if let Err(e) = job_clone.run() {
-                    error!("Failed processing job {}: {}", job_clone.name, e);
+                    // error!("Failed running job {}: {}", job_clone.name, e);
                     tx.send(Err(e)).unwrap(); // Send error result
                     return;
                 }
@@ -80,6 +94,7 @@ impl Queue {
             let result = rx.recv().context("Failed to receive result")?;
             results.push(result); // Store the result
             active_jobs -= 1; // One job just finished
+            pb.inc(1); // Update progress bar
 
             // If there are more jobs to process, start the next one immediately
             // This maintains the rolling window of exactly N concurrent jobs
@@ -91,7 +106,7 @@ impl Queue {
                 let handle = thread::spawn(move || {
                     // info!("Processing job: {}", job_clone.name);
                     if let Err(e) = job_clone.run() {
-                        error!("Failed processing job {}: {}", job_clone.name, e);
+                        // error!("Failed processing job {}: {}", job_clone.name, e);
                         tx.send(Err(e)).unwrap();
                         return;
                     }
@@ -116,6 +131,8 @@ impl Queue {
         for result in results {
             result?; // The ? operator will return early if any result is Err
         }
+
+        pb.finish_with_message("All jobs completed!");
 
         Ok(())
     }

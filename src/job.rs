@@ -87,7 +87,7 @@ impl Job {
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
-        info!("Starting {}", self.name);
+        // info!("Starting {}", self.name);
 
         // TODO: Figure out if this job is incomplete and should be restarted
 
@@ -136,7 +136,7 @@ impl Job {
         //     log_path.display()
         // );
         //
-        info!("{} done", self.name);
+        // info!("{} done", self.name);
 
         Ok(())
     }

@@ -1,6 +1,6 @@
 general:
-  max_concurrent: 5
-  ncores: 2
+  max_concurrent: 2
+  ncores: 4
   execution: local
   mol_suffixes: [_r_u, _l_u, _x_u]
   input_list: docking/input_list.txt
