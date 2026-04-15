@@ -15,6 +15,7 @@ keywords = [
   "structural-biology",
 ]
 categories = ["science", "command-line-utilities", "bioinformatics"]
+rust-version = "1.92"
 
 [dependencies]
 chrono = "0.4"
