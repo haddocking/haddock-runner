@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub struct SlurmJob {
-    id: u16,
+    id: u64,
     wd: PathBuf,
     state: SlurmJobState,
 }
@@ -14,7 +14,7 @@ pub struct SlurmJob {
 impl SlurmJob {
     pub fn new(wd: PathBuf) -> Self {
         SlurmJob {
-            id: u16::MIN,
+            id: u64::MIN,
             wd,
             state: SlurmJobState::Unknown,
         }
