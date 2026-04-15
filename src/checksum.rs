@@ -230,6 +230,7 @@ mod tests {
             toppar: vec![toppar_file],
             misc: vec![misc_file],
             shape: None,
+            size: 0,
         };
 
         // Calculate target checksums
@@ -267,6 +268,7 @@ mod tests {
             toppar: vec![],
             misc: vec![],
             shape: Some(shape_file),
+            size: 0,
         };
 
         // Calculate target checksums
@@ -296,6 +298,7 @@ mod tests {
             toppar: vec![],
             misc: vec![],
             shape: None,
+            size: 0,
         };
 
         // Validate checksums (should create new file)
