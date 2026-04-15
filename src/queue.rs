@@ -1,7 +1,7 @@
 use crate::job::Job;
 use anyhow::Context;
 use indicatif::{ProgressBar, ProgressStyle};
-use log::{error, info};
+use log::info;
 use std::sync::mpsc;
 use std::thread;
 
