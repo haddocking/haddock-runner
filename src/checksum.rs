@@ -65,13 +65,6 @@ fn calculate_target_checksums(target: &crate::dataset::Target) -> Result<HashMap
 pub fn validate_checksums(targets: &[crate::dataset::Target], checksum_file: &Path) -> Result<()> {
     // Check if checksum file exists
     let mut current_checksums = HashMap::new();
-    if !checksum_file.exists() {
-        // Create new checksum file with pretty printing
-        let serialized = serde_json::to_string_pretty(&current_checksums)
-            .context("Failed to serialize checksums")?;
-        fs::write(checksum_file, serialized).context("Failed to write checksum file")?;
-        return Ok(()); // Fresh run
-    }
 
     // Calculate current checksums for all targets
     for target in targets {
@@ -79,6 +72,13 @@ pub fn validate_checksums(targets: &[crate::dataset::Target], checksum_file: &Pa
         current_checksums.extend(target_checksums);
     }
 
+    if !checksum_file.exists() {
+        // Create new checksum file with pretty printing
+        let serialized = serde_json::to_string_pretty(&current_checksums)
+            .context("Failed to serialize checksums")?;
+        fs::write(checksum_file, serialized).context("Failed to write checksum file")?;
+        return Ok(()); // Fresh run
+    }
     // Create parent directory if it doesn't exist
     if let Some(parent) = checksum_file.parent() {
         fs::create_dir_all(parent).context("Failed to create checksum directory")?;
