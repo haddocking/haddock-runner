@@ -1,0 +1,43 @@
+[package]
+name = "haddock-runner"
+version = "3.0.0-rc1"
+edition = "2024"
+authors = ["Rodrigo V. Honorato <r.vargashonorato@uu.nl>"]
+description = "Run large scale HADDOCK simulations using multiple input molecules in different scenarios"
+license = "Apache-2.0"
+repository = "https://github.com/haddocking/haddock-runner"
+readme = "README.md"
+keywords = [
+  "haddock",
+  "molecular-docking",
+  "bioinformatics",
+  "benchmark",
+  "structural-biology",
+]
+categories = ["science", "command-line-utilities", "bioinformatics"]
+rust-version = "1.92"
+
+[dependencies]
+chrono = "0.4"
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+indexmap = { version = "2.14.0", features = ["serde"] }
+regex = "1.12.3"
+tempfile = "3.27.0"
+itertools = "0.14"
+md-5 = "0.10"
+serde_json = "1.0"
+log = "0.4"
+env_logger = "0.11"
+indicatif = "0.18"
+clap = { version = "4.5", features = ["derive"] }
+toml = "0.8"
+
+[dev-dependencies]
+criterion = "0.8"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
