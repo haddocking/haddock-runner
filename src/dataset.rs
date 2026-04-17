@@ -1,4 +1,5 @@
-use crate::utils::{extract_root, extract_root_from_filename};
+use crate::utils::extract_root;
+use anyhow::Context;
 use regex::Regex;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -119,7 +120,7 @@ pub fn load_dataset(
     input_list: &str,
     mol_suffixes: &[String],
     shape_suffix: Option<&str>,
-) -> Vec<Target> {
+) -> anyhow::Result<Vec<Target>> {
     // Parse the input_list contents and group the paths based on their common root
     let mut targets: HashMap<String, TargetBuilder> = HashMap::new();
 
@@ -137,7 +138,8 @@ pub fn load_dataset(
     let toppar_pattern = Regex::new(r".*\.(top|param)$").unwrap();
 
     // Read input list file
-    let content = std::fs::read_to_string(input_list).expect("Failed to read input list");
+    let content =
+        std::fs::read_to_string(input_list).with_context(|| "could not read input list")?;
 
     for line in content.lines() {
         // Skip comments and empty lines
@@ -145,7 +147,7 @@ pub fn load_dataset(
             continue;
         }
 
-        let path = PathBuf::from(line);
+        let path = PathBuf::from(line.trim());
         let file_name = path.file_name().unwrap().to_string_lossy();
 
         // Try to match molecule patterns
@@ -206,7 +208,7 @@ pub fn load_dataset(
         // If no pattern matched, add to misc
         if !matched {
             // Try to extract root from filename (remove suffixes)
-            if let Some(root) = extract_root_from_filename(&file_name) {
+            if let Some(root) = extract_root(&file_name) {
                 let builder = targets
                     .entry(root.clone())
                     .or_insert_with(|| TargetBuilder::new(root));
@@ -216,7 +218,7 @@ pub fn load_dataset(
     }
 
     // Convert builders to targets
-    targets
+    let result = targets
         .into_values()
         .map(|builder| {
             Target::new(
@@ -228,7 +230,9 @@ pub fn load_dataset(
                 builder.shape,
             )
         })
-        .collect()
+        .collect();
+
+    Ok(result)
 }
 
 // Helper struct for building targets
@@ -300,7 +304,8 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+        let targets =
+            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
 
         // Should have one target
         assert_eq!(targets.len(), 1);
@@ -323,7 +328,8 @@ mod tests {
             &file_path,
             &["_r".to_string(), "_l".to_string()],
             Some("_shape"),
-        );
+        )
+        .unwrap();
 
         // Should have one target with shape
         assert_eq!(targets.len(), 1);
@@ -342,7 +348,8 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+        let targets =
+            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
 
         // Should have two targets
         assert_eq!(targets.len(), 2);
@@ -364,7 +371,8 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+        let targets =
+            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
 
         // Should have one target (comments and empty lines should be ignored)
         assert_eq!(targets.len(), 1);
@@ -381,7 +389,8 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None);
+        let targets =
+            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
 
         // Should have one target with misc file
         assert_eq!(targets.len(), 1);

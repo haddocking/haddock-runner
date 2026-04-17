@@ -23,6 +23,7 @@ use std::path::Path;
 /// * `Result<String>` - The MD5 checksum as a hexadecimal string, or an error if file reading fails
 ///
 fn calculate_checksum<P: AsRef<Path>>(file_path: P) -> Result<String> {
+    // TODO: Use streaming instead of reading to avoid reading the whole file into memory
     let file_content = fs::read(&file_path)
         .with_context(|| format!("Failed to read file: {}", file_path.as_ref().display()))?;
 
@@ -102,10 +103,6 @@ pub fn validate_checksums(targets: &[crate::dataset::Target], checksum_file: &Pa
             .context("Failed to serialize checksums")?;
         fs::write(checksum_file, serialized).context("Failed to write checksum file")?;
         return Ok(()); // Fresh run
-    }
-    // Create parent directory if it doesn't exist
-    if let Some(parent) = checksum_file.parent() {
-        fs::create_dir_all(parent).context("Failed to create checksum directory")?;
     }
 
     // Read stored checksums

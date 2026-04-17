@@ -78,17 +78,11 @@ fn main() -> Result<()> {
         &input.general.input_list,
         &input.general.mol_suffixes,
         input.general.shape_suffix.as_deref(),
-    );
+    )?;
 
     // Validate checksums for all input files
     let checksum_file = input.general.work_dir.join("checksum.json");
     checksum::validate_checksums(&targets, &checksum_file)?;
-
-    // scenario + target = job
-    input
-        .scenarios
-        .iter()
-        .for_each(|s| println!("{:?}", s.name));
 
     let jobs = job::create_jobs(input.clone(), targets);
 

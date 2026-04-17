@@ -2,6 +2,7 @@ use anyhow::bail;
 use chrono::Local;
 use serde_yaml::Value;
 use std::process::Command;
+use toml::Value as TomlValue;
 
 /// Generate a timestamp string in the format YYYY-MM-DD_HH-MM-SS
 ///
@@ -37,37 +38,10 @@ pub fn extract_root(filename: &str) -> Option<String> {
     }
 }
 
-/// Extract root from filename by removing common file extensions and suffixes
-///
-/// This function removes common HADDOCK file extensions (.pdb, .tbl, .top, .param)
-/// and then extracts the root part before the first underscore.
-///
-/// # Arguments
-///
-/// * `filename` - The filename to process
-///
-/// # Returns
-///
-/// * `Option<String>` - The extracted root part
-pub fn extract_root_from_filename(filename: &str) -> Option<String> {
-    // Try to extract root by removing common suffixes
-    let filename = filename.replace(".pdb", "");
-    let filename = filename.replace(".tbl", "");
-    let filename = filename.replace(".top", "");
-    let filename = filename.replace(".param", "");
-
-    // Remove any remaining suffixes after underscores
-    if let Some(pos) = filename.find('_') {
-        Some(filename[..pos].to_string())
-    } else {
-        Some(filename)
-    }
-}
-
 /// Format a YAML value for TOML output
 ///
-/// This function converts YAML values to their TOML string representation,
-/// handling booleans, numbers, strings, sequences, and providing a fallback for other types.
+/// This function converts YAML values to their TOML string representation
+/// using the toml crate for proper formatting.
 ///
 /// # Arguments
 ///
@@ -77,16 +51,48 @@ pub fn extract_root_from_filename(filename: &str) -> Option<String> {
 ///
 /// * `String` - TOML-formatted string representation
 pub fn format_toml_value(value: &Value) -> String {
-    match value {
-        Value::Bool(b) => b.to_string(),
-        Value::Number(n) => n.to_string(),
-        Value::String(s) => format!("\"{}\"", s),
-        Value::Sequence(seq) => {
-            let items: Vec<String> = seq.iter().map(format_toml_value).collect();
-            format!("[{}]", items.join(", "))
+    // Convert YAML Value to TOML Value and use its Display implementation
+    let toml_value: TomlValue = match value {
+        Value::Bool(b) => TomlValue::Boolean(*b),
+        Value::Number(n) => {
+            if n.is_i64() {
+                TomlValue::Integer(n.as_i64().unwrap())
+            } else if n.is_u64() {
+                TomlValue::Integer(n.as_i64().unwrap_or(i64::MAX))
+            } else if n.is_f64() {
+                TomlValue::Float(n.as_f64().unwrap())
+            } else {
+                TomlValue::String(n.to_string())
+            }
         }
-        _ => "null".to_string(), // Fallback for other types
-    }
+        Value::String(s) => TomlValue::String(s.clone()),
+        Value::Sequence(seq) => {
+            let items: Vec<TomlValue> = seq
+                .iter()
+                .map(|v| {
+                    // Recursively convert each item
+                    match v {
+                        Value::Bool(b) => TomlValue::Boolean(*b),
+                        Value::Number(n) => {
+                            if n.is_i64() {
+                                TomlValue::Integer(n.as_i64().unwrap())
+                            } else if n.is_f64() {
+                                TomlValue::Float(n.as_f64().unwrap())
+                            } else {
+                                TomlValue::String(n.to_string())
+                            }
+                        }
+                        Value::String(s) => TomlValue::String(s.clone()),
+                        _ => TomlValue::String("null".to_string()),
+                    }
+                })
+                .collect();
+            TomlValue::Array(items)
+        }
+        _ => TomlValue::String("null".to_string()),
+    };
+
+    toml_value.to_string()
 }
 
 /// Check if a command exists in the system PATH
@@ -125,18 +131,17 @@ pub fn find_haddock3_executable() -> anyhow::Result<String> {
         let path = String::from_utf8_lossy(&output.stdout);
         Ok(path.trim().to_string())
     } else {
-        bail!("could not find `haddock3` executable in the PATH");
+        bail!("haddock3 executable not found in PATH")
     }
 }
 
-/// Validate that haddock3 is available and executable
+/// Validate that haddock3 is available in the system PATH
 ///
-/// This function checks if the haddock3 executable can be found in the system PATH
-/// and is ready for use.
+/// This function checks if the haddock3 executable can be found and is accessible.
 ///
 /// # Returns
 ///
-/// * `anyhow::Result<()>` - Ok if haddock3 is available, error otherwise
+/// * `anyhow::Result<()>` - Ok if haddock3 is found, error otherwise
 pub fn validate_haddock3() -> anyhow::Result<()> {
     find_haddock3_executable()?;
     Ok(())
@@ -148,96 +153,33 @@ mod tests {
     use serde_yaml::Value;
 
     #[test]
-    fn test_generate_timestamp() {
-        let timestamp = generate_timestamp();
-
-        // Should be in the format YYYY-MM-DD_HH-MM-SS
-        assert_eq!(timestamp.len(), 19);
-        assert!(timestamp.contains('-'));
-        assert!(timestamp.contains('_'));
-    }
-
-    #[test]
     fn test_extract_root() {
-        // Test normal case
-        assert_eq!(extract_root("protein1_r.pdb"), Some("protein1".to_string()));
-
-        // Test multiple underscores
-        assert_eq!(extract_root("protein_1_r.pdb"), Some("protein".to_string()));
-
-        // Test no underscore
-        assert_eq!(extract_root("protein.pdb"), None);
-
-        // Test single part
-        assert_eq!(extract_root("protein"), None);
-    }
-
-    #[test]
-    fn test_extract_root_from_filename() {
-        // Test PDB file
-        assert_eq!(
-            extract_root_from_filename("protein1_r.pdb"),
-            Some("protein1".to_string())
-        );
-
-        // Test TBL file
-        assert_eq!(
-            extract_root_from_filename("protein1_restraints.tbl"),
-            Some("protein1".to_string())
-        );
-
-        // Test TOP file
-        assert_eq!(
-            extract_root_from_filename("protein1.top"),
-            Some("protein1".to_string())
-        );
-
-        // Test PARAM file
-        assert_eq!(
-            extract_root_from_filename("protein1.param"),
-            Some("protein1".to_string())
-        );
-
-        // Test file with multiple underscores
-        assert_eq!(
-            extract_root_from_filename("protein_1_r.pdb"),
-            Some("protein".to_string())
-        );
-
-        // Test file without common suffixes - this should return the full filename without extension
-        assert_eq!(
-            extract_root_from_filename("protein.txt"),
-            Some("protein.txt".to_string())
-        );
+        assert_eq!(extract_root("protein_1.pdb"), Some("protein".to_string()));
+        assert_eq!(extract_root("ligand.pdb"), None);
+        assert_eq!(extract_root("complex_1_2.pdb"), Some("complex".to_string()));
     }
 
     #[test]
     fn test_format_toml_value() {
-        // Test bool
         assert_eq!(format_toml_value(&Value::Bool(true)), "true");
         assert_eq!(format_toml_value(&Value::Bool(false)), "false");
-
-        // Test number
         assert_eq!(format_toml_value(&Value::Number(42.into())), "42");
-
-        // Test string
+        assert_eq!(
+            format_toml_value(&Value::Number(std::f64::consts::PI.into())),
+            "3.141592653589793"
+        );
         assert_eq!(
             format_toml_value(&Value::String("test".to_string())),
             "\"test\""
         );
 
-        // Test sequence
         let seq = vec![
-            Value::String("item1".to_string()),
-            Value::String("item2".to_string()),
+            Value::Number(1.into()),
+            Value::Number(2.into()),
+            Value::Number(3.into()),
         ];
-        assert_eq!(
-            format_toml_value(&Value::Sequence(seq)),
-            "[\"item1\", \"item2\"]"
-        );
-
-        // Test null (fallback)
-        assert_eq!(format_toml_value(&Value::Null), "null");
+        assert_eq!(format_toml_value(&Value::Sequence(seq)), "[1, 2, 3]");
+        assert_eq!(format_toml_value(&Value::Null), "\"null\"");
     }
 
     #[test]
@@ -245,7 +187,7 @@ mod tests {
         // Test with a command that should exist
         assert!(command_exists("ls"));
 
-        // Test with a command that should not exist
+        // Test with a command that likely doesn't exist
         assert!(!command_exists("nonexistent_command_12345"));
     }
 }

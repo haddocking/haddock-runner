@@ -153,7 +153,10 @@ impl Queue {
         // PHASE 3: Cleanup - wait for all threads to finish
         // This ensures all threads have properly terminated
         for handle in handles {
-            handle.join().unwrap();
+            // propagate error
+            if let Err(e) = handle.join() {
+                return Err(anyhow::anyhow!("Thread panicked: {:?}", e));
+            }
         }
 
         // PHASE 4: Result checking
