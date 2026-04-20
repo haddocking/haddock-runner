@@ -130,7 +130,7 @@ impl Job {
 
         // Mark it are ready for execution
         self.status = Status::Prepared;
-        info!("> {}", self.name);
+        debug!("> {}", self.name);
 
         Ok(())
     }
@@ -146,12 +146,65 @@ impl Job {
     pub fn run(&mut self) -> anyhow::Result<()> {
         // info!("Starting {}", self.name);
 
-        // TODO: Figure out if this job is incomplete and should be restarted
+        // Check the status of the job
+        self.update_status()?;
+
+        match self.status {
+            // Job is incomplete, clean it up
+            Status::Incomplete => {
+                debug!("job {} is incomplete, cleaning and setup again", self.name);
+                self.clean()?;
+                self.setup()?;
+            }
+            // Job was already done, skip it by returning
+            Status::Done => {
+                debug!("job {} is complete, skipping", self.name);
+                return Ok(());
+            }
+            // All other, move ahead
+            _ => {}
+        }
 
         match self.general.execution {
             Execution::Local => self.run_local(),
             Execution::Slurm => self.run_slurm(),
         }
+    }
+
+    /// Check the status of the job
+    ///
+    /// This method checks the status of a job.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if check completes successfully, error otherwise
+    fn update_status(&mut self) -> anyhow::Result<()> {
+        // Check if working directory exists
+        if !self.wd.exists() {
+            // Directory doesn't exist, this is a new job
+            self.status = Status::Unknown;
+            return Ok(());
+        }
+
+        // Check if job is prepared
+        let run_toml = self.wd.join(WORKFLOW_FILENAME);
+        if run_toml.exists() {
+            self.status = Status::Prepared
+        }
+
+        // Check if it has a log file
+        let log_file = self.wd.join("run1/log");
+        if log_file.exists() {
+            // Read it and find some match words
+            let contents = fs::read_to_string(log_file)?;
+            if contents.contains("Finished at") {
+                self.status = Status::Done
+            } else {
+                self.status = Status::Incomplete
+            }
+        }
+
+        Ok(())
     }
 
     /// Run the job using SLURM
