@@ -69,7 +69,7 @@ scenarios:
 
 ## Advanced Examples
 
-_soon_
+Soon to be added.
 
 ## Configuration Variations
 
@@ -196,7 +196,7 @@ structures/1GGR/1GGR_ref.pdb
 
 ### Complex Input List with Multiple File Types
 
-```
+```text
 # Target 1PPE - Protein-protein with multiple restraint types
 structures/1PPE/1PPE_r_u.pdb
 structures/1PPE/1PPE_l_u.pdb

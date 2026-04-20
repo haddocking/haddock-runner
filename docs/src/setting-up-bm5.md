@@ -25,7 +25,7 @@ mkdir -p {data,configs,results,scripts}
 
 Your project structure will look like:
 
-```
+```text
 bm5-benchmark/
 ├── data/          # BM5 dataset files
 ├── configs/       # Configuration files

@@ -6,9 +6,9 @@ This guide provides a comprehensive, step-by-step introduction to using `haddock
 
 Using `haddock-runner` involves three main steps:
 
-1. **Prepare your input files** → [Writing an Input List File](./writing-a-input.list-file.md)
-2. **Configure your benchmark** → [Writing a Benchmark YAML File](./writing-a-benchmark.yaml-file.md)
-3. **Run the benchmark** → [Running Haddock Runner](./running-haddock-runner.md)
+1. **Prepare your input files**
+2. **Configure your benchmark**
+3. **Run the benchmark**
 
 ## Complete Usage Guide
 
@@ -22,7 +22,7 @@ Before using `haddock-runner`, you need:
 
 **Organize your files**:
 
-```
+```text
 your_project/
 ├── structures/
 │   ├── target1_r_u.pdb    # Receptor structure

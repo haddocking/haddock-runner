@@ -38,7 +38,7 @@ cargo install cargo-edit cargo-audit
 
 ## Project Structure
 
-```
+```text
 src/
 ├── main.rs              # Main application entry point
 ├── input.rs             # Input file parsing and validation
