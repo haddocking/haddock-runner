@@ -3,37 +3,3 @@ authors = ["Rodrigo V Honorato"]
 language = "en"
 src = "src"
 title = "haddock-runner"
-description = "Comprehensive documentation for haddock-runner - a tool for running large-scale HADDOCK docking benchmarks"
-
-[output.html]
-git-repository-url = "https://github.com/haddocking/haddock-runner"
-mathjax-support = false
-no-section-label = false
-playground.runnable = false
-site-url = "/haddock-runner/"
-
-[output.html.search]
-enable = true
-limit-results = 30
-teaser-word-count = 30
-use-boolean-and = true
-boost-title = 2
-boost-hierarchy = 2
-boost-paragraph = 1
-expand = true
-heading-split-level = 3
-copy-js = true
-
-[output.html.fold]
-enable = true
-level = 0
-
-[preprocessor]
-
-[preprocessor.links]
-renderers = ["html"]
-
-[output.linkcheck]
-follow-web-links = true
-traverse-parent-directories = false
-optional = true
