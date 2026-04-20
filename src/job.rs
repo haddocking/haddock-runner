@@ -311,7 +311,7 @@ impl Job {
         let all_files = self.get_all_target_files();
 
         // Add general HADDOCK3 configuration
-        toml_content.push_str("run_dir = \"run1\"\n\n");
+        toml_content.push_str("run_dir = \"run1\"\nmode = \"local\"\n");
 
         // Add molecules section
         toml_content.push_str("molecules = [\n");
