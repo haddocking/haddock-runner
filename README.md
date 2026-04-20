@@ -3,6 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13150820.svg)](https://doi.org/10.5281/zenodo.13150820)
 [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8F-yellow)](https://fair-software.eu)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![Crates.io Version](https://img.shields.io/crates/v/haddock-runner)
 
 [![ci](https://github.com/haddocking/haddock-runner/actions/workflows/ci.yml/badge.svg)](https://github.com/haddocking/haddock-runner/actions/workflows/ci.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/ad6b3c5f52c64e66837d20aac0048c44)](https://www.codacy.com/gh/haddocking/haddock-runner/dashboard?utm_source=github.com&utm_medium=referral&utm_content=haddocking/haddock-runner&utm_campaign=Badge_Coverage)
