@@ -243,7 +243,7 @@ scenarios:
 
 ### File Organization
 
-```
+```text
 benchmark_project/
 ├── configs/
 │   ├── benchmark.yaml
