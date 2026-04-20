@@ -14,7 +14,7 @@ keywords = [
   "benchmark",
   "structural-biology",
 ]
-categories = ["science", "command-line-utilities", "bioinformatics"]
+categories = ["science", "command-line-utilities"]
 rust-version = "1.92"
 exclude = [".*", "docs/"]
 
