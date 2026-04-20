@@ -118,6 +118,6 @@ cargo outdated
 
 ### Data Flow
 
-```
+```text
 Input Files → Configuration Parsing → Dataset Loading → Job Creation → Queue Scheduling → Job Execution → Result Collection
 ```

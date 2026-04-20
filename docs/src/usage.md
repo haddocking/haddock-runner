@@ -45,7 +45,7 @@ The input list file specifies all files needed for each docking target.
 
 **Example** (`input_list.txt`):
 
-```
+```text
 # Target 1A2K - Protein-protein complex
 structures/1A2K/1A2K_r_u.pdb
 structures/1A2K/1A2K_l_u.pdb
