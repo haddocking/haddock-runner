@@ -1,156 +1,265 @@
 # Examples
 
-Here is a full example of the `benchmark.yaml` file for both [HADDOCK2.4](#haddock24) and [HADDOCK3.0](#haddock30).
+This page provides comprehensive examples of `haddock-runner` configurations for various benchmarking scenarios. These examples demonstrate the tool's flexibility and help you design your own benchmarks.
 
-## `HADDOCK2.4`
+## Basic Examples
+
+### Restraint Strategy Comparison
+
+Compare different restraint approaches for the same targets:
 
 ```yaml
 general:
-  executable: /workspaces/haddock-runner/haddock24.sh
+  mol_suffixes: [_r_u, _l_u]
+  input_list: input_list.txt
+  work_dir: ./results/restraint-comparison
   max_concurrent: 2
-  haddock_dir: /Users/rodrigo/repos/haddock
-  receptor_suffix: _r_u
-  ligand_suffix: _l_u
-  input_list: /workspaces/haddock-runner/example/input_list.txt
-  work_dir: /workspaces/haddock-runner/bm-goes-here
+  ncores: 4
+  execution: local
 
 scenarios:
-  - name: true-interface
-    parameters:
-      run_cns:
-        noecv: false
-        structures_0: 1000
-        structures_1: 200
-        waterrefine: 200
-      restraints:
-        ambig: ambig
-        unambig: restraint-bodies
-        hbonds: hbonds
-      custom_toppar:
-        topology: _ligand.top
-        param: _ligand.param
+  - name: true-interface-restraints
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 500
+        ambig_fname: _ti.tbl
+      flexref:
+        ambig_fname: _ti.tbl
+      caprieval:
+        reference_fname: _ref.pdb
+
+  - name: hbond-only-restraints
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 500
+        ambig_fname: _hb.tbl
+      flexref:
+        ambig_fname: _hb.tbl
+      caprieval:
+        reference_fname: _ref.pdb
 
   - name: center-of-mass
-    parameters:
-      run_cns:
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 500
         cmrest: true
-        structures_0: 10000
-        structures_1: 400
-        waterrefine: 400
-        anastruc_1: 400
-      custom_toppar:
-        topology: _ligand.top
-        param: _ligand.param
+      flexref:
+        cmrest: true
+      caprieval:
+        reference_fname: _ref.pdb
 
-  - name: random-restraints
-    parameters:
-      run_cns:
+  - name: random-air-restraints
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 500
         ranair: true
-        structures_0: 10000
-        structures_1: 400
-        waterrefine: 400
-        anastruc_1: 400
-      custom_toppar:
-        topology: _ligand.top
-        param: _ligand.param
-
-  #-----------------------------------------------
+      flexref:
+        ranair: true
+      caprieval:
+        reference_fname: _ref.pdb
 ```
 
-## `HADDOCK3.0`
+## Advanced Examples
+
+Soon to be added.
+
+## Configuration Variations
+
+### HPC Cluster Configuration
+
+Optimized for SLURM workload manager:
 
 ```yaml
 general:
-  executable: /workspaces/haddock-runner/example/haddock3.sh
-  max_concurrent: 4
-  haddock_dir: /opt/haddock3
-  receptor_suffix: _r_u
-  ligand_suffix: _l_u
-  input_list: /workspaces/haddock-runner/example/input_list.txt
-  work_dir: /workspaces/haddock-runner/bm-goes-here
+  mol_suffixes: [_r_u, _l_u]
+  input_list: large_input_list.txt
+  work_dir: /scratch/results/large-benchmark
+  max_concurrent: 20
+  ncores: 8
+  execution: slurm
 
 scenarios:
-  - name: true-interface
-    parameters:
-      general:
-        mode: local
-        ncores: 8
-
-      modules:
-        order:
-          [topoaa, rigidbody, seletop, flexref, emref, clustfcc, seletopclusts]
-        topoaa:
-          autohis: true
-        rigidbody:
-          ambig_fname: _ambig.tbl
-          unambig_fname: _restraint-bodies.tbl
-          ligand_param_fname: _ligand.param
-          ligand_top_fname: _ligand.top
-        seletop:
-          select: 200
-        flexref:
-          ambig_fname: _ambig.tbl
-          unambig_fname: _restraint-bodies.tbl
-          ligand_param_fname: _ligand.param
-          ligand_top_fname: _ligand.top
-        emref:
-          ambig_fname: _ambig
-        clustfcc:
-        seletopclusts:
-
-  - name: center-of-mass
-    parameters:
-      general:
-        mode: local
-        ncores: 8
-
-      modules:
-        order:
-          [topoaa, rigidbody, seletop, flexref, emref, clustfcc, seletopclusts]
-        topoaa:
-          autohis: true
-        rigidbody:
-          sampling: 10000
-          cmrest: true
-          ligand_param_fname: _ligand.param
-          ligand_top_fname: _ligand.top
-        seletop:
-          select: 400
-        flexref:
-          ligand_param_fname: _ligand.param
-          ligand_top_fname: _ligand.top
-        emref:
-        clustfcc:
-        seletopclusts:
-
-  - name: random-restraints
-    parameters:
-      general:
-        mode: local
-        ncores: 8
-
-      modules:
-        order:
-          [topoaa, rigidbody, seletop, flexref, emref, clustfcc, seletopclusts]
-        topoaa:
-          autohis: true
-        rigidbody:
-          sampling: 10000
-          ranair: true
-          ligand_param_fname: _ligand.param
-          ligand_top_fname: _ligand.top
-        seletop:
-          select: 400
-        flexref:
-          contactairs: true
-          ligand_param_fname: _ligand.param
-          ligand_top_fname: _ligand.top
-        emref:
-          contactairs: true
-          ligand_param_fname: _ligand.param
-          ligand_top_fname: _ligand.top
-        clustfcc:
-        seletopclusts:
-
-  #-----------------------------------------------
+  - name: hpc-optimized
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 2000
+        ambig_fname: _ti.tbl
+      flexref:
+        ambig_fname: _ti.tbl
+      caprieval:
+        reference_fname: _ref.pdb
 ```
+
+### Minimal Configuration
+
+Simple setup for quick testing:
+
+```yaml
+general:
+  mol_suffixes: [_r_u, _l_u]
+  input_list: test_input.txt
+  work_dir: ./test-results
+  max_concurrent: 2
+  ncores: 2
+  execution: local
+
+scenarios:
+  - name: quick-test
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 100
+        cmrest: true
+```
+
+## Real-world Example: BM5 Benchmark
+
+A configuration similar to the BM5 benchmark setup:
+
+```yaml
+general:
+  mol_suffixes: [_r_u, _l_u]
+  input_list: bm5_input_list.txt
+  work_dir: ./results/bm5-style
+  max_concurrent: 10
+  ncores: 4
+  execution: local
+
+scenarios:
+  - name: bm5-true-interface
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 1000
+        ambig_fname: _ti.tbl
+        unambig_fname: _unambig.tbl
+      seletop:
+        select: 200
+        sort_by: score
+      semiflexref:
+        ambig_fname: _ti.tbl
+        unambig_fname: _unambig.tbl
+      emref:
+        mdsteps: 500
+      caprieval:
+        reference_fname: _ref.pdb
+        clusters: 4
+
+  - name: bm5-center-mass
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 1000
+        cmrest: true
+      seletop:
+        select: 200
+        sort_by: score
+      semiflexref:
+        cmrest: true
+      emref:
+        mdsteps: 500
+      caprieval:
+        reference_fname: _ref.pdb
+        clusters: 4
+```
+
+## Input List Examples
+
+### Simple Input List
+
+```text
+# Target 1A2K
+structures/1A2K/1A2K_r_u.pdb
+structures/1A2K/1A2K_l_u.pdb
+structures/1A2K/1A2K_ti.tbl
+structures/1A2K/1A2K_ref.pdb
+
+# Target 1GGR
+structures/1GGR/1GGR_r_u.pdb
+structures/1GGR/1GGR_l_u.pdb
+structures/1GGR/1GGR_ti.tbl
+structures/1GGR/1GGR_ref.pdb
+```
+
+### Complex Input List with Multiple File Types
+
+```text
+# Target 1PPE - Protein-protein with multiple restraint types
+structures/1PPE/1PPE_r_u.pdb
+structures/1PPE/1PPE_l_u.pdb
+structures/1PPE/1PPE_ti.tbl
+structures/1PPE/1PPE_hb.tbl
+structures/1PPE/1PPE_unambig.tbl
+structures/1PPE/1PPE_ref.pdb
+
+# Target 2OOB - With ligand files
+structures/2OOB/2OOB_r_u.pdb
+structures/2OOB/2OOB_l_u.pdb
+structures/2OOB/2OOB_x_u.pdb
+structures/2OOB/2OOB_ti.tbl
+structures/2OOB/2OOB_hb.tbl
+structures/2OOB/2OOB_ligand.top
+structures/2OOB/2OOB_ligand.param
+structures/2OOB/2OOB_ref.pdb
+```
+
+## Best Practices for Examples
+
+### Starting with Examples
+
+1. **Begin with simple configurations** and gradually add complexity
+2. **Test with small datasets** before scaling up
+3. **Use `--setup` mode** to validate configurations before full runs
+4. **Start with low sampling** numbers for initial testing
+
+### Adapting Examples
+
+- **Modify scenarios** to match your research questions
+- **Adjust resource settings** based on your hardware
+- **Customize workflows** for your specific docking needs
+- **Scale parameters** appropriately for your system size
+
+### Creating Your Own
+
+Use these examples as templates and:
+
+1. Replace file paths with your actual data
+2. Adjust sampling parameters for your needs
+3. Add or remove workflow steps as required
+4. Configure resource limits for your environment
+
+## Troubleshooting Examples
+
+### Common Configuration Issues
+
+**Problem**: Jobs fail with missing file errors
+**Solution**: Verify all files in input list exist and paths are correct
+
+**Problem**: Out of memory errors
+**Solution**: Reduce `max_concurrent` or increase `ncores` per job
+
+**Problem**: HADDOCK module not found
+**Solution**: Ensure HADDOCK3 is properly installed and in PATH
+
+**Problem**: Slow execution
+**Solution**: Adjust `max_concurrent` and `ncores` for optimal resource usage
+
+## Additional Resources
+
+- **Complete configuration reference**: [Writing a Benchmark YAML File](./writing-a-benchmark.yaml-file.md)
+- **Input list format guide**: [Writing an Input List File](./writing-a-input.list-file.md)
+- **Running benchmarks**: [Running Haddock Runner](./running-haddock-runner.md)
+- **Real-world setup**: [Setting Up a Benchmark](./setting-up-bm5.md)

@@ -38,6 +38,22 @@ jobs:
       - name: Run clippy
         run: cargo clippy -- -D warnings
 
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install mdBook
+        run: |
+          curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf -y | sh
+          rustup update
+          cargo install --version 0.5.2 mdbook
+
+      - name: Build docs
+        run: cd docs && mdbook build
+
   coverage:
     runs-on: ubuntu-latest
 

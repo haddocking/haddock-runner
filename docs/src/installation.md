@@ -1,42 +1,150 @@
 # Installation
 
-The tool is designed for users/students/developers that are familiar with
-HADDOCK and command-line scripting, and have access to an HPC infrastructure.
+The `haddock-runner` is designed for researchers, developers, and advanced users who are familiar with HADDOCK and command-line computing. It is particularly suited for those with access to HPC infrastructure for running large-scale docking experiments.
 
-If this is the first time you are using HADDOCK, please first familiarize
-yourself with the software by running the basic
-[HADDOCK2.4](/education/HADDOCK24/index.md) or [HADDOCK3](/education/HADDOCK3/index.md) tutorials.
+## Prerequisites
 
-This tool is not meant to be used by end-users who want to run a single target,
-or a small set of targets; for that purpose we recommend instead using
-the [HADDOCK2.4 web server](https://wenmr.science.uu.nl/haddock2.4/).
+### HADDOCK3 Installation
 
-> **VERY IMPORTANT**: You need to have HADDOCK installed on your system.
-> This is not covered in this documentation.
-> Please refer to the
-> [HADDOCK2.4 installation instructions](/software/haddock2.4/installation)
-> or [HADDOCK3.0 repository](https://github.com/haddocking/haddock3) for more information.
+> **IMPORTANT**: `haddock-runner` requires HADDOCK3 to be installed on your system.
+>
+> This tool is **not** a replacement for HADDOCK itself, but rather a benchmarking framework that automates the execution of multiple HADDOCK runs.
 
-`haddock-runner` is a standalone open-source software licensed under Apache 2.0
-and freely available from the following repository: [github.com/haddocking/haddock-runner](https://github.com/haddocking/haddock-runner).
+If you are new to HADDOCK, we recommend:
 
-To use it simply download the latest binary from the [releases page](https://github.com/haddocking/haddock-runner/releases):
+- Completing the basic [HADDOCK3 tutorials](/education/HADDOCK3/index.md)
+- Familiarizing yourself with HADDOCK3 workflows and configuration
+
+For single target docking or small-scale experiments, consider using:
+
+- [HADDOCK2.4 web server](https://wenmr.science.uu.nl/haddock2.4/) for interactive use
+- HADDOCK3 command-line interface for small batches
+
+### System Requirements
+
+- **Operating System**: Linux (recommended), macOS, or Windows with WSL
+- **Memory**: Minimum 8GB RAM (16GB+ recommended for concurrent execution)
+- **Storage**: Sufficient disk space for input structures and results
+- **HPC Access**: Recommended for large-scale benchmarks
+
+## Installation Methods
+
+### Method 1: Install via crates.io (Recommended)
+
+The easiest way to install `haddock-runner` is through cargo, Rust's package manager:
 
 ```bash
-$ wget https://github.com/haddocking/haddock-runner/releases/download/v1.13.0/haddock-runner_1.13.0_linux_386.tar.gz
-$ tar -zxvf haddock-runner_1.13.0_linux_386.tar.gz
-$ ./haddock-runner -version
-haddock-runner version v1.13.0
+# Install directly from crates.io
+cargo install haddock-runner
+
+# This will install the binary to ~/.cargo/bin/haddock-runner
 ```
 
-Alternatively, you can build the latest version from source (you probably don't
-need to do that), make sure [go](https://go.dev/doc/install) is installed
-and run the following commands:
+> **Note**: If you don't have cargo installed, you can install Rust from [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
+
+After installation, ensure the cargo bin directory is in your PATH:
 
 ```bash
-$ git clone https://github.com/haddocking/haddock-runner.git
-$ cd haddock-runner
-$ go build -o haddock-runner
-$ ./haddock-runner -version
-haddock-runner version v1.13.0
+# Add cargo bin to your PATH (add this to your ~/.bashrc or ~/.zshrc)
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# Verify installation
+source $HOME/.cargo/env
+haddock-runner --version
 ```
+
+### Method 2: Install Pre-built Binary from GitHub Releases (Coming Soon)
+
+Pre-compiled binaries will be available for each release on GitHub:
+
+```bash
+# Download the latest release for your platform
+# Check https://github.com/haddocking/haddock-runner/releases for the latest version
+VERSION="v3.0.0"  # Update to latest version
+OS_ARCH="x86_64-unknown-linux-gnu"  # Choose your platform
+
+wget https://github.com/haddocking/haddock-runner/releases/download/${VERSION}/haddock-runner-${OS_ARCH}
+
+# Make it executable
+chmod +x haddock-runner-${OS_ARCH}
+
+# Move to your PATH (optional)
+sudo mv haddock-runner-${OS_ARCH} /usr/local/bin/haddock-runner
+
+# Verify installation
+haddock-runner --version
+```
+
+Available platforms will include:
+
+- `x86_64-unknown-linux-gnu` (Linux 64-bit)
+- `x86_64-apple-darwin` (macOS Intel)
+- `aarch64-apple-darwin` (macOS Apple Silicon)
+
+> **Note**: Pre-built binaries are coming soon. For now, please use Method 1 (crates.io) or see the [Development](/development) section for building from source.
+
+## Post-Installation Setup
+
+### Add to PATH (Optional)
+
+To make `haddock-runner` available system-wide:
+
+```bash
+# Create a symlink or copy the binary to a directory in your PATH
+sudo ln -s $(pwd)/target/release/haddock-runner /usr/local/bin/haddock-runner
+
+# Verify it's accessible
+which haddock-runner
+haddock-runner --version
+```
+
+### Verify HADDOCK3 Integration
+
+Before running benchmarks, ensure HADDOCK3 is properly installed and accessible:
+
+```bash
+# Check HADDOCK3 installation
+haddock3 --version
+
+# Verify required modules are available
+haddock3 --list-modules
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Rust installation problems**:
+
+- Ensure you have proper internet connectivity
+- Check that you have required system dependencies (`build-essential`, `curl`, etc.)
+- Try `rustup update` if you already have Rust installed
+
+**Missing HADDOCK3**:
+
+- Ensure HADDOCK3 is installed and in your PATH
+- Check that all required HADDOCK modules are available
+- Verify your HADDOCK3 configuration files are properly set up
+
+**Permission issues**:
+
+- Ensure you have read/write access to the working directory
+- Check that input files are readable
+- Verify you have execution permissions for the binary
+
+### Getting Help
+
+If you encounter installation issues:
+
+- Check the [GitHub Issues](https://github.com/haddocking/haddock-runner/issues) for known problems
+- Consult the [HADDOCK3 documentation](https://github.com/haddocking/haddock3) for HADDOCK-specific requirements
+- Contact the development team via the support channels mentioned in the [Getting Help](/getting-help) section
+
+## Next Steps
+
+Now that you have `haddock-runner` installed, you're ready to:
+
+1. **Set up your first benchmark** - See [Setting Up a Benchmark](/setting-up-bm5)
+2. **Write a configuration file** - See [Writing a Benchmark YAML File](/writing-a-benchmark.yaml-file)
+3. **Prepare your input files** - See [Writing a Input List File](/writing-a-input.list-file)
+4. **Run your benchmark** - See [Running Haddock Runner](/running-haddock-runner)
