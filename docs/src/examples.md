@@ -180,7 +180,7 @@ scenarios:
 
 ### Simple Input List
 
-```
+```text
 # Target 1A2K
 structures/1A2K/1A2K_r_u.pdb
 structures/1A2K/1A2K_l_u.pdb

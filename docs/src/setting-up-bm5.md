@@ -196,7 +196,7 @@ haddock-runner configs/bm5-benchmark.yaml
 
 ## Step 7: Analyze Results
 
-_soon_
+To be added soon.
 
 ## Troubleshooting
 

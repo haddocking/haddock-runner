@@ -21,6 +21,7 @@ Before using `haddock-runner`, you need:
 - **Topology/parameter files** (optional): For ligands or special molecules
 
 **Organize your files**:
+
 ```
 your_project/
 ├── structures/
@@ -36,12 +37,14 @@ your_project/
 The input list file specifies all files needed for each docking target.
 
 **Key points**:
+
 - One target per section (separated by comments)
 - List all required files for each target
 - Paths can be relative or absolute
 - Use consistent naming conventions
 
 **Example** (`input_list.txt`):
+
 ```
 # Target 1A2K - Protein-protein complex
 structures/1A2K/1A2K_r_u.pdb
@@ -56,18 +59,18 @@ structures/1GGR/1GGR_l_u.pdb
 structures/1GGR/1GGR_ti.tbl
 ```
 
-See [Writing an Input List File](./writing-a-input.list-file.md) for detailed format specifications.
-
 ### Step 3: Write the Benchmark Configuration
 
 The YAML configuration file defines your benchmark scenarios and settings.
 
 **Main sections**:
+
 - `general`: Global settings (concurrency, resources, directories)
 - `scenarios`: Different docking workflows to test
 - Each scenario defines a complete HADDOCK workflow
 
 **Example** (`benchmark.yaml`):
+
 ```yaml
 general:
   max_concurrent: 4        # How many jobs to run simultaneously
@@ -117,6 +120,7 @@ haddock-runner --debug benchmark.yaml
 ```
 
 **What happens during execution**:
+
 1. Input validation and checksum verification
 2. Job creation for each target-scenario combination
 3. Concurrent execution according to resource limits
@@ -145,6 +149,7 @@ results/
 ```
 
 **Result analysis tips**:
+
 - Compare docking success rates between scenarios
 - Analyze CAPRI metrics for quality assessment
 - Examine computation times and resource usage
@@ -155,6 +160,7 @@ results/
 ### Starting Small
 
 For your first benchmark:
+
 - Use 2-3 well-characterized targets
 - Test 2 different scenarios
 - Start with small sampling numbers (100-500)
@@ -170,6 +176,7 @@ For your first benchmark:
 ### Common Workflows
 
 **Parameter optimization**:
+
 ```yaml
 scenarios:
   - name: sampling-500
@@ -187,6 +194,7 @@ scenarios:
 ```
 
 **Restraint strategy comparison**:
+
 ```yaml
 scenarios:
   - name: true-interface
@@ -208,21 +216,25 @@ scenarios:
 **Common issues and solutions**:
 
 **Input file errors**:
+
 - Verify all files exist and are readable
 - Check file paths in your input list
 - Use absolute paths if relative paths don't work
 
 **HADDOCK module errors**:
+
 - Ensure HADDOCK3 is properly installed
 - Verify all required modules are available
 - Check your HADDOCK3 configuration
 
 **Resource limitations**:
+
 - Reduce `max_concurrent` if running out of memory
 - Lower sampling numbers for faster testing
 - Use `--setup` to validate before full runs
 
 **Permission issues**:
+
 - Ensure write access to working directory
 - Check execution permissions for the binary
 - Verify HADDOCK3 has proper file access
@@ -230,6 +242,7 @@ scenarios:
 ## Best Practices
 
 ### File Organization
+
 ```
 benchmark_project/
 ├── configs/
@@ -246,12 +259,14 @@ benchmark_project/
 ```
 
 ### Version Control
+
 - Keep configuration files in Git
 - Store input structures separately (large files)
 - Document changes between benchmark runs
 - Use meaningful commit messages
 
 ### Reproducibility
+
 - Fix random seeds when comparing methods
 - Document exact HADDOCK3 version used
 - Record system specifications
@@ -274,4 +289,3 @@ If you encounter any issues:
 - Consult the [GitHub Issues](https://github.com/haddocking/haddock-runner/issues)
 - Review the [HADDOCK3 documentation](https://github.com/haddocking/haddock3)
 - Contact the support team via the channels mentioned in the main documentation
-
