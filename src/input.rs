@@ -140,7 +140,6 @@ impl Input {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct General {
     pub mol_suffixes: Vec<String>,
-    pub shape_suffix: Option<String>,
     pub input_list: String,
     pub work_dir: PathBuf,
     pub max_concurrent: u16,
@@ -252,7 +251,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::from("/tmp"),
                 max_concurrent: 1,
@@ -273,7 +271,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec![],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::from("/tmp"),
                 max_concurrent: 1,
@@ -294,7 +291,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_r".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::from("/tmp"),
                 max_concurrent: 1,
@@ -315,7 +311,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::from("/tmp"),
                 max_concurrent: 1,
@@ -337,7 +332,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::new(),
                 max_concurrent: 1,
@@ -358,7 +352,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::from("/tmp"),
                 max_concurrent: 0,

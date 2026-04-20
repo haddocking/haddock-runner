@@ -74,11 +74,7 @@ fn main() -> Result<()> {
 
     input.validate()?;
 
-    let targets = dataset::load_dataset(
-        &input.general.input_list,
-        &input.general.mol_suffixes,
-        input.general.shape_suffix.as_deref(),
-    )?;
+    let targets = dataset::load_dataset(&input.general.input_list, &input.general.mol_suffixes)?;
 
     // Validate checksums for all input files
     let checksum_file = input.general.work_dir.join("checksum.json");

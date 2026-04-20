@@ -200,7 +200,6 @@ mod tests {
                 },
                 general: crate::input::General {
                     mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                    shape_suffix: None,
                     input_list: "test.txt".to_string(),
                     work_dir: std::path::PathBuf::from("/tmp"),
                     max_concurrent: 1,
@@ -229,7 +228,6 @@ mod tests {
                 },
                 general: crate::input::General {
                     mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                    shape_suffix: None,
                     input_list: "test.txt".to_string(),
                     work_dir: std::path::PathBuf::from("/tmp"),
                     max_concurrent: 1,
@@ -283,7 +281,6 @@ mod tests {
                 },
                 general: crate::input::General {
                     mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                    shape_suffix: None,
                     input_list: "test.txt".to_string(),
                     work_dir: std::path::PathBuf::from("/tmp"),
                     max_concurrent: 1,
@@ -312,7 +309,6 @@ mod tests {
                 },
                 general: crate::input::General {
                     mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                    shape_suffix: None,
                     input_list: "test.txt".to_string(),
                     work_dir: std::path::PathBuf::from("/tmp"),
                     max_concurrent: 1,
@@ -341,7 +337,6 @@ mod tests {
                 },
                 general: crate::input::General {
                     mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                    shape_suffix: None,
                     input_list: "test.txt".to_string(),
                     work_dir: std::path::PathBuf::from("/tmp"),
                     max_concurrent: 1,

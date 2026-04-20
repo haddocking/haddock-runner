@@ -390,7 +390,6 @@ mod tests {
     fn test_job_new() {
         let general = General {
             mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-            shape_suffix: None,
             input_list: "test.txt".to_string(),
             work_dir: PathBuf::from("/tmp"),
             max_concurrent: 1,
@@ -428,7 +427,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::from("/tmp"),
                 max_concurrent: 1,
@@ -490,7 +488,6 @@ mod tests {
         // Create a job with a work directory
         let general = General {
             mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-            shape_suffix: None,
             input_list: "test.txt".to_string(),
             work_dir: work_dir.clone(),
             max_concurrent: 1,
@@ -568,7 +565,6 @@ mod tests {
             },
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: temp_path.to_path_buf(),
                 max_concurrent: 1,
@@ -628,7 +624,6 @@ mod tests {
             },
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: temp_path.to_path_buf(),
                 max_concurrent: 1,
