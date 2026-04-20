@@ -69,7 +69,57 @@ scenarios:
 
 ## Advanced Examples
 
-Soon to be added.
+> The purpose of this scenario is to sample antibody-peptide complexes, re-docking experimental structures. Rigid docking, flexible refinement and em refinement. Unambiguous restrains to keep Ab heavy and light chain together and ambiguous for CDR loops and whole peptide. <Jahaciel Villaverde Nogues>
+
+```yaml
+general:
+  input_list: /trinity/csbdevel/jvillave/deeprank-ab-pep/haddock3/2_real/2_config/data_2_cutoff_043/input_test_scenario_0.list
+  mol_suffixes: [_antibody, _antigen]
+  work_dir: /trinity/csbdevel/jvillave/deeprank-ab-pep/haddock3/2_real/3_2_results/scenario_0_results
+  execution: slurm 
+  max_concurrent: 100
+  ncores: 24
+
+scenarios:
+  # ------------------------------------------------------------
+  # 1) scenario 0, ab initio ground truth
+  # ------------------------------------------------------------
+  - name: ground-truth
+    workflow:
+      topoaa:
+        tolerance : 20
+      rigidbody:
+        tolerance : 20
+        crossdock: false
+        sampling: 10000
+        ambig_fname: _ti.tbl
+        unambig_fname: _antibody-unambig.tbl
+      clustfcc:
+        plot_matrix: true
+      # select up to 100 clusters per target,
+      # keeping 5 top models each (max 500 models)
+      seletopclusts:
+        top_clusters: 100
+        top_models: 5
+      flexref:
+        tolerance : 20
+        ambig_fname: _ti.tbl
+        unambig_fname: _antibody-unambig.tbl
+      # final energy minimisation
+      emref:
+        tolerance : 20
+        ambig_fname: _ti.tbl
+        unambig_fname: _antibody-unambig.tbl
+      caprieval:
+        reference_fname: _matched.pdb
+        fnat_cutoff: 4.0
+        irmsd_cutoff: 8.0
+      emscoring:
+        tolerance : 20
+        per_interface_scoring: true
+```
+
+...
 
 ## Configuration Variations
 

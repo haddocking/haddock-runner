@@ -424,7 +424,7 @@ dependencies = [
 
 [[package]]
 name = "haddock-runner"
-version = "3.0.0-rc2"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "chrono",

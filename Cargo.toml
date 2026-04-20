@@ -1,6 +1,6 @@
 [package]
 name = "haddock-runner"
-version = "3.0.0-rc2"
+version = "3.0.0"
 edition = "2024"
 authors = ["Rodrigo V. Honorato <r.vargashonorato@uu.nl>"]
 description = "Run large scale HADDOCK simulations using multiple input molecules in different scenarios"
@@ -16,6 +16,7 @@ keywords = [
 ]
 categories = ["science", "command-line-utilities", "bioinformatics"]
 rust-version = "1.92"
+exclude = [".*", "docs/"]
 
 [dependencies]
 chrono = "0.4"

@@ -2,7 +2,7 @@ use crate::job::fs::canonicalize;
 use crate::runner::slurm::SlurmJob;
 use crate::utils::{find_haddock3_executable, format_toml_value};
 use anyhow::Context;
-use log::{debug, info};
+use log::debug;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
@@ -130,7 +130,7 @@ impl Job {
 
         // Mark it are ready for execution
         self.status = Status::Prepared;
-        info!("> {}", self.name);
+        debug!("> {}", self.name);
 
         Ok(())
     }
@@ -146,12 +146,65 @@ impl Job {
     pub fn run(&mut self) -> anyhow::Result<()> {
         // info!("Starting {}", self.name);
 
-        // TODO: Figure out if this job is incomplete and should be restarted
+        // Check the status of the job
+        self.update_status()?;
+
+        match self.status {
+            // Job is incomplete, clean it up
+            Status::Incomplete => {
+                debug!("job {} is incomplete, cleaning and setup again", self.name);
+                self.clean()?;
+                self.setup()?;
+            }
+            // Job was already done, skip it by returning
+            Status::Done => {
+                debug!("job {} is complete, skipping", self.name);
+                return Ok(());
+            }
+            // All other, move ahead
+            _ => {}
+        }
 
         match self.general.execution {
             Execution::Local => self.run_local(),
             Execution::Slurm => self.run_slurm(),
         }
+    }
+
+    /// Check the status of the job
+    ///
+    /// This method checks the status of a job.
+    ///
+    /// # Returns
+    ///
+    /// * `anyhow::Result<()>` - Ok if check completes successfully, error otherwise
+    fn update_status(&mut self) -> anyhow::Result<()> {
+        // Check if working directory exists
+        if !self.wd.exists() {
+            // Directory doesn't exist, this is a new job
+            self.status = Status::Unknown;
+            return Ok(());
+        }
+
+        // Check if job is prepared
+        let run_toml = self.wd.join(WORKFLOW_FILENAME);
+        if run_toml.exists() {
+            self.status = Status::Prepared
+        }
+
+        // Check if it has a log file
+        let log_file = self.wd.join("run1/log");
+        if log_file.exists() {
+            // Read it and find some match words
+            let contents = fs::read_to_string(log_file)?;
+            if contents.contains("Finished at") {
+                self.status = Status::Done
+            } else {
+                self.status = Status::Incomplete
+            }
+        }
+
+        Ok(())
     }
 
     /// Run the job using SLURM
@@ -258,7 +311,7 @@ impl Job {
         let all_files = self.get_all_target_files();
 
         // Add general HADDOCK3 configuration
-        toml_content.push_str("run_dir = \"run1\"\n\n");
+        toml_content.push_str("run_dir = \"run1\"\nmode = \"local\"\n");
 
         // Add molecules section
         toml_content.push_str("molecules = [\n");
@@ -390,7 +443,6 @@ mod tests {
     fn test_job_new() {
         let general = General {
             mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-            shape_suffix: None,
             input_list: "test.txt".to_string(),
             work_dir: PathBuf::from("/tmp"),
             max_concurrent: 1,
@@ -428,7 +480,6 @@ mod tests {
         let input = Input {
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: PathBuf::from("/tmp"),
                 max_concurrent: 1,
@@ -490,7 +541,6 @@ mod tests {
         // Create a job with a work directory
         let general = General {
             mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-            shape_suffix: None,
             input_list: "test.txt".to_string(),
             work_dir: work_dir.clone(),
             max_concurrent: 1,
@@ -568,7 +618,6 @@ mod tests {
             },
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: temp_path.to_path_buf(),
                 max_concurrent: 1,
@@ -628,7 +677,6 @@ mod tests {
             },
             general: General {
                 mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
-                shape_suffix: None,
                 input_list: "test.txt".to_string(),
                 work_dir: temp_path.to_path_buf(),
                 max_concurrent: 1,

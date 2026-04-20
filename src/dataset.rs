@@ -116,11 +116,7 @@ fn calculate_target_size(
 /// # Returns
 ///
 /// * `Vec<Target>` - Vector of Target instances created from the input files
-pub fn load_dataset(
-    input_list: &str,
-    mol_suffixes: &[String],
-    shape_suffix: Option<&str>,
-) -> anyhow::Result<Vec<Target>> {
+pub fn load_dataset(input_list: &str, mol_suffixes: &[String]) -> anyhow::Result<Vec<Target>> {
     // Parse the input_list contents and group the paths based on their common root
     let mut targets: HashMap<String, TargetBuilder> = HashMap::new();
 
@@ -130,9 +126,6 @@ pub fn load_dataset(
         .iter()
         .map(|suffix| Regex::new(&format!(r"(.*){}(_\d+)?\.pdb$", regex::escape(suffix))).unwrap())
         .collect();
-
-    let shape_pattern = shape_suffix
-        .map(|suffix| Regex::new(&format!(r"(.*){}\.pdb$", regex::escape(suffix))).unwrap());
 
     let restraint_pattern = Regex::new(r".*_.*\.tbl$").unwrap();
     let toppar_pattern = Regex::new(r".*\.(top|param)$").unwrap();
@@ -164,21 +157,6 @@ pub fn load_dataset(
                 matched = true;
                 break;
             }
-        }
-
-        // Try to match shape pattern
-        if !matched
-            && let Some(pattern) = &shape_pattern
-            && let Some(captures) = pattern.captures(&file_name)
-        {
-            let root = captures.get(1).unwrap().as_str().to_string();
-
-            // Add to target builder
-            let builder = targets
-                .entry(root.clone())
-                .or_insert_with(|| TargetBuilder::new(root));
-            builder.shape = Some(path.clone());
-            matched = true;
         }
 
         // Try to match restraint pattern
@@ -304,37 +282,13 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets =
-            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()]).unwrap();
 
         // Should have one target
         assert_eq!(targets.len(), 1);
         assert_eq!(targets[0].id, "protein1");
         assert_eq!(targets[0].molecules.len(), 2);
         assert_eq!(targets[0].restraints.len(), 1);
-    }
-
-    #[test]
-    fn test_load_dataset_with_shape() {
-        // Create a temporary input list file with shape
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "protein1_r.pdb").unwrap();
-        writeln!(temp_file, "protein1_l.pdb").unwrap();
-        writeln!(temp_file, "protein1_shape.pdb").unwrap();
-        let file_path = temp_file.path().to_str().unwrap().to_string();
-
-        // Load dataset
-        let targets = load_dataset(
-            &file_path,
-            &["_r".to_string(), "_l".to_string()],
-            Some("_shape"),
-        )
-        .unwrap();
-
-        // Should have one target with shape
-        assert_eq!(targets.len(), 1);
-        assert_eq!(targets[0].id, "protein1");
-        assert!(targets[0].shape.is_some());
     }
 
     #[test]
@@ -348,8 +302,7 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets =
-            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()]).unwrap();
 
         // Should have two targets
         assert_eq!(targets.len(), 2);
@@ -371,8 +324,7 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets =
-            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()]).unwrap();
 
         // Should have one target (comments and empty lines should be ignored)
         assert_eq!(targets.len(), 1);
@@ -389,8 +341,7 @@ mod tests {
         let file_path = temp_file.path().to_str().unwrap().to_string();
 
         // Load dataset
-        let targets =
-            load_dataset(&file_path, &["_r".to_string(), "_l".to_string()], None).unwrap();
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()]).unwrap();
 
         // Should have one target with misc file
         assert_eq!(targets.len(), 1);

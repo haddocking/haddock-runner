@@ -74,15 +74,13 @@ fn main() -> Result<()> {
 
     input.validate()?;
 
-    let targets = dataset::load_dataset(
-        &input.general.input_list,
-        &input.general.mol_suffixes,
-        input.general.shape_suffix.as_deref(),
-    )?;
+    let targets = dataset::load_dataset(&input.general.input_list, &input.general.mol_suffixes)?;
 
     // Validate checksums for all input files
     let checksum_file = input.general.work_dir.join("checksum.json");
-    checksum::validate_checksums(&targets, &checksum_file)?;
+    let yaml_path = Path::new(&args.input_file);
+    let input_list_path = Path::new(&input.general.input_list);
+    checksum::validate_checksums(&targets, yaml_path, input_list_path, &checksum_file)?;
 
     let jobs = job::create_jobs(input.clone(), targets);
 
