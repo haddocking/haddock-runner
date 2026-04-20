@@ -133,7 +133,7 @@ See [Running Haddock Runner](./running-haddock-runner.md) for runtime details.
 
 After completion, results are organized by scenario and target:
 
-```
+```text
 results/
 ├── true-interface/
 │   ├── 1A2K/
