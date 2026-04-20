@@ -2,7 +2,7 @@ use crate::job::fs::canonicalize;
 use crate::runner::slurm::SlurmJob;
 use crate::utils::{find_haddock3_executable, format_toml_value};
 use anyhow::Context;
-use log::{debug, info};
+use log::debug;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;

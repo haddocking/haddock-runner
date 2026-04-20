@@ -82,12 +82,19 @@ fn calculate_target_checksums(target: &crate::dataset::Target) -> Result<HashMap
 /// # Arguments
 ///
 /// * `targets` - Array of targets containing files to validate
+/// * `yaml_file` - Path to the YAML input file
+/// * `input_list_file` - Path to the input list file
 /// * `checksum_file` - Path to the JSON file storing checksums
 ///
 /// # Returns
 ///
 /// * `Result<()>` - Ok if checksums match or new file created, Err if files have changed
-pub fn validate_checksums(targets: &[crate::dataset::Target], checksum_file: &Path) -> Result<()> {
+pub fn validate_checksums(
+    targets: &[crate::dataset::Target],
+    yaml_file: &Path,
+    input_list_file: &Path,
+    checksum_file: &Path,
+) -> Result<()> {
     // Check if checksum file exists
     let mut current_checksums = HashMap::new();
 
@@ -96,6 +103,14 @@ pub fn validate_checksums(targets: &[crate::dataset::Target], checksum_file: &Pa
         let target_checksums = calculate_target_checksums(target)?;
         current_checksums.extend(target_checksums);
     }
+
+    // Add checksum for the YAML input file
+    let yaml_checksum = calculate_checksum(yaml_file)?;
+    current_checksums.insert(yaml_file.display().to_string(), yaml_checksum);
+
+    // Add checksum for the input list file
+    let input_list_checksum = calculate_checksum(input_list_file)?;
+    current_checksums.insert(input_list_file.display().to_string(), input_list_checksum);
 
     if !checksum_file.exists() {
         // Create new checksum file with pretty printing
@@ -149,8 +164,17 @@ fn find_modified(
     }
 
     // Build error message with details
-    let mut error_msg = "Input files have changed since last run.\n".to_string();
-    error_msg.push_str("Remove checksum.json to force fresh run.\n\n");
+    let _sep = "!! ========================================================================= !!";
+
+    let mut error_msg = "\n".to_string() + _sep + "\n";
+    error_msg.push_str("!! Input files have been modified during the benchmark run !!\n");
+    error_msg.push_str("!! This makes the benchmark non-reproducible !!\n");
+    error_msg.push_str(
+        "!! If you change input or parameters mid execution, you need to start over !!\n",
+    );
+    error_msg
+        .push_str("!! If this is an exploratory run, create a new configuration for testing !!\n");
+    error_msg.push_str(&format!("{}\n\n", _sep));
 
     if !changed_files.is_empty() {
         error_msg.push_str("Modified files:\n");
@@ -323,7 +347,12 @@ mod tests {
         };
 
         // Validate checksums (should create new file)
-        let result = validate_checksums(&[target], &checksum_file);
+        let yaml_file = temp_dir.path().join("test.yml");
+        fs::write(&yaml_file, "test yaml content").unwrap();
+        let input_list_file = temp_dir.path().join("test_input_list.txt");
+        fs::write(&input_list_file, "test input list content").unwrap();
+
+        let result = validate_checksums(&[target], &yaml_file, &input_list_file, &checksum_file);
 
         // Should succeed and create the file
         assert!(result.is_ok());
@@ -354,5 +383,54 @@ mod tests {
         assert!(error_msg.contains("file3.txt"));
         assert!(error_msg.contains("Files removed:"));
         assert!(error_msg.contains("file4.txt"));
+    }
+
+    #[test]
+    fn test_validate_checksums_yaml_file_changed() {
+        // Create a temporary directory for the checksum file
+        let temp_dir = tempdir().unwrap();
+        let checksum_file = temp_dir.path().join("checksum.json");
+
+        // Create test files
+        let yaml_file = temp_dir.path().join("test.yml");
+        let input_list_file = temp_dir.path().join("input_list.txt");
+        let mol_file = temp_dir.path().join("test_mol.pdb");
+
+        fs::write(&yaml_file, "original yaml content").unwrap();
+        fs::write(&input_list_file, "input list content").unwrap();
+        fs::write(&mol_file, "molecule content").unwrap();
+
+        // Create target
+        let target = crate::dataset::Target {
+            id: "test".to_string(),
+            molecules: vec![mol_file.clone()],
+            restraints: vec![],
+            toppar: vec![],
+            misc: vec![],
+            shape: None,
+            size: 0,
+        };
+
+        // Create initial checksum file
+        let result = validate_checksums(
+            &[target.clone()],
+            &yaml_file,
+            &input_list_file,
+            &checksum_file,
+        );
+        assert!(result.is_ok());
+        assert!(checksum_file.exists());
+
+        // Now modify the YAML file
+        fs::write(&yaml_file, "modified yaml content").unwrap();
+
+        // Try to validate again - should fail because YAML file changed
+        let result = validate_checksums(&[target], &yaml_file, &input_list_file, &checksum_file);
+        assert!(result.is_err());
+
+        // Check that the error message mentions the YAML file
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Modified files:"));
+        assert!(error_msg.contains("test.yml"));
     }
 }
