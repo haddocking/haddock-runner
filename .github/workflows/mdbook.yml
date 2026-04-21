@@ -38,6 +38,13 @@ jobs:
         uses: actions/configure-pages@v4
       - name: Build with mdBook
         run: mdbook build docs
+
+      - name: check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: docs/book/*.html --max-retries 1 --root-dir docs/src
+          fail: true
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
