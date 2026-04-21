@@ -309,7 +309,7 @@ Use these examples as templates and:
 
 ## Additional Resources
 
-- **Complete configuration reference**: [Writing a Benchmark YAML File](./writing-a-benchmark.yaml-file.md)
-- **Input list format guide**: [Writing an Input List File](./writing-a-input.list-file.md)
-- **Running benchmarks**: [Running Haddock Runner](./running-haddock-runner.md)
+- **Complete configuration reference**: [Writing a Benchmark YAML File](./usage.md#step-3-write-the-benchmark-configuration)
+- **Input list format guide**: [Writing an Input List File](./usage.md#step-2-create-the-input-list-file)
+- **Running benchmarks**: [Running Haddock Runner](./usage.md#step-4-run-the-benchmark)
 - **Real-world setup**: [Setting Up a Benchmark](./setting-up-bm5.md)
