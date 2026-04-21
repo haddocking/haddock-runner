@@ -52,7 +52,13 @@ jobs:
           cargo install --version 0.5.2 mdbook
 
       - name: Build docs
-        run: cd docs && mdbook build
+        run: mdbook build docs
+
+      - name: check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: docs/book/*.html --max-retries 1 --root-dir docs/src
+          fail: true
 
   coverage:
     runs-on: ubuntu-latest
