@@ -12,7 +12,7 @@ The `haddock-runner` is designed for researchers, developers, and advanced users
 
 If you are new to HADDOCK, we recommend:
 
-- Completing the basic [HADDOCK3 tutorials](/education/HADDOCK3/index.md)
+- Completing the basic [HADDOCK3 tutorials](https://www.bonvinlab.org/education/HADDOCK3)
 - Familiarizing yourself with HADDOCK3 workflows and configuration
 
 For single target docking or small-scale experiments, consider using:
@@ -81,7 +81,7 @@ Available platforms will include:
 - `x86_64-apple-darwin` (macOS Intel)
 - `aarch64-apple-darwin` (macOS Apple Silicon)
 
-> **Note**: Pre-built binaries are coming soon. For now, please use Method 1 (crates.io) or see the [Development](/development) section for building from source.
+> **Note**: Pre-built binaries are coming soon. For now, please use Method 1 (crates.io) or see the [Development](./development.md) section for building from source.
 
 ## Post-Installation Setup
 
@@ -138,13 +138,12 @@ If you encounter installation issues:
 
 - Check the [GitHub Issues](https://github.com/haddocking/haddock-runner/issues) for known problems
 - Consult the [HADDOCK3 documentation](https://github.com/haddocking/haddock3) for HADDOCK-specific requirements
-- Contact the development team via the support channels mentioned in the [Getting Help](/getting-help) section
 
 ## Next Steps
 
 Now that you have `haddock-runner` installed, you're ready to:
 
-1. **Set up your first benchmark** - See [Setting Up a Benchmark](/setting-up-bm5)
-2. **Write a configuration file** - See [Writing a Benchmark YAML File](/usage#step-3-write-the-benchmark-configuration)
-3. **Prepare your input files** - See [Writing an Input List File](/usage#step-2-create-the-input-list-file)
-4. **Run your benchmark** - See [Running Haddock Runner](/usage#step-4-run-the-benchmark)
+1. **Set up your first benchmark** - See [Setting Up a Benchmark](./setting-up-bm5.md)
+2. **Write a configuration file** - See [Writing a Benchmark YAML File](./usage.md#step-3-write-the-benchmark-configuration)
+3. **Prepare your input files** - See [Writing an Input List File](./usage.md#step-2-create-the-input-list-file)
+4. **Run your benchmark** - See [Running Haddock Runner](./usage.md#step-4-run-the-benchmark)
