@@ -86,7 +86,7 @@ Results are organized by scenario and target, making it easy to compare performa
 4. **List your input files** in the required format
 5. **Run the benchmark** and analyze results
 
-See the [Setting Up a Benchmark](/setting-up-bm5) and [Writing a Benchmark YAML File](/writing-a-benchmark.yaml-file) sections for detailed instructions.
+See the [Setting Up a Benchmark](/setting-up-bm5) and [Writing a Benchmark YAML File](/usage#step-3-write-the-benchmark-configuration) sections for detailed instructions.
 
 ## Getting Help
 

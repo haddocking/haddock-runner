@@ -145,6 +145,6 @@ If you encounter installation issues:
 Now that you have `haddock-runner` installed, you're ready to:
 
 1. **Set up your first benchmark** - See [Setting Up a Benchmark](/setting-up-bm5)
-2. **Write a configuration file** - See [Writing a Benchmark YAML File](/writing-a-benchmark.yaml-file)
-3. **Prepare your input files** - See [Writing a Input List File](/writing-a-input.list-file)
-4. **Run your benchmark** - See [Running Haddock Runner](/running-haddock-runner)
+2. **Write a configuration file** - See [Writing a Benchmark YAML File](/usage#step-3-write-the-benchmark-configuration)
+3. **Prepare your input files** - See [Writing an Input List File](/usage#step-2-create-the-input-list-file)
+4. **Run your benchmark** - See [Running Haddock Runner](/usage#step-4-run-the-benchmark)

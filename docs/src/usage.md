@@ -102,7 +102,7 @@ scenarios:
         cmrest: true
 ```
 
-See [Writing a Benchmark YAML File](./writing-a-benchmark.yaml-file.md) for complete configuration options.
+See [Writing a Benchmark YAML File](#step-3-write-the-benchmark-configuration) for complete configuration options.
 
 ### Step 4: Run the Benchmark
 
@@ -127,7 +127,7 @@ haddock-runner --debug benchmark.yaml
 4. Results organization in the working directory
 5. Progress logging and error handling
 
-See [Running Haddock Runner](./running-haddock-runner.md) for runtime details.
+See [Running the Benchmark](#step-4-run-the-benchmark) for runtime details.
 
 ### Step 5: Analyze Results
 
