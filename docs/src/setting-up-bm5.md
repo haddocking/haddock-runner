@@ -6,7 +6,7 @@ This guide provides comprehensive, up-to-date instructions for setting up and ru
 
 Before starting, ensure you have:
 
-- `haddock-runner` installed (see [Installation](../installation.md))
+- `haddock-runner` installed (see [Installation](./installation.md))
 - HADDOCK3 properly installed and configured
 - Access to a computing environment with sufficient resources
 - Basic familiarity with command-line tools
