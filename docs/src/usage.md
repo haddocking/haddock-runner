@@ -102,7 +102,7 @@ scenarios:
         cmrest: true
 ```
 
-See [Writing a Benchmark YAML File](#step-3-write-the-benchmark-configuration) for complete configuration options.
+See [Configuration Reference](./reference.md) for complete configuration options.
 
 ### Step 4: Run the Benchmark
 
