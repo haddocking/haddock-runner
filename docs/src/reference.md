@@ -93,7 +93,7 @@ scenarios:
 
 ## Input List File Format
 
-The input list file (specified by `general.input_list`) contains paths to all files required for each docking target. Files are automatically grouped into targets based on their common root identifier, **the part before the first underscore**.
+The input list file (specified by `general.input_list`) contains paths to all files required for each docking target. Files are automatically grouped into targets by a shared identifier derived from the filename: for molecule files, the identifier is the part of the filename before the configured `mol_suffixes` match; for restraints, topology/parameter, shape, and miscellaneous files, grouping typically uses the part before the first underscore.
 
 ### File Classification
 
@@ -302,14 +302,13 @@ When `execution: slurm`:
 
 ### Path Resolution
 
-- **Relative paths** in the configuration file (for `input_list` and `work_dir`) are resolved relative to the configuration file's location.
-- **Relative paths** in the input list file are resolved relative to the input list file's location.
+- **Relative paths** in the configuration file (for `input_list` and `work_dir`) are resolved relative to the current working directory.
 
 ### Filename Pattern Resolution
 
 When a module parameter ends with `_fname` and contains a pattern (e.g., `_ti.tbl`), the pattern is matched against all files available for the target. The matching is done using regular expressions.
 
-If multiple files match the pattern, the module parameter will receive all matching filenames. If no file matches, the parameter will be omitted or cause an error depending on the HADDOCK3 module requirements.
+**IMPORTANT: If multiple files match the pattern, the match is treated as ambiguous and the resolver returns `None`, so the parameter is omitted from the generated run TOML.**
 
 ---
 
