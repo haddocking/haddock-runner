@@ -95,6 +95,13 @@ scenarios:
 
 The input list file (specified by `general.input_list`) contains paths to all files required for each docking target. Files are automatically grouped into targets by a shared identifier derived from the filename: for molecule files, the identifier is the part of the filename before the configured `mol_suffixes` match; for restraints, topology/parameter, shape, and miscellaneous files, grouping typically uses the part before the first underscore.
 
+> **Important note about ensembles**: If your input contains multiple models, haddock will handle it with its own tooling. So here you should define it as a single model following the naming scheme, so:
+>
+> ```
+> ❌ complexA_ens_l_u.pdb # containing 10 models
+> ✅ complexA_l_u.pdb     # containing 10 models
+> ```
+>
 ### File Classification
 
 Files in the input list are automatically categorized based on their extensions and patterns:
