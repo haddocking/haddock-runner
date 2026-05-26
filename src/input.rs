@@ -11,6 +11,7 @@ use std::{
 };
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct Input {
     pub general: General,
     pub scenarios: Vec<Scenario>,
@@ -138,6 +139,7 @@ impl Input {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct General {
     pub mol_suffixes: Vec<String>,
     pub input_list: String,
@@ -155,6 +157,7 @@ pub enum Execution {
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
+#[serde(deny_unknown_fields)]
 pub struct Scenario {
     pub name: String,
     pub workflow: Workflow,
@@ -363,6 +366,72 @@ mod tests {
 
         // Should fail validation
         let result = input.validate_general();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_input_deserialize_unknown_top_level_field() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: local
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+unknown_field: true
+"#;
+
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_input_deserialize_unknown_general_field() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: local
+  unexpected: value
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_input_deserialize_unknown_scenario_field() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: local
+scenarios:
+  - name: test
+    unknown: true
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
         assert!(result.is_err());
     }
 }
