@@ -372,12 +372,7 @@ impl Job {
         let absolute_wd = canonicalize(&self.wd).unwrap_or_else(|_| self.wd.to_path_buf());
 
         // Write SLURM header
-        let header = "#!/bin/bash\n".to_string()
-            + "#SBATCH --job-name=haddock\n"
-            + "#SBATCH --output=haddock-%j.out\n"
-            + "#SBATCH --error=haddock-%j.err\n"
-            + &format!("#SBATCH --cpus-per-task={}\n", self.general.ncores)
-            + "#SBATCH --ntasks=1\n";
+        let header = self.generate_slurm_header();
 
         // Write job body
         let body = format!(
@@ -391,6 +386,21 @@ impl Job {
         file.write_all(body.as_bytes())?;
 
         Ok(())
+    }
+
+    fn generate_slurm_header(&self) -> String {
+        let mut header = "#!/bin/bash\n".to_string()
+            + "#SBATCH --job-name=haddock\n"
+            + "#SBATCH --output=haddock-%j.out\n"
+            + "#SBATCH --error=haddock-%j.err\n";
+
+        if let Some(partition) = &self.general.partition {
+            header.push_str(&format!("#SBATCH --partition={partition}\n"));
+        }
+
+        header
+            + &format!("#SBATCH --cpus-per-task={}\n", self.general.ncores)
+            + "#SBATCH --ntasks=1\n"
     }
 
     /// Resolves _fname patterns to actual file paths
@@ -448,6 +458,7 @@ mod tests {
             max_concurrent: 1,
             ncores: 1,
             execution: Execution::Local,
+            partition: None,
         };
 
         let scenario = Scenario {
@@ -485,6 +496,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![
                 Scenario {
@@ -546,6 +558,7 @@ mod tests {
             max_concurrent: 1,
             ncores: 1,
             execution: Execution::Local,
+            partition: None,
         };
 
         let scenario = Scenario {
@@ -623,6 +636,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
         };
 
@@ -682,6 +696,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
         };
 
@@ -694,5 +709,78 @@ mod tests {
         assert!(all_files.contains(&toppar_file));
         assert!(all_files.contains(&misc_file));
         assert!(all_files.contains(&shape_file));
+    }
+
+    #[test]
+    fn test_generate_slurm_header_without_partition() {
+        let job = Job {
+            name: "test".to_string(),
+            status: Status::Unknown,
+            wd: PathBuf::from("/tmp"),
+            target: Target {
+                id: "target".to_string(),
+                molecules: vec![],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+                size: 0,
+            },
+            scenario: Scenario {
+                name: "scenario".to_string(),
+                workflow: Workflow {
+                    modules: IndexMap::new(),
+                },
+            },
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 4,
+                execution: Execution::Slurm,
+                partition: None,
+            },
+        };
+
+        let header = job.generate_slurm_header();
+        assert!(!header.contains("#SBATCH --partition="));
+        assert!(header.contains("#SBATCH --cpus-per-task=4"));
+    }
+
+    #[test]
+    fn test_generate_slurm_header_with_partition() {
+        let job = Job {
+            name: "test".to_string(),
+            status: Status::Unknown,
+            wd: PathBuf::from("/tmp"),
+            target: Target {
+                id: "target".to_string(),
+                molecules: vec![],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+                size: 0,
+            },
+            scenario: Scenario {
+                name: "scenario".to_string(),
+                workflow: Workflow {
+                    modules: IndexMap::new(),
+                },
+            },
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 4,
+                execution: Execution::Slurm,
+                partition: Some("gpu".to_string()),
+            },
+        };
+
+        let header = job.generate_slurm_header();
+        assert!(header.contains("#SBATCH --partition=gpu"));
     }
 }

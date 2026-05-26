@@ -147,6 +147,7 @@ pub struct General {
     pub max_concurrent: u16,
     pub ncores: u16,
     pub execution: Execution,
+    pub partition: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -259,6 +260,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -279,6 +281,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -299,6 +302,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -319,6 +323,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -340,6 +345,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -360,6 +366,7 @@ mod tests {
                 max_concurrent: 0,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -411,6 +418,29 @@ scenarios:
 
         let result: Result<Input, _> = serde_yaml::from_str(yaml);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_input_deserialize_with_partition() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  partition: gpu
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.partition, Some("gpu".to_string()));
     }
 
     #[test]
