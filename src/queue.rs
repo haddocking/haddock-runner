@@ -205,6 +205,7 @@ mod tests {
                     max_concurrent: 1,
                     ncores: 1,
                     execution: crate::input::Execution::Local,
+                    partition: None,
                 },
             },
             Job {
@@ -233,6 +234,7 @@ mod tests {
                     max_concurrent: 1,
                     ncores: 1,
                     execution: crate::input::Execution::Local,
+                    partition: None,
                 },
             },
         ];
@@ -286,6 +288,7 @@ mod tests {
                     max_concurrent: 1,
                     ncores: 1,
                     execution: crate::input::Execution::Local,
+                    partition: None,
                 },
             },
             Job {
@@ -314,6 +317,7 @@ mod tests {
                     max_concurrent: 1,
                     ncores: 1,
                     execution: crate::input::Execution::Local,
+                    partition: None,
                 },
             },
             Job {
@@ -342,6 +346,7 @@ mod tests {
                     max_concurrent: 1,
                     ncores: 1,
                     execution: crate::input::Execution::Local,
+                    partition: None,
                 },
             },
         ];

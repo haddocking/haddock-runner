@@ -29,6 +29,7 @@ The `general` section contains global settings that apply to all scenarios and t
 | `max_concurrent` | integer | Yes | Maximum number of jobs to run simultaneously. Controls how many target-scenario combinations execute in parallel. |
 | `ncores` | integer | Yes | Number of CPU cores to allocate per job. |
 | `execution` | string | Yes | Execution backend. Valid values: `local`, `slurm`. |
+| `partition` | string | No | SLURM partition to submit jobs to when `execution: slurm`. If omitted, the cluster default partition is used. |
 | `mol_suffixes` | array of strings | Yes | File suffixes used to identify molecule files. Must contain at least 2 suffixes (typically receptor and ligand). |
 | `input_list` | string | Yes | Path to the input list file containing file paths for all targets. |
 | `work_dir` | string | Yes | Directory where benchmark results will be stored. Created automatically if it doesn't exist. |
@@ -198,6 +199,7 @@ general:
   max_concurrent: 4
   ncores: 4
   execution: slurm
+  partition: long
   mol_suffixes: [_r_u, _l_u, _shape]
   input_list: shape/input.txt
   work_dir: shape-results

@@ -164,7 +164,8 @@ For SLURM clusters, modify your config:
 ```yaml
 general:
   execution: slurm
-  cpus_per_task: 4
+  ncores: 4
+  partition: long
 ```
 
 ## Step 6: Monitor and Manage the Benchmark

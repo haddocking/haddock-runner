@@ -116,6 +116,12 @@ impl Input {
             anyhow::bail!("max_concurrent must be greater than 0");
         }
 
+        if let Some(partition) = &self.general.partition
+            && partition.trim().is_empty()
+        {
+            anyhow::bail!("partition must be non-empty when defined");
+        }
+
         match &self.general.execution {
             Execution::Local => {
                 validate_haddock3()?;
@@ -147,6 +153,7 @@ pub struct General {
     pub max_concurrent: u16,
     pub ncores: u16,
     pub execution: Execution,
+    pub partition: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -259,6 +266,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -279,6 +287,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -299,6 +308,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -319,6 +329,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -340,6 +351,7 @@ mod tests {
                 max_concurrent: 1,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -360,6 +372,7 @@ mod tests {
                 max_concurrent: 0,
                 ncores: 1,
                 execution: Execution::Local,
+                partition: None,
             },
             scenarios: vec![],
         };
@@ -367,6 +380,29 @@ mod tests {
         // Should fail validation
         let result = input.validate_general();
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_input_validate_general_empty_partition() {
+        let input = Input {
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Slurm,
+                partition: Some("   ".to_string()),
+            },
+            scenarios: vec![],
+        };
+
+        let result = input.validate_general();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "partition must be non-empty when defined"
+        );
     }
 
     #[test]
@@ -411,6 +447,51 @@ scenarios:
 
         let result: Result<Input, _> = serde_yaml::from_str(yaml);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_input_deserialize_with_partition() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  partition: gpu
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.partition, Some("gpu".to_string()));
+    }
+
+    #[test]
+    fn test_input_deserialize_without_partition() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.partition, None);
     }
 
     #[test]
