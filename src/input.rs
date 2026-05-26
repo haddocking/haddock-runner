@@ -444,6 +444,28 @@ scenarios:
     }
 
     #[test]
+    fn test_input_deserialize_without_partition() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.partition, None);
+    }
+
+    #[test]
     fn test_input_deserialize_unknown_scenario_field() {
         let yaml = r#"
 general:
