@@ -394,13 +394,17 @@ impl Job {
             + "#SBATCH --output=haddock-%j.out\n"
             + "#SBATCH --error=haddock-%j.err\n";
 
+        header.push_str(&format!(
+            "#SBATCH --cpus-per-task={}\n",
+            self.general.ncores
+        ));
+        header.push_str("#SBATCH --ntasks=1\n");
+
         if let Some(partition) = &self.general.partition {
             header.push_str(&format!("#SBATCH --partition={partition}\n"));
         }
 
         header
-            + &format!("#SBATCH --cpus-per-task={}\n", self.general.ncores)
-            + "#SBATCH --ntasks=1\n"
     }
 
     /// Resolves _fname patterns to actual file paths
@@ -745,7 +749,16 @@ mod tests {
 
         let header = job.generate_slurm_header();
         assert!(!header.contains("#SBATCH --partition="));
+        assert!(header.starts_with("#!/bin/bash\n"));
+        assert!(header.contains("#SBATCH --job-name=haddock\n"));
+        assert!(header.contains("#SBATCH --output=haddock-%j.out\n"));
+        assert!(header.contains("#SBATCH --error=haddock-%j.err\n"));
         assert!(header.contains("#SBATCH --cpus-per-task=4"));
+        assert!(header.contains("#SBATCH --ntasks=1\n"));
+        assert_eq!(
+            header.find("#SBATCH --ntasks=1\n"),
+            Some(header.len() - "#SBATCH --ntasks=1\n".len())
+        );
     }
 
     #[test]
@@ -782,5 +795,12 @@ mod tests {
 
         let header = job.generate_slurm_header();
         assert!(header.contains("#SBATCH --partition=gpu"));
+        assert!(header.starts_with("#!/bin/bash\n"));
+        assert!(header.contains("#SBATCH --job-name=haddock\n"));
+        assert!(header.contains("#SBATCH --output=haddock-%j.out\n"));
+        assert!(header.contains("#SBATCH --error=haddock-%j.err\n"));
+        assert!(header.contains("#SBATCH --cpus-per-task=4"));
+        assert!(header.contains("#SBATCH --ntasks=1\n"));
+        assert!(header.find("#SBATCH --partition=gpu\n") > header.find("#SBATCH --ntasks=1\n"));
     }
 }
