@@ -116,6 +116,12 @@ impl Input {
             anyhow::bail!("max_concurrent must be greater than 0");
         }
 
+        if let Some(partition) = &self.general.partition
+            && partition.trim().is_empty()
+        {
+            anyhow::bail!("partition must be non-empty when defined");
+        }
+
         match &self.general.execution {
             Execution::Local => {
                 validate_haddock3()?;
@@ -374,6 +380,29 @@ mod tests {
         // Should fail validation
         let result = input.validate_general();
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_input_validate_general_empty_partition() {
+        let input = Input {
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Slurm,
+                partition: Some("   ".to_string()),
+            },
+            scenarios: vec![],
+        };
+
+        let result = input.validate_general();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "partition must be non-empty when defined"
+        );
     }
 
     #[test]
