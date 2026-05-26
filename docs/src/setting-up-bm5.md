@@ -165,7 +165,7 @@ For SLURM clusters, modify your config:
 general:
   execution: slurm
   ncores: 4
-  partition: gpu
+  partition: long
 ```
 
 ## Step 6: Monitor and Manage the Benchmark
