@@ -199,7 +199,7 @@ general:
   max_concurrent: 4
   ncores: 4
   execution: slurm
-  partition: gpu
+  partition: long
   mol_suffixes: [_r_u, _l_u, _shape]
   input_list: shape/input.txt
   work_dir: shape-results
