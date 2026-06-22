@@ -171,7 +171,6 @@ scenarios:
         reference_fname: _ref.pdb
 ```
 
-
 - All instances of a repeated module **must** carry a `.digit` suffix — mixing a bare name with a suffixed one (e.g. `caprieval` and `caprieval.1`) is an error.
 - Suffixes must be **sequential starting at `.1`**: `.1`, `.2`, `.3`, … Gaps (e.g. `.1`, `.3`) or a different starting point (e.g. `.2`, `.3`) are not allowed.
 - A module that appears only once does **not** need a suffix.
