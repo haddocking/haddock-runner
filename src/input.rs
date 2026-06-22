@@ -8,8 +8,12 @@ use serde_yaml::Value;
 use std::{
     fs,
     path::{Path, PathBuf},
+    sync::LazyLock,
     thread,
 };
+
+pub(crate) static DIGIT_SUFFIX_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(.*?)\.(\d+)$").unwrap());
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
@@ -84,19 +88,17 @@ impl Input {
     /// Mixing a bare name with a suffixed variant (e.g. `caprieval` + `caprieval.1`)
     /// is rejected because haddock3 cannot reconcile the two forms.
     pub fn validate_workflows(&self) -> Result<()> {
-        let digit_suffix_re = Regex::new(r"^(.*?)\.(\d+)$").unwrap();
-
         for scenario in &self.scenarios {
             // Check for bare names coexisting with suffixed siblings
             for name in scenario.workflow.modules.keys() {
-                if digit_suffix_re.captures(name).is_none() {
+                if DIGIT_SUFFIX_RE.captures(name).is_none() {
                     let has_suffixed_sibling = scenario
                         .workflow
                         .modules
                         .keys()
                         .filter(|n| *n != name)
                         .any(|n| {
-                            digit_suffix_re
+                            DIGIT_SUFFIX_RE
                                 .captures(n)
                                 .map(|c| c.get(1).unwrap().as_str() == name.as_str())
                                 .unwrap_or(false)
@@ -115,7 +117,7 @@ impl Input {
             let mut suffix_map: std::collections::HashMap<String, Vec<u32>> =
                 std::collections::HashMap::new();
             for name in scenario.workflow.modules.keys() {
-                if let Some(caps) = digit_suffix_re.captures(name) {
+                if let Some(caps) = DIGIT_SUFFIX_RE.captures(name) {
                     let base = caps.get(1).unwrap().as_str().to_string();
                     let n: u32 = caps.get(2).unwrap().as_str().parse().unwrap();
                     suffix_map.entry(base).or_default().push(n);

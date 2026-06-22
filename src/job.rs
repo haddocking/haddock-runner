@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use itertools::Itertools;
 
-use crate::input::{Execution, General};
+use crate::input::{Execution, General, DIGIT_SUFFIX_RE};
 use crate::runner::local;
 use crate::runner::status::Status;
 use crate::{
@@ -309,8 +309,6 @@ impl Job {
     fn generate_run_toml(&self) -> anyhow::Result<String> {
         let mut toml_content = String::new();
         let all_files = self.get_all_target_files();
-        let digit_suffix_re = Regex::new(r"\.\d+$").unwrap();
-
         // Add general HADDOCK3 configuration
         toml_content.push_str("run_dir = \"run1\"\nmode = \"local\"\n");
 
@@ -330,7 +328,7 @@ impl Job {
         for (module_name, module_params) in &self.scenario.workflow.modules {
             // Modules with a .digit suffix are quoted so haddock3 treats the dot as a literal
             // character rather than a TOML nested-table separator.
-            let header = if digit_suffix_re.is_match(module_name) {
+            let header = if DIGIT_SUFFIX_RE.is_match(module_name) {
                 format!("[\"{module_name}\"]\n")
             } else {
                 format!("[{module_name}]\n")
