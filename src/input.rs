@@ -87,7 +87,7 @@ impl Input {
     /// `.digit` suffixes (e.g. `caprieval.1`, `caprieval.2`) starting at 1 with no gaps.
     /// Mixing a bare name with a suffixed variant (e.g. `caprieval` + `caprieval.1`)
     /// is rejected because haddock3 cannot reconcile the two forms.
-    pub fn validate_workflows(&self) -> Result<()> {
+    fn validate_workflows(&self) -> Result<()> {
         for scenario in &self.scenarios {
             // Check for bare names coexisting with suffixed siblings
             for name in scenario.workflow.modules.keys() {
