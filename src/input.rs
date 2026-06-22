@@ -2,6 +2,7 @@ use crate::runner::slurm::validate_slurm;
 use crate::utils::validate_haddock3;
 use anyhow::{Context, Result, bail};
 use indexmap::IndexMap;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value;
 use std::{
@@ -69,8 +70,74 @@ impl Input {
         // Validate general fields
         self.validate_general()?;
 
+        // Validate workflow module naming
+        self.validate_workflows()?;
+
         // Validate haddock3
         validate_haddock3()?;
+
+        Ok(())
+    }
+
+    /// Validates that repeated modules in every scenario workflow consistently use
+    /// `.digit` suffixes (e.g. `caprieval.1`, `caprieval.2`) starting at 1 with no gaps.
+    /// Mixing a bare name with a suffixed variant (e.g. `caprieval` + `caprieval.1`)
+    /// is rejected because haddock3 cannot reconcile the two forms.
+    pub fn validate_workflows(&self) -> Result<()> {
+        let digit_suffix_re = Regex::new(r"^(.*?)\.(\d+)$").unwrap();
+
+        for scenario in &self.scenarios {
+            // Check for bare names coexisting with suffixed siblings
+            for name in scenario.workflow.modules.keys() {
+                if digit_suffix_re.captures(name).is_none() {
+                    let has_suffixed_sibling = scenario
+                        .workflow
+                        .modules
+                        .keys()
+                        .filter(|n| *n != name)
+                        .any(|n| {
+                            digit_suffix_re
+                                .captures(n)
+                                .map(|c| c.get(1).unwrap().as_str() == name.as_str())
+                                .unwrap_or(false)
+                        });
+                    if has_suffixed_sibling {
+                        bail!(
+                            "scenario '{}': module '{name}' mixes bare and .digit-suffixed names; \
+                            repeated modules must all use .digit suffixes (e.g. {name}.1, {name}.2)",
+                            scenario.name
+                        );
+                    }
+                }
+            }
+
+            // Check that suffixed modules are sequential starting at 1
+            let mut suffix_map: std::collections::HashMap<String, Vec<u32>> =
+                std::collections::HashMap::new();
+            for name in scenario.workflow.modules.keys() {
+                if let Some(caps) = digit_suffix_re.captures(name) {
+                    let base = caps.get(1).unwrap().as_str().to_string();
+                    let n: u32 = caps.get(2).unwrap().as_str().parse().unwrap();
+                    suffix_map.entry(base).or_default().push(n);
+                }
+            }
+            for (base, mut indices) in suffix_map {
+                indices.sort();
+                let expected: Vec<u32> = (1..=indices.len() as u32).collect();
+                if indices != expected {
+                    bail!(
+                        "scenario '{}': module '{base}' suffixes must be sequential starting at 1 \
+                        (e.g. {base}.1, {base}.2), got: {}",
+                        scenario.name,
+                        indices
+                            .iter()
+                            .map(|n| format!("{base}.{n}"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                }
+            }
+        }
 
         Ok(())
     }
@@ -514,5 +581,90 @@ scenarios:
 
         let result: Result<Input, _> = serde_yaml::from_str(yaml);
         assert!(result.is_err());
+    }
+
+    fn make_input_with_workflow(modules: IndexMap<String, Value>) -> Input {
+        Input {
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Local,
+                partition: None,
+            },
+            scenarios: vec![Scenario {
+                name: "test".to_string(),
+                workflow: Workflow { modules },
+            }],
+        }
+    }
+
+    #[test]
+    fn test_validate_workflow_repeated_modules_with_digits_is_ok() {
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval.1".to_string(), Value::Null);
+        modules.insert("caprieval.2".to_string(), Value::Null);
+
+        let input = make_input_with_workflow(modules);
+        assert!(input.validate_workflows().is_ok());
+    }
+
+    #[test]
+    fn test_validate_workflow_mixed_bare_and_suffixed_is_error() {
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval".to_string(), Value::Null);
+        modules.insert("caprieval.1".to_string(), Value::Null);
+
+        let input = make_input_with_workflow(modules);
+        assert!(input.validate_workflows().is_err());
+    }
+
+    #[test]
+    fn test_validate_workflow_sequential_digits_three_is_ok() {
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval.1".to_string(), Value::Null);
+        modules.insert("caprieval.2".to_string(), Value::Null);
+        modules.insert("caprieval.3".to_string(), Value::Null);
+
+        let input = make_input_with_workflow(modules);
+        assert!(input.validate_workflows().is_ok());
+    }
+
+    #[test]
+    fn test_validate_workflow_not_starting_at_one_is_error() {
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval.2".to_string(), Value::Null);
+        modules.insert("caprieval.3".to_string(), Value::Null);
+
+        let input = make_input_with_workflow(modules);
+        assert!(input.validate_workflows().is_err());
+    }
+
+    #[test]
+    fn test_validate_workflow_gap_in_sequence_is_error() {
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval.1".to_string(), Value::Null);
+        modules.insert("caprieval.3".to_string(), Value::Null);
+
+        let input = make_input_with_workflow(modules);
+        assert!(input.validate_workflows().is_err());
+    }
+
+    #[test]
+    fn test_validate_workflow_zero_based_is_error() {
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval.0".to_string(), Value::Null);
+        modules.insert("caprieval.1".to_string(), Value::Null);
+
+        let input = make_input_with_workflow(modules);
+        assert!(input.validate_workflows().is_err());
     }
 }
