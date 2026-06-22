@@ -309,6 +309,7 @@ impl Job {
     fn generate_run_toml(&self) -> anyhow::Result<String> {
         let mut toml_content = String::new();
         let all_files = self.get_all_target_files();
+        let digit_suffix_re = Regex::new(r"\.\d+$").unwrap();
 
         // Add general HADDOCK3 configuration
         toml_content.push_str("run_dir = \"run1\"\nmode = \"local\"\n");
@@ -327,7 +328,14 @@ impl Job {
 
         // Add workflow modules from scenario
         for (module_name, module_params) in &self.scenario.workflow.modules {
-            toml_content.push_str(&format!("[{}]\n", module_name));
+            // Modules with a .digit suffix are quoted so haddock3 treats the dot as a literal
+            // character rather than a TOML nested-table separator.
+            let header = if digit_suffix_re.is_match(module_name) {
+                format!("[\"{module_name}\"]\n")
+            } else {
+                format!("[{module_name}]\n")
+            };
+            toml_content.push_str(&header);
 
             if let Some(params) = module_params.as_mapping() {
                 for (key, value) in params.iter() {
@@ -450,6 +458,7 @@ mod tests {
     use crate::input::{Execution, General, Scenario, Workflow};
     use crate::runner::status::Status;
     use indexmap::IndexMap;
+    use serde_yaml::Value;
     use std::path::PathBuf;
     use tempfile::tempdir;
 
@@ -798,5 +807,99 @@ mod tests {
 #SBATCH --cpus-per-task=4\n\
 #SBATCH --partition=gpu\n";
         assert_eq!(header, expected);
+    }
+
+    fn make_job_with_modules(modules: IndexMap<String, Value>) -> Job {
+        Job {
+            name: "test".to_string(),
+            status: Status::Unknown,
+            wd: PathBuf::from("/tmp"),
+            target: Target {
+                id: "test".to_string(),
+                molecules: vec![PathBuf::from("mol.pdb")],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+                size: 0,
+            },
+            scenario: Scenario {
+                name: "test".to_string(),
+                workflow: Workflow { modules },
+            },
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Local,
+                partition: None,
+            },
+        }
+    }
+
+    #[test]
+    fn test_generate_run_toml_repeated_modules() {
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval.1".to_string(), Value::Null);
+        modules.insert("caprieval.2".to_string(), Value::Null);
+
+        let job = make_job_with_modules(modules);
+        let toml = job.generate_run_toml().unwrap();
+
+        assert!(
+            toml.contains("[\"caprieval.1\"]"),
+            "expected [\"caprieval.1\"] but got:\n{toml}"
+        );
+        assert!(
+            toml.contains("[\"caprieval.2\"]"),
+            "expected [\"caprieval.2\"] but got:\n{toml}"
+        );
+        assert!(
+            !toml.contains("[caprieval.1]"),
+            "unquoted [caprieval.1] should not appear"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_single_suffixed_module() {
+        // A module with a .digit suffix appearing alone should still be quoted
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("emscoring.1".to_string(), Value::Null);
+
+        let job = make_job_with_modules(modules);
+        let toml = job.generate_run_toml().unwrap();
+
+        assert!(
+            toml.contains("[\"emscoring.1\"]"),
+            "expected [\"emscoring.1\"] but got:\n{toml}"
+        );
+        assert!(
+            !toml.contains("[emscoring.1]"),
+            "unquoted [emscoring.1] should not appear"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_plain_modules_unaffected() {
+        // Modules without a .digit suffix must keep plain [module] headers
+        let mut modules = IndexMap::new();
+        modules.insert("topoaa".to_string(), Value::Null);
+        modules.insert("caprieval".to_string(), Value::Null);
+
+        let job = make_job_with_modules(modules);
+        let toml = job.generate_run_toml().unwrap();
+
+        assert!(
+            toml.contains("[topoaa]"),
+            "expected [topoaa] but got:\n{toml}"
+        );
+        assert!(
+            toml.contains("[caprieval]"),
+            "expected [caprieval] but got:\n{toml}"
+        );
     }
 }
