@@ -150,6 +150,33 @@ The `workflow` section within each scenario defines the HADDOCK3 modules to exec
 
 Look in the [haddock repository](https://github.com/haddocking/haddock3) for information about modules/parameters for each module.
 
+### Repeated Modules
+
+To run the same HADDOCK3 module more than once in a workflow (e.g. two `caprieval` steps), append a `.digit` suffix to each occurrence. Suffixes must start at `.1` and be sequential with no gaps.
+
+```yaml
+scenarios:
+  - name: evaluate-before-and-after
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 1000
+        ambig_fname: _ti.tbl
+      caprieval.1:
+        reference_fname: _ref.pdb
+      flexref:
+        ambig_fname: _ti.tbl
+      caprieval.2:
+        reference_fname: _ref.pdb
+```
+
+- All instances of a repeated module **must** carry a `.digit` suffix — mixing a bare name with a suffixed one (e.g. `caprieval` and `caprieval.1`) is an error.
+- Suffixes must be **sequential starting at `.1`**: `.1`, `.2`, `.3`, … Gaps (e.g. `.1`, `.3`) or a different starting point (e.g. `.2`, `.3`) are not allowed.
+- A module that appears only once does **not** need a suffix.
+
+> **Why `.digit` suffixes?** YAML does not allow duplicate keys in a mapping, so two plain `caprieval:` entries would be silently merged. The `.digit` convention gives each entry a unique key while haddock-runner strips the suffix when generating the haddock3 configuration file.
+
 ### Module Parameter Patterns
 
 Many parameters accept **filename patterns** instead of explicit paths. These patterns are matched against the files available for each target. The pattern matching uses regular expressions.
@@ -292,6 +319,11 @@ The configuration file is validated before execution. The following rules apply:
 4. **`input_list`**: Must not be an empty string, and the file must exist.
 5. **`max_concurrent`**: Must be greater than 0.
 6. **`ncores`**: Must be greater than 0.
+
+### Workflow Section
+
+1. **Repeated modules**: A bare module name (e.g. `caprieval`) must not coexist with a suffixed variant (e.g. `caprieval.1`) in the same workflow.
+2. **Suffix sequencing**: Suffixes for repeated modules must start at `.1` and be sequential with no gaps (`.1`, `.2`, `.3`, …).
 
 ### Local Execution
 
