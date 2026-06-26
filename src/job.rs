@@ -324,6 +324,16 @@ impl Job {
         // Add ncores section
         toml_content.push_str(&format!("ncores = {}\n", &self.general.ncores));
 
+        if let Some(value) = self.general.preprocess {
+            toml_content.push_str(&format!("preprocess = {}\n", value));
+        }
+        if let Some(value) = self.general.postprocess {
+            toml_content.push_str(&format!("postprocess = {}\n", value));
+        }
+        if let Some(value) = self.general.gen_archive {
+            toml_content.push_str(&format!("gen_archive = {}\n", value));
+        }
+
         // Add workflow modules from scenario
         for (module_name, module_params) in &self.scenario.workflow.modules {
             // Modules with a .digit suffix are quoted so haddock3 treats the dot as a literal
@@ -922,6 +932,102 @@ mod tests {
         assert!(
             toml.contains("[caprieval]"),
             "expected [caprieval] but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_gen_archive_some_true() {
+        let mut job = make_job_with_modules(IndexMap::new());
+        job.general.gen_archive = Some(true);
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            toml.contains("gen_archive = true"),
+            "expected gen_archive = true but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_gen_archive_some_false() {
+        let mut job = make_job_with_modules(IndexMap::new());
+        job.general.gen_archive = Some(false);
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            toml.contains("gen_archive = false"),
+            "expected gen_archive = false but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_gen_archive_none() {
+        let job = make_job_with_modules(IndexMap::new());
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            !toml.contains("gen_archive"),
+            "gen_archive should not appear but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_preprocess_some_true() {
+        let mut job = make_job_with_modules(IndexMap::new());
+        job.general.preprocess = Some(true);
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            toml.contains("preprocess = true"),
+            "expected preprocess = true but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_preprocess_some_false() {
+        let mut job = make_job_with_modules(IndexMap::new());
+        job.general.preprocess = Some(false);
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            toml.contains("preprocess = false"),
+            "expected preprocess = false but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_preprocess_none() {
+        let job = make_job_with_modules(IndexMap::new());
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            !toml.contains("preprocess"),
+            "preprocess should not appear but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_postprocess_some_true() {
+        let mut job = make_job_with_modules(IndexMap::new());
+        job.general.postprocess = Some(true);
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            toml.contains("postprocess = true"),
+            "expected postprocess = true but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_postprocess_some_false() {
+        let mut job = make_job_with_modules(IndexMap::new());
+        job.general.postprocess = Some(false);
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            toml.contains("postprocess = false"),
+            "expected postprocess = false but got:\n{toml}"
+        );
+    }
+
+    #[test]
+    fn test_generate_run_toml_postprocess_none() {
+        let job = make_job_with_modules(IndexMap::new());
+        let toml = job.generate_run_toml().unwrap();
+        assert!(
+            !toml.contains("postprocess"),
+            "postprocess should not appear but got:\n{toml}"
         );
     }
 }
