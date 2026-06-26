@@ -958,13 +958,24 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_run_toml_gen_archive_none() {
+    fn test_generate_run_toml_optional_haddock_params_present() {
+        let mut job = make_job_with_modules(IndexMap::new());
+        job.general.preprocess = Some(true);
+        job.general.postprocess = Some(true);
+        job.general.gen_archive = Some(true);
+        let toml = job.generate_run_toml().unwrap();
+        assert!(toml.contains("preprocess = true"), "expected preprocess = true but got:\n{toml}");
+        assert!(toml.contains("postprocess = true"), "expected postprocess = true but got:\n{toml}");
+        assert!(toml.contains("gen_archive = true"), "expected gen_archive = true but got:\n{toml}");
+    }
+
+    #[test]
+    fn test_generate_run_toml_optional_haddock_params_absent() {
         let job = make_job_with_modules(IndexMap::new());
         let toml = job.generate_run_toml().unwrap();
-        assert!(
-            !toml.contains("gen_archive"),
-            "gen_archive should not appear but got:\n{toml}"
-        );
+        assert!(!toml.contains("preprocess"), "preprocess should not appear but got:\n{toml}");
+        assert!(!toml.contains("postprocess"), "postprocess should not appear but got:\n{toml}");
+        assert!(!toml.contains("gen_archive"), "gen_archive should not appear but got:\n{toml}");
     }
 
     #[test]
@@ -990,16 +1001,6 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_run_toml_preprocess_none() {
-        let job = make_job_with_modules(IndexMap::new());
-        let toml = job.generate_run_toml().unwrap();
-        assert!(
-            !toml.contains("preprocess"),
-            "preprocess should not appear but got:\n{toml}"
-        );
-    }
-
-    #[test]
     fn test_generate_run_toml_postprocess_some_true() {
         let mut job = make_job_with_modules(IndexMap::new());
         job.general.postprocess = Some(true);
@@ -1021,13 +1022,4 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_generate_run_toml_postprocess_none() {
-        let job = make_job_with_modules(IndexMap::new());
-        let toml = job.generate_run_toml().unwrap();
-        assert!(
-            !toml.contains("postprocess"),
-            "postprocess should not appear but got:\n{toml}"
-        );
-    }
 }
