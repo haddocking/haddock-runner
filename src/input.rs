@@ -589,6 +589,135 @@ scenarios:
     }
 
     #[test]
+    fn test_input_deserialize_without_preprocess() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.preprocess, None);
+    }
+
+    #[test]
+    fn test_input_deserialize_with_preprocess() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  preprocess: true
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.preprocess, Some(true));
+    }
+
+    #[test]
+    fn test_input_deserialize_without_postprocess() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.postprocess, None);
+    }
+
+    #[test]
+    fn test_input_deserialize_with_postprocess() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  postprocess: true
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.postprocess, Some(true));
+    }
+
+    #[test]
+    fn test_input_deserialize_without_gen_archive() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.gen_archive, None);
+    }
+
+    #[test]
+    fn test_input_deserialize_with_gen_archive() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  gen_archive: true
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.gen_archive, Some(true));
+    }
+
+    #[test]
     fn test_input_deserialize_unknown_scenario_field() {
         let yaml = r#"
 general:
