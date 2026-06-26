@@ -206,6 +206,9 @@ mod tests {
                     ncores: 1,
                     execution: crate::input::Execution::Local,
                     partition: None,
+                    preprocess: None,
+                    postprocess: None,
+                    gen_archive: None,
                 },
             },
             Job {
@@ -235,6 +238,9 @@ mod tests {
                     ncores: 1,
                     execution: crate::input::Execution::Local,
                     partition: None,
+                    preprocess: None,
+                    postprocess: None,
+                    gen_archive: None,
                 },
             },
         ];
@@ -289,6 +295,9 @@ mod tests {
                     ncores: 1,
                     execution: crate::input::Execution::Local,
                     partition: None,
+                    preprocess: None,
+                    postprocess: None,
+                    gen_archive: None,
                 },
             },
             Job {
@@ -318,6 +327,9 @@ mod tests {
                     ncores: 1,
                     execution: crate::input::Execution::Local,
                     partition: None,
+                    preprocess: None,
+                    postprocess: None,
+                    gen_archive: None,
                 },
             },
             Job {
@@ -347,6 +359,9 @@ mod tests {
                     ncores: 1,
                     execution: crate::input::Execution::Local,
                     partition: None,
+                    preprocess: None,
+                    postprocess: None,
+                    gen_archive: None,
                 },
             },
         ];

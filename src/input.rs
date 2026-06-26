@@ -223,6 +223,10 @@ pub struct General {
     pub ncores: u16,
     pub execution: Execution,
     pub partition: Option<String>,
+    // Haddock's optional parameters
+    pub preprocess: Option<bool>,
+    pub postprocess: Option<bool>,
+    pub gen_archive: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -336,6 +340,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -357,6 +364,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -378,6 +388,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -399,6 +412,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -421,6 +437,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -442,6 +461,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -462,6 +484,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Slurm,
                 partition: Some("   ".to_string()),
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -595,6 +620,9 @@ scenarios:
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![Scenario {
                 name: "test".to_string(),

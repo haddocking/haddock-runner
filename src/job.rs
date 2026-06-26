@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use itertools::Itertools;
 
-use crate::input::{Execution, General, DIGIT_SUFFIX_RE};
+use crate::input::{DIGIT_SUFFIX_RE, Execution, General};
 use crate::runner::local;
 use crate::runner::status::Status;
 use crate::{
@@ -470,6 +470,9 @@ mod tests {
             ncores: 1,
             execution: Execution::Local,
             partition: None,
+            preprocess: None,
+            postprocess: None,
+            gen_archive: None,
         };
 
         let scenario = Scenario {
@@ -508,6 +511,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![
                 Scenario {
@@ -570,6 +576,9 @@ mod tests {
             ncores: 1,
             execution: Execution::Local,
             partition: None,
+            preprocess: None,
+            postprocess: None,
+            gen_archive: None,
         };
 
         let scenario = Scenario {
@@ -648,6 +657,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
         };
 
@@ -708,6 +720,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
         };
 
@@ -751,6 +766,9 @@ mod tests {
                 ncores: 4,
                 execution: Execution::Slurm,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
         };
 
@@ -793,6 +811,9 @@ mod tests {
                 ncores: 4,
                 execution: Execution::Slurm,
                 partition: Some("gpu".to_string()),
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
         };
 
@@ -833,6 +854,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
         }
     }
