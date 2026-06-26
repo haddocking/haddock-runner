@@ -33,6 +33,9 @@ The `general` section contains global settings that apply to all scenarios and t
 | `mol_suffixes` | array of strings | Yes | File suffixes used to identify molecule files. Must contain at least 2 suffixes (typically receptor and ligand). |
 | `input_list` | string | Yes | Path to the input list file containing file paths for all targets. |
 | `work_dir` | string | Yes | Directory where benchmark results will be stored. Created automatically if it doesn't exist. |
+| `preprocess` | boolean | No | [see haddock's definition](https://github.com/haddocking/haddock3/blob/main/src/haddock/core/optional.yaml). |
+| `postprocess` | boolean | No | [see haddock's definition](https://github.com/haddocking/haddock3/blob/main/src/haddock/core/optional.yaml).  |
+| `gen_archive` | boolean | No | [see haddock's definition](https://github.com/haddocking/haddock3/blob/main/src/haddock/core/optional.yaml).  |
 
 ### Example
 
