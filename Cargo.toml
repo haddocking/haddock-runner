@@ -1,6 +1,6 @@
 [package]
 name = "haddock-runner"
-version = "3.1.1"
+version = "3.2.0"
 edition = "2024"
 authors = ["Rodrigo V. Honorato <r.vargashonorato@uu.nl>"]
 description = "Run large scale HADDOCK simulations using multiple input molecules in different scenarios"

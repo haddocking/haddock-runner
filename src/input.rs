@@ -223,6 +223,10 @@ pub struct General {
     pub ncores: u16,
     pub execution: Execution,
     pub partition: Option<String>,
+    // Haddock's optional parameters
+    pub preprocess: Option<bool>,
+    pub postprocess: Option<bool>,
+    pub gen_archive: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -336,6 +340,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -357,6 +364,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -378,6 +388,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -399,6 +412,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -421,6 +437,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -442,6 +461,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -462,6 +484,9 @@ mod tests {
                 ncores: 1,
                 execution: Execution::Slurm,
                 partition: Some("   ".to_string()),
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![],
         };
@@ -564,6 +589,96 @@ scenarios:
     }
 
     #[test]
+    fn test_input_deserialize_optional_haddock_params_absent() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        let general = result.unwrap().general;
+        assert_eq!(general.preprocess, None);
+        assert_eq!(general.postprocess, None);
+        assert_eq!(general.gen_archive, None);
+    }
+
+    #[test]
+    fn test_input_deserialize_with_preprocess() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  preprocess: true
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.preprocess, Some(true));
+    }
+
+    #[test]
+    fn test_input_deserialize_with_postprocess() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  postprocess: true
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.postprocess, Some(true));
+    }
+
+    #[test]
+    fn test_input_deserialize_with_gen_archive() {
+        let yaml = r#"
+general:
+  mol_suffixes: ["_r", "_l"]
+  input_list: input_list.txt
+  work_dir: ./work
+  max_concurrent: 1
+  ncores: 1
+  execution: slurm
+  gen_archive: true
+scenarios:
+  - name: test
+    workflow:
+      topoaa:
+        autohis: true
+"#;
+        let result: Result<Input, _> = serde_yaml::from_str(yaml);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().general.gen_archive, Some(true));
+    }
+
+    #[test]
     fn test_input_deserialize_unknown_scenario_field() {
         let yaml = r#"
 general:
@@ -595,6 +710,9 @@ scenarios:
                 ncores: 1,
                 execution: Execution::Local,
                 partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
             },
             scenarios: vec![Scenario {
                 name: "test".to_string(),
