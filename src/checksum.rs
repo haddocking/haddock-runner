@@ -1,8 +1,17 @@
 use anyhow::{Context, Result, bail};
 use md5::{Digest, Md5};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+
+/// On-disk representation of `checksum.json`
+///
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+struct ChecksumData {
+    files: HashMap<String, String>,
+    haddock3_version: String,
+}
 
 /// Calculate MD5 checksum for a file
 ///
@@ -85,6 +94,7 @@ fn calculate_target_checksums(target: &crate::dataset::Target) -> Result<HashMap
 /// * `yaml_file` - Path to the YAML input file
 /// * `input_list_file` - Path to the input list file
 /// * `checksum_file` - Path to the JSON file storing checksums
+/// * `haddock3_version` - The haddock3 version currently in use
 ///
 /// # Returns
 ///
@@ -94,6 +104,7 @@ pub fn validate_checksums(
     yaml_file: &Path,
     input_list_file: &Path,
     checksum_file: &Path,
+    haddock3_version: &str,
 ) -> Result<()> {
     // Check if checksum file exists
     let mut current_checksums = HashMap::new();
@@ -114,8 +125,12 @@ pub fn validate_checksums(
 
     if !checksum_file.exists() {
         // Create new checksum file with pretty printing
-        let serialized = serde_json::to_string_pretty(&current_checksums)
-            .context("Failed to serialize checksums")?;
+        let data = ChecksumData {
+            files: current_checksums,
+            haddock3_version: haddock3_version.to_string(),
+        };
+        let serialized =
+            serde_json::to_string_pretty(&data).context("Failed to serialize checksums")?;
         fs::write(checksum_file, serialized).context("Failed to write checksum file")?;
         return Ok(()); // Fresh run
     }
@@ -123,17 +138,59 @@ pub fn validate_checksums(
     // Read stored checksums
     let stored_content =
         fs::read_to_string(checksum_file).context("Failed to read checksum file")?;
-    let stored_checksums: HashMap<String, String> =
+    let stored_data: ChecksumData =
         serde_json::from_str(&stored_content).context("Failed to parse checksum file")?;
 
+    if stored_data.haddock3_version != haddock3_version {
+        bail!(
+            "\nHaddock3 version has changed since this benchmark's checksum file was created !!\n  - Expected: {}\n  - Found: {}\n\nIf you intended to switch haddock3 versions, start a new benchmark with a fresh work directory.\n",
+            stored_data.haddock3_version,
+            haddock3_version
+        );
+    }
+
     // Compare checksums
-    if current_checksums == stored_checksums {
+    if current_checksums == stored_data.files {
         Ok(()) // Checksums match, can resume
     } else {
         // Find which files have changed
-        let error_msg = find_modified(current_checksums, stored_checksums);
+        let error_msg = find_modified(current_checksums, stored_data.files);
         bail!(error_msg);
     }
+}
+
+/// Validate that the haddock3 executable currently on PATH matches the
+/// version recorded in the checksum file
+///
+/// Unlike `validate_checksums`, which only runs once at startup, this is
+/// meant to be called per-job so that a haddock3 version swap partway
+/// through a long-running benchmark (e.g. an env-module or conda change)
+/// is caught before the next job dispatches.
+///
+/// # Arguments
+///
+/// * `checksum_file` - Path to the JSON file storing checksums
+///
+/// # Returns
+///
+/// * `Result<()>` - Ok if the live version matches the stored one, Err otherwise
+pub fn validate_haddock3_version_live(checksum_file: &Path) -> Result<()> {
+    let stored_content =
+        fs::read_to_string(checksum_file).context("Failed to read checksum file")?;
+    let stored_data: ChecksumData =
+        serde_json::from_str(&stored_content).context("Failed to parse checksum file")?;
+
+    let live_version = crate::utils::get_haddock3_version()?;
+
+    if live_version != stored_data.haddock3_version {
+        bail!(
+            "\nHaddock3 version changed mid-run !!\n  - Expected: {}\n  - Found: {}\n\nThe haddock3 executable on PATH no longer matches the version used to start this benchmark, making it non-reproducible. Restore the original version or start a new benchmark.\n",
+            stored_data.haddock3_version,
+            live_version
+        );
+    }
+
+    Ok(())
 }
 
 fn find_modified(
@@ -352,7 +409,13 @@ mod tests {
         let input_list_file = temp_dir.path().join("test_input_list.txt");
         fs::write(&input_list_file, "test input list content").unwrap();
 
-        let result = validate_checksums(&[target], &yaml_file, &input_list_file, &checksum_file);
+        let result = validate_checksums(
+            &[target],
+            &yaml_file,
+            &input_list_file,
+            &checksum_file,
+            "haddock3 3.0.0",
+        );
 
         // Should succeed and create the file
         assert!(result.is_ok());
@@ -417,6 +480,7 @@ mod tests {
             &yaml_file,
             &input_list_file,
             &checksum_file,
+            "haddock3 3.0.0",
         );
         assert!(result.is_ok());
         assert!(checksum_file.exists());
@@ -425,12 +489,85 @@ mod tests {
         fs::write(&yaml_file, "modified yaml content").unwrap();
 
         // Try to validate again - should fail because YAML file changed
-        let result = validate_checksums(&[target], &yaml_file, &input_list_file, &checksum_file);
+        let result = validate_checksums(
+            &[target],
+            &yaml_file,
+            &input_list_file,
+            &checksum_file,
+            "haddock3 3.0.0",
+        );
         assert!(result.is_err());
 
         // Check that the error message mentions the YAML file
         let error_msg = result.unwrap_err().to_string();
         assert!(error_msg.contains("Modified files:"));
         assert!(error_msg.contains("test.yml"));
+    }
+
+    #[test]
+    fn test_validate_checksums_haddock3_version_changed() {
+        let temp_dir = tempdir().unwrap();
+        let checksum_file = temp_dir.path().join("checksum.json");
+
+        let yaml_file = temp_dir.path().join("test.yml");
+        let input_list_file = temp_dir.path().join("input_list.txt");
+        let mol_file = temp_dir.path().join("test_mol.pdb");
+
+        fs::write(&yaml_file, "yaml content").unwrap();
+        fs::write(&input_list_file, "input list content").unwrap();
+        fs::write(&mol_file, "molecule content").unwrap();
+
+        let target = crate::dataset::Target {
+            id: "test".to_string(),
+            molecules: vec![mol_file],
+            restraints: vec![],
+            toppar: vec![],
+            misc: vec![],
+            shape: None,
+            size: 0,
+        };
+
+        // Create initial checksum file with one version
+        let result = validate_checksums(
+            &[target.clone()],
+            &yaml_file,
+            &input_list_file,
+            &checksum_file,
+            "haddock3 3.0.0",
+        );
+        assert!(result.is_ok());
+
+        // Validate again with a different version - should fail
+        let result = validate_checksums(
+            &[target],
+            &yaml_file,
+            &input_list_file,
+            &checksum_file,
+            "haddock3 3.1.0",
+        );
+        assert!(result.is_err());
+
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Haddock3 version has changed"));
+        assert!(error_msg.contains("3.0.0"));
+        assert!(error_msg.contains("3.1.0"));
+    }
+
+    #[test]
+    fn test_validate_haddock3_version_live_mismatch() {
+        let temp_dir = tempdir().unwrap();
+        let checksum_file = temp_dir.path().join("checksum.json");
+
+        let data = ChecksumData {
+            files: HashMap::new(),
+            haddock3_version: "haddock3 9.9.9".to_string(),
+        };
+        fs::write(&checksum_file, serde_json::to_string_pretty(&data).unwrap()).unwrap();
+
+        // The live haddock3 version (whatever is actually on PATH, or the
+        // "not found" error if it isn't) will never equal the bogus stored
+        // version above, so this must always fail.
+        let result = validate_haddock3_version_live(&checksum_file);
+        assert!(result.is_err());
     }
 }
