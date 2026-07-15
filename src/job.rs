@@ -43,6 +43,15 @@ pub fn create_jobs(input: Input, targets: Vec<Target>) -> Vec<Job> {
         .collect::<Vec<Job>>()
 }
 
+/// Outcome of a completed `Job::run()` call
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RunOutcome {
+    /// The job actually executed haddock3
+    Executed,
+    /// The job was already done and was skipped
+    Skipped,
+}
+
 #[derive(Debug, Clone)]
 pub struct Job {
     pub name: String,
@@ -142,8 +151,9 @@ impl Job {
     ///
     /// # Returns
     ///
-    /// * `anyhow::Result<()>` - Ok if job completes successfully, error otherwise
-    pub fn run(&mut self) -> anyhow::Result<()> {
+    /// * `anyhow::Result<RunOutcome>` - `Executed` if the job actually ran,
+    ///   `Skipped` if it was already done, error otherwise
+    pub fn run(&mut self) -> anyhow::Result<RunOutcome> {
         // info!("Starting {}", self.name);
 
         // Check the status of the job
@@ -159,7 +169,7 @@ impl Job {
             // Job was already done, skip it by returning
             Status::Done => {
                 debug!("job {} is complete, skipping", self.name);
-                return Ok(());
+                return Ok(RunOutcome::Skipped);
             }
             // All other, move ahead
             _ => {}
@@ -173,7 +183,9 @@ impl Job {
         match self.general.execution {
             Execution::Local => self.run_local(),
             Execution::Slurm => self.run_slurm(),
-        }
+        }?;
+
+        Ok(RunOutcome::Executed)
     }
 
     /// Check the status of the job
@@ -327,7 +339,7 @@ impl Job {
         toml_content.push_str("]\n\n");
 
         // Add ncores section
-        toml_content.push_str(&format!("ncores = {}\n", &self.general.ncores));
+        toml_content.push_str(&format!("ncores = {}\n", self.general.ncores));
 
         if let Some(value) = self.general.preprocess {
             toml_content.push_str(&format!("preprocess = {}\n", value));

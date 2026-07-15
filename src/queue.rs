@@ -1,9 +1,12 @@
-use crate::job::Job;
+use crate::job::{Job, RunOutcome};
+use crate::summary::{self, JobOutcome, JobResult};
 use anyhow::Context;
+use chrono::Local;
 use indicatif::{ProgressBar, ProgressStyle};
 use log::info;
 use std::sync::mpsc;
 use std::thread;
+use std::time::Instant;
 
 pub struct Queue {
     concurrent: u16,
@@ -26,7 +29,7 @@ impl Queue {
     /// * `Self` - Configured Queue instance
     pub fn new(concurrent: u16, mut workload: Vec<Job>) -> Self {
         // Sort workload by target size in descending order (largest first)
-        workload.sort_by(|a, b| b.target.size.cmp(&a.target.size));
+        workload.sort_by_key(|job| std::cmp::Reverse(job.target.size));
 
         Queue {
             concurrent,
@@ -44,7 +47,7 @@ impl Queue {
     /// * `anyhow::Result<()>` - Ok if all jobs set up successfully, error otherwise
     pub fn setup(&self) -> anyhow::Result<()> {
         // Run setup for all jobs sequentially - this is I/O and doesn't benefit much from parallelism
-        info!("Setting up {} jobs", &self.workload.len());
+        info!("Setting up {} jobs", self.workload.len());
         for job in &self.workload {
             let mut job_clone = job.clone();
             // info!("Setting up job: {}", job_clone.name);
@@ -63,7 +66,13 @@ impl Queue {
     ///
     /// * `anyhow::Result<()>` - Ok if all jobs complete successfully, error otherwise
     pub fn start(&self) -> anyhow::Result<()> {
+        // Nothing to run and nowhere to write a summary
+        if self.workload.is_empty() {
+            return Ok(());
+        }
+
         info!("Start!");
+        let started_at = Local::now();
         let concurrent = self.concurrent as usize;
         let total_jobs = self.workload.len();
 
@@ -90,29 +99,43 @@ impl Queue {
         let mut handles = vec![];
         let mut active_jobs = 0;
         let mut job_index = 0;
-        let mut results = Vec::with_capacity(total_jobs);
+        let mut results: Vec<JobResult> = Vec::with_capacity(total_jobs);
+
+        // Spawns a thread that runs `job_clone`, timing it and sending a
+        // `JobResult` back through `tx` regardless of success or failure.
+        fn dispatch(job_clone: Job, tx: mpsc::Sender<JobResult>) -> thread::JoinHandle<()> {
+            let name = job_clone.name.clone();
+            let scenario = job_clone.scenario.name.clone();
+            let target = job_clone.target.id.clone();
+
+            thread::spawn(move || {
+                let mut job_clone = job_clone;
+                let start = Instant::now();
+                let outcome = match job_clone.run() {
+                    Ok(RunOutcome::Executed) => JobOutcome::Completed,
+                    Ok(RunOutcome::Skipped) => JobOutcome::Skipped,
+                    Err(e) => JobOutcome::Failed(format!("{:#}", e)),
+                };
+                let duration = start.elapsed();
+
+                tx.send(JobResult {
+                    name,
+                    scenario,
+                    target,
+                    duration,
+                    outcome,
+                })
+                .unwrap();
+            })
+        }
 
         // PHASE 1: Initial dispatch - fill up to concurrency limit
         // Keep starting jobs until we either:
         // - Reach the concurrency limit (active_jobs == concurrent)
         // - Run out of jobs to dispatch (job_index == total_jobs)
         while active_jobs < concurrent && job_index < total_jobs {
-            let tx = tx.clone();
-            let mut job_clone = self.workload[job_index].clone();
-
-            // Spawn a new thread for this job
-            let handle = thread::spawn(move || {
-                // info!("Processing job: {}", job_clone.name);
-                if let Err(e) = job_clone.run() {
-                    // error!("Failed running job {}: {}", job_clone.name, e);
-                    tx.send(Err(e)).unwrap(); // Send error result
-                    return;
-                }
-                tx.send(Ok(())).unwrap(); // Send success result
-            });
-
-            // Track this thread and update counters
-            handles.push(handle);
+            let job_clone = self.workload[job_index].clone();
+            handles.push(dispatch(job_clone, tx.clone()));
             active_jobs += 1;
             job_index += 1;
         }
@@ -129,22 +152,8 @@ impl Queue {
             // If there are more jobs to process, start the next one immediately
             // This maintains the rolling window of exactly N concurrent jobs
             if job_index < total_jobs {
-                let tx = tx.clone();
-                let mut job_clone = self.workload[job_index].clone();
-
-                // Spawn a new thread for the next job
-                let handle = thread::spawn(move || {
-                    // info!("Processing job: {}", job_clone.name);
-                    if let Err(e) = job_clone.run() {
-                        // error!("Failed processing job {}: {}", job_clone.name, e);
-                        tx.send(Err(e)).unwrap();
-                        return;
-                    }
-                    tx.send(Ok(())).unwrap();
-                });
-
-                // Track this new thread and update counters
-                handles.push(handle);
+                let job_clone = self.workload[job_index].clone();
+                handles.push(dispatch(job_clone, tx.clone()));
                 active_jobs += 1; // New job started
                 job_index += 1; // Move to next job
             }
@@ -159,13 +168,31 @@ impl Queue {
             }
         }
 
-        // PHASE 4: Result checking
-        // If any job failed, propagate the error
-        for result in results {
-            result?; // The ? operator will return early if any result is Err
-        }
-
         pb.finish_with_message("All jobs completed!");
+
+        // PHASE 4: Reporting - build and write the run summary before
+        // checking for failures, so a summary is produced even on a
+        // partially failed run.
+        let finished_at = Local::now();
+        let work_dir = self.workload[0].general.work_dir.clone();
+        summary::build_and_write(&work_dir, started_at, finished_at, &results)?;
+
+        // PHASE 5: Result checking - if any job failed, propagate an
+        // aggregated error listing every failed job
+        let failures: Vec<&JobResult> = results
+            .iter()
+            .filter(|r| matches!(r.outcome, JobOutcome::Failed(_)))
+            .collect();
+
+        if !failures.is_empty() {
+            let mut error_msg = format!("{} job(s) failed:\n", failures.len());
+            for failure in &failures {
+                if let JobOutcome::Failed(msg) = &failure.outcome {
+                    error_msg.push_str(&format!("  - {}: {}\n", failure.name, msg));
+                }
+            }
+            anyhow::bail!(error_msg);
+        }
 
         Ok(())
     }
@@ -378,5 +405,65 @@ mod tests {
         assert_eq!(queue.workload[0].target.size, 1000);
         assert_eq!(queue.workload[1].target.size, 500);
         assert_eq!(queue.workload[2].target.size, 100);
+    }
+
+    #[test]
+    fn test_queue_start_writes_summary_even_on_failure() {
+        use tempfile::tempdir;
+
+        // haddock3 is not expected to be on PATH in the test environment, so
+        // this job will fail (either resolving the checksum file or finding
+        // the haddock3 executable) - either way it exercises the "write the
+        // summary before propagating the failure" behavior of `start()`.
+        let temp_dir = tempdir().unwrap();
+        let work_dir = temp_dir.path().to_path_buf();
+
+        let general = crate::input::General {
+            mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+            input_list: "test.txt".to_string(),
+            work_dir: work_dir.clone(),
+            max_concurrent: 1,
+            ncores: 1,
+            execution: crate::input::Execution::Local,
+            partition: None,
+            preprocess: None,
+            postprocess: None,
+            gen_archive: None,
+        };
+
+        let job = Job {
+            name: "target1-scenario1".to_string(),
+            status: Status::Unknown,
+            wd: work_dir.join("scenario1").join("target1"),
+            target: crate::dataset::Target {
+                id: "target1".to_string(),
+                molecules: vec![],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+                size: 0,
+            },
+            scenario: crate::input::Scenario {
+                name: "scenario1".to_string(),
+                workflow: crate::input::Workflow {
+                    modules: indexmap::IndexMap::new(),
+                },
+            },
+            general,
+        };
+
+        let queue = Queue::new(1, vec![job]);
+        let result = queue.start();
+
+        assert!(result.is_err());
+
+        let summary_path = work_dir.join("summary.json");
+        assert!(summary_path.exists());
+
+        let content = std::fs::read_to_string(&summary_path).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
+        assert_eq!(parsed["total_jobs"], 1);
+        assert_eq!(parsed["failed"], 1);
     }
 }
