@@ -1,4 +1,4 @@
-use anyhow::bail;
+use anyhow::{Context, bail};
 use chrono::Local;
 use serde_yaml::Value;
 use std::process::Command;
@@ -147,6 +147,51 @@ pub fn validate_haddock3() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Get the version of the haddock3 executable found in PATH
+///
+/// This function locates the haddock3 executable and runs it with `--version`.
+/// haddock3 reports its version as `haddock3 - YYYY.MM.PATCH` (e.g.
+/// `haddock3 - 2026.3.0`); this parses out just the version part.
+///
+/// # Returns
+///
+/// * `anyhow::Result<String>` - The haddock3 version string (e.g. `2026.3.0`), error otherwise
+pub fn get_haddock3_version() -> anyhow::Result<String> {
+    let exe = find_haddock3_executable()?;
+
+    let output = Command::new(&exe)
+        .arg("--version")
+        .output()
+        .with_context(|| format!("failed to run `{exe} --version`"))?;
+
+    if !output.status.success() {
+        bail!(
+            "`{exe} --version` exited with status {}: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    parse_haddock3_version(stdout.trim()).with_context(|| {
+        format!(
+            "could not parse haddock3 version from output: `{}`",
+            stdout.trim()
+        )
+    })
+}
+
+/// Extract the version from haddock3's `haddock3 - <version>` output
+fn parse_haddock3_version(output: &str) -> Option<String> {
+    let (_, version) = output.rsplit_once(" - ")?;
+    let version = version.trim();
+    if version.is_empty() {
+        None
+    } else {
+        Some(version.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -189,5 +234,18 @@ mod tests {
 
         // Test with a command that likely doesn't exist
         assert!(!command_exists("nonexistent_command_12345"));
+    }
+
+    #[test]
+    fn test_parse_haddock3_version() {
+        assert_eq!(
+            parse_haddock3_version("haddock3 - 2026.3.0"),
+            Some("2026.3.0".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_haddock3_version_no_match() {
+        assert_eq!(parse_haddock3_version("some unrelated tool output"), None);
     }
 }

@@ -165,6 +165,11 @@ impl Job {
             _ => {}
         }
 
+        // Re-check the haddock3 version against the one recorded when
+        // the benchmark started, this will catch a mid-run version swap
+        let checksum_file = self.general.work_dir.join("checksum.json");
+        crate::checksum::validate_haddock3_version_live(&checksum_file)?;
+
         match self.general.execution {
             Execution::Local => self.run_local(),
             Execution::Slurm => self.run_slurm(),
@@ -964,18 +969,36 @@ mod tests {
         job.general.postprocess = Some(true);
         job.general.gen_archive = Some(true);
         let toml = job.generate_run_toml().unwrap();
-        assert!(toml.contains("preprocess = true"), "expected preprocess = true but got:\n{toml}");
-        assert!(toml.contains("postprocess = true"), "expected postprocess = true but got:\n{toml}");
-        assert!(toml.contains("gen_archive = true"), "expected gen_archive = true but got:\n{toml}");
+        assert!(
+            toml.contains("preprocess = true"),
+            "expected preprocess = true but got:\n{toml}"
+        );
+        assert!(
+            toml.contains("postprocess = true"),
+            "expected postprocess = true but got:\n{toml}"
+        );
+        assert!(
+            toml.contains("gen_archive = true"),
+            "expected gen_archive = true but got:\n{toml}"
+        );
     }
 
     #[test]
     fn test_generate_run_toml_optional_haddock_params_absent() {
         let job = make_job_with_modules(IndexMap::new());
         let toml = job.generate_run_toml().unwrap();
-        assert!(!toml.contains("preprocess"), "preprocess should not appear but got:\n{toml}");
-        assert!(!toml.contains("postprocess"), "postprocess should not appear but got:\n{toml}");
-        assert!(!toml.contains("gen_archive"), "gen_archive should not appear but got:\n{toml}");
+        assert!(
+            !toml.contains("preprocess"),
+            "preprocess should not appear but got:\n{toml}"
+        );
+        assert!(
+            !toml.contains("postprocess"),
+            "postprocess should not appear but got:\n{toml}"
+        );
+        assert!(
+            !toml.contains("gen_archive"),
+            "gen_archive should not appear but got:\n{toml}"
+        );
     }
 
     #[test]
@@ -1021,5 +1044,4 @@ mod tests {
             "expected postprocess = false but got:\n{toml}"
         );
     }
-
 }

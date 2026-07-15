@@ -74,13 +74,22 @@ fn main() -> Result<()> {
 
     input.validate()?;
 
+    let haddock3_version = utils::get_haddock3_version()?;
+    info!("Using haddock3 version: {haddock3_version}");
+
     let targets = dataset::load_dataset(&input.general.input_list, &input.general.mol_suffixes)?;
 
     // Validate checksums for all input files
     let checksum_file = input.general.work_dir.join("checksum.json");
     let yaml_path = Path::new(&args.input_file);
     let input_list_path = Path::new(&input.general.input_list);
-    checksum::validate_checksums(&targets, yaml_path, input_list_path, &checksum_file)?;
+    checksum::validate_checksums(
+        &targets,
+        yaml_path,
+        input_list_path,
+        &checksum_file,
+        &haddock3_version,
+    )?;
 
     let jobs = job::create_jobs(input.clone(), targets);
 
