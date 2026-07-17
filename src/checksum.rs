@@ -476,7 +476,7 @@ mod tests {
 
         // Create initial checksum file
         let result = validate_checksums(
-            &[target.clone()],
+            std::slice::from_ref(&target),
             &yaml_file,
             &input_list_file,
             &checksum_file,
@@ -529,7 +529,7 @@ mod tests {
 
         // Create initial checksum file with one version
         let result = validate_checksums(
-            &[target.clone()],
+            std::slice::from_ref(&target),
             &yaml_file,
             &input_list_file,
             &checksum_file,
