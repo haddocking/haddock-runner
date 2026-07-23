@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use md5::{Digest, Md5};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -175,10 +175,7 @@ pub fn validate_checksums(
 ///
 /// * `Result<()>` - Ok if the live version matches the stored one, Err otherwise
 pub fn validate_haddock3_version_live(checksum_file: &Path) -> Result<()> {
-    let stored_content =
-        fs::read_to_string(checksum_file).context("Failed to read checksum file")?;
-    let stored_data: ChecksumData =
-        serde_json::from_str(&stored_content).context("Failed to parse checksum file")?;
+    let stored_data = read_checksum_data(checksum_file)?;
 
     let live_version = crate::utils::get_haddock3_version()?;
 
@@ -191,6 +188,20 @@ pub fn validate_haddock3_version_live(checksum_file: &Path) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn read_checksum_data(checksum_file: &Path) -> Result<ChecksumData> {
+    let stored_content =
+        fs::read_to_string(checksum_file).context("Failed to read checksum file")?;
+    serde_json::from_str(&stored_content).context("Failed to parse checksum file")
+}
+
+/// Returns the haddock3 version recorded in `checksum.json` when the benchmark started.
+///
+/// Used to embed the expected version into a generated SLURM job script so it can be
+/// re-checked from inside the job itself, after `slurm_prologue` has run.
+pub fn expected_haddock3_version(checksum_file: &Path) -> Result<String> {
+    Ok(read_checksum_data(checksum_file)?.haddock3_version)
 }
 
 fn find_modified(
@@ -265,7 +276,7 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
     use std::io::Write;
-    use tempfile::{NamedTempFile, tempdir};
+    use tempfile::{tempdir, NamedTempFile};
 
     #[test]
     fn test_calculate_checksum() {
@@ -433,7 +444,7 @@ mod tests {
         let mut stored = HashMap::new();
         stored.insert("file1.txt".to_string(), "checksum1_changed".to_string()); // Changed
         stored.insert("file4.txt".to_string(), "checksum4".to_string()); // Removed
-        // file2.txt and file3.txt are new
+                                                                         // file2.txt and file3.txt are new
 
         // Find modified files
         let error_msg = find_modified(current, stored);
@@ -569,5 +580,20 @@ mod tests {
         // version above, so this must always fail.
         let result = validate_haddock3_version_live(&checksum_file);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_expected_haddock3_version() {
+        let temp_dir = tempdir().unwrap();
+        let checksum_file = temp_dir.path().join("checksum.json");
+
+        let data = ChecksumData {
+            files: HashMap::new(),
+            haddock3_version: "2026.3.0".to_string(),
+        };
+        fs::write(&checksum_file, serde_json::to_string_pretty(&data).unwrap()).unwrap();
+
+        let version = expected_haddock3_version(&checksum_file).unwrap();
+        assert_eq!(version, "2026.3.0");
     }
 }
