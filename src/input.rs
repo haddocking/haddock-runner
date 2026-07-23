@@ -256,6 +256,8 @@ pub struct General {
     pub gen_archive: Option<bool>,
     // SBATCH optional header customization
     pub slurm_header: Option<IndexMap<String, Value>>,
+    // prologue before execution line
+    pub slurm_prologue: Option<String>,
 }
 
 /// Canonical `sbatch` long-option names accepted in `general.slurm_header`.
@@ -485,6 +487,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![],
         };
@@ -510,6 +513,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![],
         };
@@ -535,6 +539,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![],
         };
@@ -560,6 +565,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![],
         };
@@ -586,6 +592,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![],
         };
@@ -611,6 +618,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![],
         };
@@ -635,6 +643,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![],
         };
@@ -661,6 +670,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: Some(slurm_header),
+                slurm_prologue: None,
             },
             scenarios: vec![],
         }
@@ -941,6 +951,7 @@ scenarios:
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![Scenario {
                 name: "test".to_string(),
