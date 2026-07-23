@@ -30,6 +30,8 @@ The `general` section contains global settings that apply to all scenarios and t
 | `ncores` | integer | Yes | Number of CPU cores to allocate per job. |
 | `execution` | string | Yes | Execution backend. Valid values: `local`, `slurm`. |
 | `partition` | string | No | SLURM partition to submit jobs to when `execution: slurm`. If omitted, the cluster default partition is used. |
+| `slurm_header` | mapping | No | Arbitrary `#SBATCH` directives for `execution: slurm`, as `key: value` pairs using canonical `sbatch` long-option names (e.g. `partition`, `nodes`, `account`, `time`, `qos`, `mem-per-cpu`). `true` renders a bare flag (e.g. `exclusive: true` → `#SBATCH --exclusive`); `false`, `null`, or an empty string drops the entry. `cpus-per-task` is always derived from `ncores` and cannot be overridden. Unknown keys fail validation. |
+| `slurm_prologue` | string | No | Shell commands (e.g. `module load ...`) run before the haddock3 execution line when `execution: slurm`. Do not include `cd <path>` or the `haddock3 ...` invocation — those are always generated automatically. When set, a version-check step is automatically added to the job script after the prologue to detect if it altered the haddock3 version in use. |
 | `mol_suffixes` | array of strings | Yes | File suffixes used to identify molecule files. Must contain at least 2 suffixes (typically receptor and ligand). |
 | `input_list` | string | Yes | Path to the input list file containing file paths for all targets. |
 | `work_dir` | string | Yes | Directory where benchmark results will be stored. Created automatically if it doesn't exist. |
@@ -44,6 +46,29 @@ general:
   max_concurrent: 4
   ncores: 2
   execution: local
+  mol_suffixes: [_r_u, _l_u, _x_u]
+  input_list: docking/input_list.txt
+  work_dir: ./results
+```
+
+**SLURM example**, using `slurm_header` and `slurm_prologue`:
+
+```yaml
+general:
+  max_concurrent: 4
+  ncores: 96
+  execution: slurm
+  slurm_header:
+    partition: small
+    nodes: 1
+    account: project_XXXXXX
+    mem-per-cpu: 1500
+    time: "24:00:00"
+    qos: standard
+    exclusive: true
+  slurm_prologue: |
+    module load some-module
+    module load another-module
   mol_suffixes: [_r_u, _l_u, _x_u]
   input_list: docking/input_list.txt
   work_dir: ./results
@@ -339,6 +364,7 @@ When `execution: local`:
 When `execution: slurm`:
 
 - The `sbatch` and `sacct` commands must be available in the system PATH.
+- **`slurm_header`**: Keys must be recognized `sbatch` long-option names; an unknown key fails validation. `cpus-per-task` is always derived from `ncores` and cannot be overridden.
 
 ---
 
