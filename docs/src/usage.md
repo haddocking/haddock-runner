@@ -104,6 +104,45 @@ scenarios:
 
 See [Configuration Reference](./reference.md) for complete configuration options.
 
+### Step 3.1: Using SLURM
+
+Set `execution: slurm` in `general` to submit jobs via `sbatch` instead of running them locally. `sbatch` and `sacct` must be available in `PATH`.
+
+> IMPORTANT: `haddock-runner` expects to be executed in the LOGIN node. It will take care of the SLURM submission itself. Do not submit a job with `haddock-runner` to the queue.
+
+**Customizing the `#SBATCH` header**: use `slurm_header` to pass any `sbatch` long option as a YAML mapping:
+
+```yaml
+general:
+  execution: slurm
+  ncores: 96
+  slurm_header:
+    partition: small
+    nodes: 1
+    account: project_XXXXXX
+    mem-per-cpu: 1500
+    time: "24:00:00"
+    qos: standard
+    exclusive: true   # renders as a bare `#SBATCH --exclusive` flag
+```
+
+- Keys must be recognized `sbatch` long-option names (e.g. `partition`, `nodes`, `account`, `time`, `qos`, `mem-per-cpu`); an unknown key fails validation.
+- `cpus-per-task` is always derived from `ncores` and cannot be overridden here.
+- `true` renders a bare flag (no value); `false`, `null`, or an empty string drops the entry and lets SLURM's own default apply.
+- If `slurm_header` is omitted entirely, SLURM's cluster defaults are used — these vary by system.
+
+**Running setup commands before the job**: use `slurm_prologue` for shell commands (e.g. loading environment modules) that must run before haddock3 executes:
+
+```yaml
+general:
+  slurm_prologue: |
+    module load some-module
+    module load another-module
+```
+
+- Do **not** add `cd <path>` or the `haddock3 ...` invocation yourself, those lines are always generated automatically and appended after your prologue.
+- Because `slurm_prologue` can change the shell environment it might swap the version of `haddock3` you are using. There is an extra (automatic) check directly in the produced job script to double-check the version and avoid any surprises.
+
 ### Step 4: Run the Benchmark
 
 Execute `haddock-runner` with your configuration:
