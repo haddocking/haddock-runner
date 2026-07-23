@@ -1050,6 +1050,29 @@ mod tests {
         assert!(!header.contains("--exclusive="));
     }
 
+    #[test]
+    fn test_format_slurm_prologue_with_commands() {
+        let mut job = make_slurm_job(None, None, None);
+        job.general.slurm_prologue = Some("module load foo\nmodule load bar".to_string());
+        assert_eq!(
+            job.format_slurm_prologue(),
+            "module load foo\nmodule load bar\n"
+        );
+    }
+
+    #[test]
+    fn test_format_slurm_prologue_none() {
+        let job = make_slurm_job(None, None, None);
+        assert_eq!(job.format_slurm_prologue(), "");
+    }
+
+    #[test]
+    fn test_format_slurm_prologue_already_has_trailing_newline() {
+        let mut job = make_slurm_job(None, None, None);
+        job.general.slurm_prologue = Some("module load foo\n".to_string());
+        assert_eq!(job.format_slurm_prologue(), "module load foo\n");
+    }
+
     fn make_job_with_modules(modules: IndexMap<String, Value>) -> Job {
         Job {
             name: "test".to_string(),
