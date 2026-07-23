@@ -237,6 +237,7 @@ mod tests {
                     postprocess: None,
                     gen_archive: None,
                     slurm_header: None,
+                    slurm_prologue: None,
                 },
             },
             Job {
@@ -270,6 +271,7 @@ mod tests {
                     postprocess: None,
                     gen_archive: None,
                     slurm_header: None,
+                    slurm_prologue: None,
                 },
             },
         ];
@@ -328,6 +330,7 @@ mod tests {
                     postprocess: None,
                     gen_archive: None,
                     slurm_header: None,
+                    slurm_prologue: None,
                 },
             },
             Job {
@@ -361,6 +364,7 @@ mod tests {
                     postprocess: None,
                     gen_archive: None,
                     slurm_header: None,
+                    slurm_prologue: None,
                 },
             },
             Job {
@@ -394,6 +398,7 @@ mod tests {
                     postprocess: None,
                     gen_archive: None,
                     slurm_header: None,
+                    slurm_prologue: None,
                 },
             },
         ];
@@ -435,6 +440,7 @@ mod tests {
             postprocess: None,
             gen_archive: None,
             slurm_header: None,
+            slurm_prologue: None,
         };
 
         let job = Job {
