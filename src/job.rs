@@ -405,22 +405,34 @@ impl Job {
         let mut file = fs::File::create(&job_script)?;
 
         let absolute_wd = canonicalize(&self.wd).unwrap_or_else(|_| self.wd.to_path_buf());
+        let haddock3_exe = find_haddock3_executable()?;
 
         // Write SLURM header
         let header = self.generate_slurm_header();
 
         let prologue = self.format_slurm_prologue();
 
+        // slurm_prologue can alter the environment (module load/conda activate/etc.)
+        // before haddock3 runs; re-check the version from inside the job itself so
+        // a swap isn't invisible to the login-node-only checks in checksum.rs.
+        let mut version_check = String::new();
+        if self.general.slurm_prologue.is_some() {
+            let checksum_file = self.general.work_dir.join("checksum.json");
+            let expected_version = crate::checksum::expected_haddock3_version(&checksum_file)?;
+            version_check = format_haddock3_version_check(&haddock3_exe, &expected_version);
+        }
+
         // Write job body
         let body = format!(
             "cd {}\n{} {}\n",
             absolute_wd.display(),
-            find_haddock3_executable()?,
+            haddock3_exe,
             WORKFLOW_FILENAME
         );
 
         file.write_all(header.as_bytes())?;
         file.write_all(prologue.as_bytes())?;
+        file.write_all(version_check.as_bytes())?;
         file.write_all(body.as_bytes())?;
 
         Ok(())
@@ -538,6 +550,21 @@ impl Job {
 
         files
     }
+}
+
+/// Renders a shell snippet that re-checks `haddock3_exe --version` against `expected_version`,
+/// exiting the job script with an error on mismatch. Meant to run after `slurm_prologue`
+/// commands, in the same shell state, since those can alter the environment haddock3 sees.
+fn format_haddock3_version_check(haddock3_exe: &str, expected_version: &str) -> String {
+    format!(
+        r#"HADDOCK3_VERSION_OUTPUT="$({haddock3_exe} --version 2>&1)"
+ACTUAL_HADDOCK3_VERSION="${{HADDOCK3_VERSION_OUTPUT##* - }}"
+if [ "$ACTUAL_HADDOCK3_VERSION" != "{expected_version}" ]; then
+    echo "ERROR: haddock3 version mismatch after slurm_prologue: expected {expected_version}, found $ACTUAL_HADDOCK3_VERSION. Check slurm_prologue for environment changes (module load/conda activate/etc.)." >&2
+    exit 1
+fi
+"#
+    )
 }
 
 #[cfg(test)]
@@ -1071,6 +1098,15 @@ mod tests {
         let mut job = make_slurm_job(None, None, None);
         job.general.slurm_prologue = Some("module load foo\n".to_string());
         assert_eq!(job.format_slurm_prologue(), "module load foo\n");
+    }
+
+    #[test]
+    fn test_format_haddock3_version_check_contents() {
+        let check = format_haddock3_version_check("/opt/haddock3/bin/haddock3", "2026.3.0");
+        assert!(check.contains("/opt/haddock3/bin/haddock3 --version"));
+        assert!(check.contains("2026.3.0"));
+        assert!(check.contains("ACTUAL_HADDOCK3_VERSION"));
+        assert!(check.contains("exit 1"));
     }
 
     fn make_job_with_modules(modules: IndexMap<String, Value>) -> Job {
