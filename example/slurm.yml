@@ -1,0 +1,40 @@
+general:
+  max_concurrent: 4 # How many should be executed at the same time
+  ncores: 96
+  execution: slurm
+  # arbitrary #SBATCH directives, added on top of/overriding the above
+  #  if not defined, SLURM will use it's default, keep in mind
+  #  this will change by system
+  slurm_header:
+    partition: small
+    nodes: 1
+    account: project_XXXXXX
+    mem-per-cpu: 1500
+    time: "24:00:00"
+    qos: standard
+    exclusive: true # renders as `#SBATCH --exclusive`
+  mol_suffixes: [_r_u, _l_u, _x_u]
+  input_list: docking/input_list.txt
+  work_dir: ../bm-goes-here
+
+scenarios:
+  - name: true-interface
+    workflow:
+      topoaa:
+        autohis: true
+      rigidbody:
+        sampling: 5
+        ambig_fname: _ti.tbl
+        unambig_fname: _unambig.tbl
+        ligand_top_fname: _ligand.top
+        ligand_param_fname: _ligand.param
+      seletop:
+        select: 2
+      flexref:
+        ambig_fname: _ti.tbl
+        unambig_fname: _unambig.tbl
+        ligand_top_fname: _ligand.top
+        ligand_param_fname: _ligand.param
+      emref:
+      caprieval:
+        reference_fname: _ref.pdb

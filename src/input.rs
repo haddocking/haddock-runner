@@ -191,6 +191,8 @@ impl Input {
             anyhow::bail!("partition must be non-empty when defined");
         }
 
+        self.validate_slurm_header()?;
+
         match &self.general.execution {
             Execution::Local => {
                 validate_haddock3()?;
@@ -211,6 +213,31 @@ impl Input {
 
         Ok(())
     }
+
+    /// Validates `general.slurm_header` entries: keys must be recognized `sbatch`
+    /// long-option names (see `SBATCH_FIELDS`), and values must be scalars.
+    fn validate_slurm_header(&self) -> Result<()> {
+        let Some(slurm_header) = &self.general.slurm_header else {
+            return Ok(());
+        };
+
+        for (key, value) in slurm_header {
+            if !SBATCH_FIELDS.contains(&key.as_str()) {
+                bail!(
+                    "unknown slurm_header field '{key}': not a recognized sbatch option \
+                    (see docs/reference.md or https://slurm.schedmd.com/sbatch.html for valid fields)"
+                );
+            }
+
+            if matches!(value, Value::Sequence(_) | Value::Mapping(_)) {
+                bail!(
+                    "slurm_header field '{key}' must be a string, number, or boolean, not a list/mapping"
+                );
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -227,7 +254,121 @@ pub struct General {
     pub preprocess: Option<bool>,
     pub postprocess: Option<bool>,
     pub gen_archive: Option<bool>,
+    // SBATCH optional header customization
+    pub slurm_header: Option<IndexMap<String, Value>>,
 }
+
+/// Canonical `sbatch` long-option names accepted in `general.slurm_header`.
+/// Sourced from https://slurm.schedmd.com/sbatch.html.
+///
+/// Note that some options that don't make sense to be sense embedded
+/// in a job script header are intentionally excluded.
+pub(crate) const SBATCH_FIELDS: &[&str] = &[
+    "account",
+    "acctg-freq",
+    "array",
+    "batch",
+    "bb",
+    "bbf",
+    "begin",
+    "chdir",
+    "cluster-constraint",
+    "clusters",
+    "comment",
+    "consolidate-segments",
+    "constraint",
+    "container",
+    "container-id",
+    "container-type",
+    "contiguous",
+    "core-spec",
+    "cores-per-socket",
+    "cpu-freq",
+    "cpus-per-gpu",
+    "cpus-per-task",
+    "deadline",
+    "delay-boot",
+    "dependency",
+    "distribution",
+    "error",
+    "exclude",
+    "exclusive",
+    "export",
+    "export-file",
+    "extra",
+    "extra-node-info",
+    "get-user-env",
+    "gid",
+    "gpu-bind",
+    "gpu-freq",
+    "gpus",
+    "gpus-per-node",
+    "gpus-per-socket",
+    "gpus-per-task",
+    "gres",
+    "gres-flags",
+    "hint",
+    "hold",
+    "ignore-pbs",
+    "input",
+    "job-name",
+    "kill-on-invalid-dep",
+    "licenses",
+    "mail-type",
+    "mail-user",
+    "mcs-label",
+    "mem",
+    "mem-bind",
+    "mem-per-cpu",
+    "mem-per-gpu",
+    "mem-update",
+    "mincpus",
+    "network",
+    "nice",
+    "no-kill",
+    "no-requeue",
+    "nodefile",
+    "nodelist",
+    "nodes",
+    "ntasks",
+    "ntasks-per-core",
+    "ntasks-per-gpu",
+    "ntasks-per-node",
+    "ntasks-per-socket",
+    "oom-kill-step",
+    "open-mode",
+    "output",
+    "overcommit",
+    "oversubscribe",
+    "parsable",
+    "partition",
+    "prefer",
+    "priority",
+    "profile",
+    "propagate",
+    "qos",
+    "reboot",
+    "requeue",
+    "reservation",
+    "resources",
+    "resv-ports",
+    "segment",
+    "signal",
+    "sockets-per-node",
+    "spread-job",
+    "spread-segments",
+    "stepmgr",
+    "switches",
+    "thread-spec",
+    "threads-per-core",
+    "time",
+    "time-min",
+    "tmp",
+    "tres-bind",
+    "uid",
+    "wait",
+    "wckey",
+];
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "lowercase")]
@@ -343,6 +484,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![],
         };
@@ -367,6 +509,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![],
         };
@@ -391,6 +534,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![],
         };
@@ -415,6 +559,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![],
         };
@@ -440,6 +585,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![],
         };
@@ -464,6 +610,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![],
         };
@@ -487,6 +634,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![],
         };
@@ -497,6 +645,85 @@ mod tests {
             result.unwrap_err().to_string(),
             "partition must be non-empty when defined"
         );
+    }
+
+    fn make_input_with_slurm_header(slurm_header: IndexMap<String, Value>) -> Input {
+        Input {
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 1,
+                execution: Execution::Local,
+                partition: None,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
+                slurm_header: Some(slurm_header),
+            },
+            scenarios: vec![],
+        }
+    }
+
+    #[test]
+    fn test_validate_slurm_header_unknown_field_is_error() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("partiton".to_string(), Value::String("gpu".to_string()));
+        let input = make_input_with_slurm_header(slurm_header);
+
+        let result = input.validate_general();
+        assert!(result.is_err());
+        assert!(
+            result.unwrap_err().to_string().contains("partiton"),
+            "error should mention the offending key"
+        );
+    }
+
+    #[test]
+    fn test_validate_slurm_header_known_field_is_ok() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("nodes".to_string(), Value::Number(2.into()));
+        slurm_header.insert("account".to_string(), Value::String("proj".to_string()));
+        let input = make_input_with_slurm_header(slurm_header);
+
+        assert!(input.validate_slurm_header().is_ok());
+    }
+
+    #[test]
+    fn test_validate_slurm_header_sequence_value_is_error() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert(
+            "nodes".to_string(),
+            Value::Sequence(vec![Value::Number(1.into())]),
+        );
+        let input = make_input_with_slurm_header(slurm_header);
+
+        let result = input.validate_general();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_slurm_header_mapping_value_is_error() {
+        let mut slurm_header = IndexMap::new();
+        let mut mapping = serde_yaml::Mapping::new();
+        mapping.insert(Value::String("a".to_string()), Value::Bool(true));
+        slurm_header.insert("nodes".to_string(), Value::Mapping(mapping));
+        let input = make_input_with_slurm_header(slurm_header);
+
+        let result = input.validate_general();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_slurm_header_null_and_empty_values_are_ok() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("partition".to_string(), Value::Null);
+        slurm_header.insert("qos".to_string(), Value::String(String::new()));
+        slurm_header.insert("exclusive".to_string(), Value::Bool(false));
+        let input = make_input_with_slurm_header(slurm_header);
+
+        assert!(input.validate_slurm_header().is_ok());
     }
 
     #[test]
@@ -713,6 +940,7 @@ scenarios:
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![Scenario {
                 name: "test".to_string(),
