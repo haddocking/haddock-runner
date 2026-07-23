@@ -165,8 +165,12 @@ For SLURM clusters, modify your config:
 general:
   execution: slurm
   ncores: 4
-  partition: long
+  slurm_header:
+    partition: long
+    account: project_XXXXXX
 ```
+
+See [Step 3.1: Using SLURM](./usage.md#step-31-using-slurm) for the full `slurm_header`/`slurm_prologue` reference.
 
 ## Step 6: Monitor and Manage the Benchmark
 
