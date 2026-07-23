@@ -7,7 +7,9 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
+use indexmap::IndexMap;
 use itertools::Itertools;
+use serde_yaml::Value;
 
 use crate::input::{DIGIT_SUFFIX_RE, Execution, General};
 use crate::runner::local;
@@ -422,19 +424,66 @@ impl Job {
     }
 
     fn generate_slurm_header(&self) -> String {
-        let mut header = "#!/bin/bash\n".to_string()
-            + "#SBATCH --job-name=haddock\n"
-            + "#SBATCH --output=haddock-%j.out\n"
-            + "#SBATCH --error=haddock-%j.err\n";
+        // `Some(value)` renders as `#SBATCH --key=value`, `None` as a bare `#SBATCH --key`
+        let mut fields: IndexMap<String, Option<String>> = IndexMap::new();
 
-        header.push_str("#SBATCH --ntasks=1\n");
-        header.push_str(&format!(
-            "#SBATCH --cpus-per-task={}\n",
-            self.general.ncores
-        ));
+        // cpus-per-task is always derived from ncores and cannot be overridden.
+        fields.insert(
+            "cpus-per-task".to_string(),
+            Some(self.general.ncores.to_string()),
+        );
 
         if let Some(partition) = &self.general.partition {
-            header.push_str(&format!("#SBATCH --partition={partition}\n"));
+            fields.insert("partition".to_string(), Some(partition.clone()));
+        }
+
+        // Parse fields and assign its proper types
+        if let Some(slurm_header) = &self.general.slurm_header {
+            for (key, value) in slurm_header {
+                // NOTE: `cpus-per-task` is a special field, its tied to haddock's `ncores`
+                //  so here on purpose we do not let users override it
+                if key == "cpus-per-task" {
+                    log::warn!(
+                        "slurm_header field 'cpus-per-task' is ignored: it is derived from ncores ({}) and cannot be overridden",
+                        self.general.ncores
+                    );
+                    continue;
+                }
+
+                // Match values
+                match value {
+                    // Not provided / explicitly unset: drop the entry and let SLURM default apply.
+                    Value::Null | Value::Bool(false) => {
+                        fields.shift_remove(key);
+                    }
+                    // Empty
+                    Value::String(s) if s.trim().is_empty() => {
+                        fields.shift_remove(key);
+                    }
+                    // Bare no-argument flag, e.g. `exclusive: true` -> `#SBATCH --exclusive`.
+                    Value::Bool(true) => {
+                        fields.insert(key.clone(), None);
+                    }
+                    Value::String(s) => {
+                        fields.insert(key.clone(), Some(s.clone()));
+                    }
+                    Value::Number(n) => {
+                        fields.insert(key.clone(), Some(n.to_string()));
+                    }
+                    // Sequences/mappings are rejected by `Input::validate`; ignore defensively.
+                    Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => {}
+                }
+            }
+        }
+
+        let mut header = "#!/bin/bash\n".to_string();
+        for (key, value) in &fields {
+            match value {
+                // key=value
+                Some(v) => header.push_str(&format!("#SBATCH --{key}={v}\n")),
+                // bare
+                None => header.push_str(&format!("#SBATCH --{key}\n")),
+            }
         }
 
         header
@@ -500,6 +549,7 @@ mod tests {
             preprocess: None,
             postprocess: None,
             gen_archive: None,
+            slurm_header: None,
         };
 
         let scenario = Scenario {
@@ -541,6 +591,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
             scenarios: vec![
                 Scenario {
@@ -606,6 +657,7 @@ mod tests {
             preprocess: None,
             postprocess: None,
             gen_archive: None,
+            slurm_header: None,
         };
 
         let scenario = Scenario {
@@ -687,6 +739,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
         };
 
@@ -750,6 +803,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
         };
 
@@ -796,17 +850,12 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
         };
 
         let header = job.generate_slurm_header();
-        let expected = "#!/bin/bash\n\
-#SBATCH --job-name=haddock\n\
-#SBATCH --output=haddock-%j.out\n\
-#SBATCH --error=haddock-%j.err\n\
-#SBATCH --ntasks=1\n\
-#SBATCH --cpus-per-task=4\n";
-        assert_eq!(header, expected);
+        assert_eq!(header, "#!/bin/bash\n#SBATCH --cpus-per-task=4\n");
     }
 
     #[test]
@@ -841,18 +890,141 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
         };
 
         let header = job.generate_slurm_header();
+        assert_eq!(
+            header,
+            "#!/bin/bash\n#SBATCH --cpus-per-task=4\n#SBATCH --partition=gpu\n"
+        );
+    }
+
+    fn make_slurm_job(
+        partition: Option<String>,
+        slurm_header: Option<IndexMap<String, Value>>,
+    ) -> Job {
+        Job {
+            name: "test".to_string(),
+            status: Status::Unknown,
+            wd: PathBuf::from("/tmp"),
+            target: Target {
+                id: "target".to_string(),
+                molecules: vec![],
+                restraints: vec![],
+                toppar: vec![],
+                misc: vec![],
+                shape: None,
+                size: 0,
+            },
+            scenario: Scenario {
+                name: "scenario".to_string(),
+                workflow: Workflow {
+                    modules: IndexMap::new(),
+                },
+            },
+            general: General {
+                mol_suffixes: vec!["_r".to_string(), "_l".to_string()],
+                input_list: "test.txt".to_string(),
+                work_dir: PathBuf::from("/tmp"),
+                max_concurrent: 1,
+                ncores: 4,
+                execution: Execution::Slurm,
+                partition,
+                preprocess: None,
+                postprocess: None,
+                gen_archive: None,
+                slurm_header,
+            },
+        }
+    }
+
+    #[test]
+    fn test_generate_slurm_header_with_new_field() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("nodes".to_string(), Value::Number(1.into()));
+        slurm_header.insert(
+            "account".to_string(),
+            Value::String("project_XXXXXX".to_string()),
+        );
+
+        let job = make_slurm_job(None, Some(slurm_header));
+        let header = job.generate_slurm_header();
         let expected = "#!/bin/bash\n\
-#SBATCH --job-name=haddock\n\
-#SBATCH --output=haddock-%j.out\n\
-#SBATCH --error=haddock-%j.err\n\
-#SBATCH --ntasks=1\n\
+#SBATCH --cpus-per-task=4\n\
+#SBATCH --nodes=1\n\
+#SBATCH --account=project_XXXXXX\n";
+        assert_eq!(header, expected);
+    }
+
+    #[test]
+    fn test_generate_slurm_header_cpus_per_task_cannot_be_overridden() {
+        // cpus-per-task is always derived from general.ncores; a user-supplied
+        // value in slurm_header is ignored (a warning is logged instead).
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("cpus-per-task".to_string(), Value::Number(8.into()));
+
+        let job = make_slurm_job(None, Some(slurm_header));
+        let header = job.generate_slurm_header();
+        assert_eq!(header, "#!/bin/bash\n#SBATCH --cpus-per-task=4\n");
+    }
+
+    #[test]
+    fn test_generate_slurm_header_slurm_header_overrides_partition_field() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("partition".to_string(), Value::String("gpu".to_string()));
+
+        let job = make_slurm_job(Some("small".to_string()), Some(slurm_header));
+        let header = job.generate_slurm_header();
+        let expected = "#!/bin/bash\n\
 #SBATCH --cpus-per-task=4\n\
 #SBATCH --partition=gpu\n";
         assert_eq!(header, expected);
+    }
+
+    #[test]
+    fn test_generate_slurm_header_null_value_is_skipped() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("partition".to_string(), Value::Null);
+
+        let job = make_slurm_job(Some("small".to_string()), Some(slurm_header));
+        let header = job.generate_slurm_header();
+        assert_eq!(header, "#!/bin/bash\n#SBATCH --cpus-per-task=4\n");
+    }
+
+    #[test]
+    fn test_generate_slurm_header_false_value_is_skipped() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("exclusive".to_string(), Value::Bool(false));
+
+        let job = make_slurm_job(None, Some(slurm_header));
+        let header = job.generate_slurm_header();
+        assert!(!header.contains("exclusive"));
+    }
+
+    #[test]
+    fn test_generate_slurm_header_empty_string_value_is_skipped() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("qos".to_string(), Value::String("   ".to_string()));
+
+        let job = make_slurm_job(None, Some(slurm_header));
+        let header = job.generate_slurm_header();
+        assert!(!header.contains("qos"));
+    }
+
+    #[test]
+    fn test_generate_slurm_header_true_value_renders_bare_flag() {
+        let mut slurm_header = IndexMap::new();
+        slurm_header.insert("exclusive".to_string(), Value::Bool(true));
+
+        let job = make_slurm_job(None, Some(slurm_header));
+        let header = job.generate_slurm_header();
+        assert!(
+            header.contains("#SBATCH --exclusive\n"),
+            "expected bare --exclusive flag but got:\n{header}"
+        );
+        assert!(!header.contains("--exclusive="));
     }
 
     fn make_job_with_modules(modules: IndexMap<String, Value>) -> Job {
@@ -884,6 +1056,7 @@ mod tests {
                 preprocess: None,
                 postprocess: None,
                 gen_archive: None,
+                slurm_header: None,
             },
         }
     }
