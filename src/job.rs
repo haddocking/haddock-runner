@@ -409,6 +409,8 @@ impl Job {
         // Write SLURM header
         let header = self.generate_slurm_header();
 
+        let prologue = self.format_slurm_prologue();
+
         // Write job body
         let body = format!(
             "cd {}\n{} {}\n",
@@ -418,9 +420,21 @@ impl Job {
         );
 
         file.write_all(header.as_bytes())?;
+        file.write_all(prologue.as_bytes())?;
         file.write_all(body.as_bytes())?;
 
         Ok(())
+    }
+
+    fn format_slurm_prologue(&self) -> String {
+        let mut prologue = String::new();
+        if let Some(commands) = &self.general.slurm_prologue {
+            prologue.push_str(commands);
+            if !commands.ends_with('\n') {
+                prologue.push('\n');
+            }
+        }
+        prologue
     }
 
     fn generate_slurm_header(&self) -> String {
@@ -550,6 +564,7 @@ mod tests {
             postprocess: None,
             gen_archive: None,
             slurm_header: None,
+            slurm_prologue: None,
         };
 
         let scenario = Scenario {
@@ -592,6 +607,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
             scenarios: vec![
                 Scenario {
@@ -658,6 +674,7 @@ mod tests {
             postprocess: None,
             gen_archive: None,
             slurm_header: None,
+            slurm_prologue: None,
         };
 
         let scenario = Scenario {
@@ -740,6 +757,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
         };
 
@@ -804,6 +822,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
         };
 
@@ -851,6 +870,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
         };
 
@@ -891,6 +911,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
         };
 
@@ -904,6 +925,7 @@ mod tests {
     fn make_slurm_job(
         partition: Option<String>,
         slurm_header: Option<IndexMap<String, Value>>,
+        slurm_prologue: Option<String>,
     ) -> Job {
         Job {
             name: "test".to_string(),
@@ -936,6 +958,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header,
+                slurm_prologue,
             },
         }
     }
@@ -949,7 +972,7 @@ mod tests {
             Value::String("project_XXXXXX".to_string()),
         );
 
-        let job = make_slurm_job(None, Some(slurm_header));
+        let job = make_slurm_job(None, Some(slurm_header), None);
         let header = job.generate_slurm_header();
         let expected = "#!/bin/bash\n\
 #SBATCH --cpus-per-task=4\n\
@@ -965,7 +988,7 @@ mod tests {
         let mut slurm_header = IndexMap::new();
         slurm_header.insert("cpus-per-task".to_string(), Value::Number(8.into()));
 
-        let job = make_slurm_job(None, Some(slurm_header));
+        let job = make_slurm_job(None, Some(slurm_header), None);
         let header = job.generate_slurm_header();
         assert_eq!(header, "#!/bin/bash\n#SBATCH --cpus-per-task=4\n");
     }
@@ -975,7 +998,7 @@ mod tests {
         let mut slurm_header = IndexMap::new();
         slurm_header.insert("partition".to_string(), Value::String("gpu".to_string()));
 
-        let job = make_slurm_job(Some("small".to_string()), Some(slurm_header));
+        let job = make_slurm_job(Some("small".to_string()), Some(slurm_header), None);
         let header = job.generate_slurm_header();
         let expected = "#!/bin/bash\n\
 #SBATCH --cpus-per-task=4\n\
@@ -988,7 +1011,7 @@ mod tests {
         let mut slurm_header = IndexMap::new();
         slurm_header.insert("partition".to_string(), Value::Null);
 
-        let job = make_slurm_job(Some("small".to_string()), Some(slurm_header));
+        let job = make_slurm_job(Some("small".to_string()), Some(slurm_header), None);
         let header = job.generate_slurm_header();
         assert_eq!(header, "#!/bin/bash\n#SBATCH --cpus-per-task=4\n");
     }
@@ -998,7 +1021,7 @@ mod tests {
         let mut slurm_header = IndexMap::new();
         slurm_header.insert("exclusive".to_string(), Value::Bool(false));
 
-        let job = make_slurm_job(None, Some(slurm_header));
+        let job = make_slurm_job(None, Some(slurm_header), None);
         let header = job.generate_slurm_header();
         assert!(!header.contains("exclusive"));
     }
@@ -1008,7 +1031,7 @@ mod tests {
         let mut slurm_header = IndexMap::new();
         slurm_header.insert("qos".to_string(), Value::String("   ".to_string()));
 
-        let job = make_slurm_job(None, Some(slurm_header));
+        let job = make_slurm_job(None, Some(slurm_header), None);
         let header = job.generate_slurm_header();
         assert!(!header.contains("qos"));
     }
@@ -1018,7 +1041,7 @@ mod tests {
         let mut slurm_header = IndexMap::new();
         slurm_header.insert("exclusive".to_string(), Value::Bool(true));
 
-        let job = make_slurm_job(None, Some(slurm_header));
+        let job = make_slurm_job(None, Some(slurm_header), None);
         let header = job.generate_slurm_header();
         assert!(
             header.contains("#SBATCH --exclusive\n"),
@@ -1057,6 +1080,7 @@ mod tests {
                 postprocess: None,
                 gen_archive: None,
                 slurm_header: None,
+                slurm_prologue: None,
             },
         }
     }
