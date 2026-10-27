@@ -42,6 +42,7 @@ The input list file specifies all files needed for each docking target.
 - List all required files for each target
 - Paths can be relative or absolute
 - Use consistent naming conventions
+- Restraint files must end in `.tbl`, or `.tbl.tgz` for an archive of ambiguous restraints (e.g. `1A2K_ambig_ensembles.tbl.tgz`, selected with `ambig_fname: _ambig_ensembles.tbl.tgz`)
 
 **Example** (`input_list.txt`):
 

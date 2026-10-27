@@ -127,7 +127,7 @@ pub fn load_dataset(input_list: &str, mol_suffixes: &[String]) -> anyhow::Result
         .map(|suffix| Regex::new(&format!(r"(.*){}(_\d+)?\.pdb$", regex::escape(suffix))).unwrap())
         .collect();
 
-    let restraint_pattern = Regex::new(r".*_.*\.tbl$").unwrap();
+    let restraint_pattern = Regex::new(r".*_.*\.tbl(\.tgz)?$").unwrap();
     let toppar_pattern = Regex::new(r".*\.(top|param)$").unwrap();
 
     // Read input list file
@@ -161,7 +161,7 @@ pub fn load_dataset(input_list: &str, mol_suffixes: &[String]) -> anyhow::Result
 
         // Try to match restraint pattern
         if !matched && restraint_pattern.is_match(&file_name) {
-            // Extract root from restraint file (pattern: ROOT_*.tbl)
+            // Extract root from restraint file (pattern: ROOT_*.tbl or ROOT_*.tbl.tgz)
             if let Some(root) = extract_root(&file_name) {
                 let builder = targets
                     .entry(root.clone())
@@ -289,6 +289,22 @@ mod tests {
         assert_eq!(targets[0].id, "protein1");
         assert_eq!(targets[0].molecules.len(), 2);
         assert_eq!(targets[0].restraints.len(), 1);
+    }
+
+    #[test]
+    fn test_load_dataset_restraint_archive() {
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "protein1_r.pdb").unwrap();
+        writeln!(temp_file, "protein1_l.pdb").unwrap();
+        writeln!(temp_file, "protein1_ti.tbl").unwrap();
+        writeln!(temp_file, "protein1_ambig_ensembles.tbl.tgz").unwrap();
+        let file_path = temp_file.path().to_str().unwrap().to_string();
+
+        let targets = load_dataset(&file_path, &["_r".to_string(), "_l".to_string()]).unwrap();
+
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].restraints.len(), 2);
+        assert!(targets[0].misc.is_empty());
     }
 
     #[test]
